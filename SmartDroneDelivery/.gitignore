@@ -1,9 +1,0 @@
-bin/
-obj/
-.vs/
-node_modules/
-dist/
-.env
-.dart_tool/
-build/
-*.user
