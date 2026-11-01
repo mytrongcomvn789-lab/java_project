@@ -2,7 +2,7 @@
 
 Nền tảng quản lý giao hàng bằng drone.
 
-Stack: ASP.NET Core 8 | PostgreSQL | React (Vite) | Flutter | Docker
+Stack: Spring Boot (Java 17+) | PostgreSQL | React (Vite) | Flutter | Docker
 
 ## Chạy nhanh
 
