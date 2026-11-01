@@ -1,0 +1,39 @@
+server:
+  port: 5000
+  servlet:
+    context-path: /api
+  error:
+    include-message: always   # để web đọc được trường "message" khi có lỗi
+
+spring:
+  application:
+    name: smartdrone-backend
+  datasource:
+    url: jdbc:postgresql://localhost:5432/smartdrone
+    username: postgres
+    password: postgres
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: update        # tự tạo/cập nhật bảng khi dev (sau này có thể chuyển sang Flyway)
+    show-sql: false
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+
+app:
+  cors:
+    allowed-origins: http://localhost:5173
+  jwt:
+    key: CHANGE_ME_TO_A_LONG_RANDOM_SECRET_KEY_32+
+    issuer: SmartDrone
+    audience: SmartDroneClients
+    access-token-minutes: 15
+    refresh-token-days: 7
+
+logging:
+  level:
+    root: INFO
