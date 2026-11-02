@@ -28,7 +28,7 @@ app:
   cors:
     allowed-origins: http://localhost:5173
   jwt:
-    key: CHANGE_ME_TO_A_LONG_RANDOM_SECRET_KEY_32+
+    key: ${APP_JWT_KEY:CHANGE_ME_TO_A_LONG_RANDOM_SECRET_KEY_32+}   # chạy thật: đặt biến môi trường APP_JWT_KEY
     issuer: SmartDrone
     audience: SmartDroneClients
     access-token-minutes: 15

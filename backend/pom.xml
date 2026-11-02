@@ -61,10 +61,28 @@
       <scope>test</scope>
     </dependency>
 
-    <!-- Các task sau sẽ thêm:
-         2.5/2.6  spring-boot-starter-security (JWT, RBAC)
-         2.7      spring-boot-starter-validation
-    -->
+    <!-- Task 2.5: xác thực + JWT -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-security</artifactId>
+    </dependency>
+    <!-- Bộ tạo/kiểm tra JWT của Spring Security (Nimbus JOSE), ký HS256 -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
+    </dependency>
+    <!-- Kiểm tra dữ liệu request (@Valid, @NotBlank, @Email...) -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-validation</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.security</groupId>
+      <artifactId>spring-security-test</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+    <!-- Task 2.6 (RBAC) dùng lại spring-boot-starter-security ở trên -->
   </dependencies>
 
   <build>
