@@ -1,7 +1,24 @@
-import axios from "axios";
+import axios, { type InternalAxiosRequestConfig } from "axios";
 import { API_URL } from "./env";
 import { tokenStorage } from "./token";
-import type { ApiError } from "../types/api";
+import type { ApiError, TokenResponse } from "../types/api";
+
+// Lỗi đã chuẩn hoá: vẫn là Error(message) như trước, thêm status/code để form xử lý.
+export class ApiRequestError extends Error {
+  status?: number;
+  code?: string;
+  traceId?: string;
+  errors?: ApiError["errors"];
+
+  constructor(message: string, init: Partial<ApiRequestError> = {}) {
+    super(message);
+    this.name = "ApiRequestError";
+    this.status = init.status;
+    this.code = init.code;
+    this.traceId = init.traceId;
+    this.errors = init.errors;
+  }
+}
 
 const apiClient = axios.create({
   baseURL: API_URL,
@@ -9,22 +26,85 @@ const apiClient = axios.create({
   headers: { "Content-Type": "application/json" },
 });
 
-// Tự động gắn JWT vào mọi request (task 2.5/2.8 sẽ lưu token sau khi đăng nhập)
+// Các endpoint xác thực không được tự refresh (tránh lặp vô hạn, và 401 ở đây là sai mật khẩu).
+const AUTH_PATHS = [
+  "/v1/auth/login",
+  "/v1/auth/register",
+  "/v1/auth/refresh",
+  "/v1/auth/logout",
+];
+
+// Tự động gắn JWT vào mọi request
 apiClient.interceptors.request.use((config) => {
   const token = tokenStorage.get();
   if (token) config.headers.Authorization = `Bearer ${token}`;
   return config;
 });
 
-// Chuẩn hoá lỗi về Error(message)
+// Nhiều request cùng gặp 401 chỉ gọi refresh MỘT lần (refresh token dùng một lần,
+// gọi song song sẽ bị backend coi là dùng lại token và đăng xuất mọi thiết bị).
+let refreshing: Promise<string> | null = null;
+
+async function refreshAccessToken(): Promise<string> {
+  const refreshToken = tokenStorage.getRefresh();
+  if (!refreshToken) throw new Error("Không có refresh token");
+  // Dùng axios gốc (không qua interceptor của apiClient).
+  const res = await axios.post<TokenResponse>(
+    `${API_URL}/v1/auth/refresh`,
+    { refreshToken },
+    { timeout: 10000 },
+  );
+  tokenStorage.setTokens(res.data.accessToken, res.data.refreshToken);
+  return res.data.accessToken;
+}
+
+function redirectToLogin() {
+  tokenStorage.clear();
+  if (window.location.pathname !== "/login") {
+    window.location.assign("/login");
+  }
+}
+
 apiClient.interceptors.response.use(
   (res) => res,
-  (error) => {
-    // 401: task 2.5 sẽ xử lý refresh token / chuyển về /login tại đây
+  async (error) => {
+    const original = error.config as
+      | (InternalAxiosRequestConfig & { _retried?: boolean })
+      | undefined;
+    const status: number | undefined = error.response?.status;
+    const isAuthCall = AUTH_PATHS.some((p) => original?.url?.includes(p));
+
+    // 401 ở API thường: thử làm mới token một lần rồi gọi lại request ban đầu.
+    if (status === 401 && original && !original._retried && !isAuthCall) {
+      if (tokenStorage.getRefresh()) {
+        original._retried = true;
+        try {
+          refreshing ??= refreshAccessToken().finally(() => {
+            refreshing = null;
+          });
+          const newToken = await refreshing;
+          original.headers.Authorization = `Bearer ${newToken}`;
+          return apiClient(original);
+        } catch {
+          redirectToLogin();
+        }
+      } else {
+        redirectToLogin();
+      }
+    }
+
+    // Chuẩn hoá lỗi về ApiRequestError(message)
     const data = error.response?.data as ApiError | undefined;
     const message =
       data?.message || error.message || "Không thể kết nối tới máy chủ";
-    return Promise.reject(new Error(message));
+    return Promise.reject(
+      new ApiRequestError(message, {
+        status,
+        code: data?.code,
+        traceId: data?.traceId,
+        errors: data?.errors,
+      }),
+    );
   },
 );
 

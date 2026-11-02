@@ -1,0 +1,258 @@
+openapi: 3.0.3
+info:
+  title: SmartDroneDelivery - Auth API
+  description: Task 2.5 (APDDMP-17). Đăng ký, đăng nhập, làm mới token, đăng xuất.
+  version: 0.1.0
+servers:
+  - url: http://localhost:5000/api
+    description: Chạy local
+tags:
+  - name: Auth
+paths:
+  /v1/auth/register:
+    post:
+      tags: [Auth]
+      summary: Đăng ký tài khoản khách hàng (role luôn là CUSTOMER)
+      operationId: register
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: Tạo tài khoản thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '409':
+          description: Email đã được đăng ký (EMAIL_ALREADY_EXISTS)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+  /v1/auth/login:
+    post:
+      tags: [Auth]
+      summary: Đăng nhập
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Đăng nhập thành công
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                example: no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          description: Sai email hoặc mật khẩu (INVALID_CREDENTIALS)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '403':
+          description: Tài khoản bị khóa (ACCOUNT_LOCKED)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+  /v1/auth/refresh:
+    post:
+      tags: [Auth]
+      summary: Đổi refresh token lấy cặp token mới (token cũ bị thu hồi)
+      operationId: refresh
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshRequest'
+      responses:
+        '200':
+          description: Cấp cặp token mới
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                example: no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          description: Refresh token lạ, hết hạn hoặc đã dùng (INVALID_REFRESH_TOKEN)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '403':
+          description: Tài khoản bị khóa (ACCOUNT_LOCKED)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+  /v1/auth/logout:
+    post:
+      tags: [Auth]
+      summary: Đăng xuất thiết bị hiện tại (thu hồi refresh token; luôn 204 nếu body hợp lệ)
+      operationId: logout
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshRequest'
+      responses:
+        '204':
+          description: Đã đăng xuất
+        '400':
+          $ref: '#/components/responses/ValidationError'
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  responses:
+    ValidationError:
+      description: Dữ liệu không hợp lệ (VALIDATION_ERROR)
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+  schemas:
+    RegisterRequest:
+      type: object
+      required: [email, password, fullName]
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 150
+        password:
+          type: string
+          minLength: 8
+          maxLength: 72
+          description: Có ít nhất 1 chữ cái và 1 chữ số; tối đa 72 byte UTF-8
+        fullName:
+          type: string
+          minLength: 1
+          maxLength: 150
+        phone:
+          type: string
+          pattern: '^\+?[0-9]{9,15}$'
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          maxLength: 150
+        password:
+          type: string
+          maxLength: 200
+    RefreshRequest:
+      type: object
+      required: [refreshToken]
+      properties:
+        refreshToken:
+          type: string
+          maxLength: 200
+    UserProfile:
+      type: object
+      required: [id, email, fullName, role, createdAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+        fullName:
+          type: string
+        phone:
+          type: string
+          nullable: true
+        role:
+          type: string
+          enum: [CUSTOMER, DISPATCHER, STATION_OPERATOR, LOGISTICS_MANAGER, SYSTEM_ADMIN]
+        createdAt:
+          type: string
+          format: date-time
+    TokenResponse:
+      type: object
+      required: [accessToken, refreshToken, tokenType, expiresIn, user]
+      properties:
+        accessToken:
+          type: string
+          description: JWT HS256; claim sub, email, role, iss, aud, iat, exp, jti
+        refreshToken:
+          type: string
+          description: Chuỗi ngẫu nhiên, dùng một lần
+        tokenType:
+          type: string
+          enum: [Bearer]
+        expiresIn:
+          type: integer
+          format: int64
+          description: Số giây hiệu lực của accessToken
+          example: 900
+        user:
+          $ref: '#/components/schemas/UserProfile'
+    Problem:
+      type: object
+      required: [status, code, message, traceId]
+      properties:
+        type:
+          type: string
+          example: about:blank
+        title:
+          type: string
+        status:
+          type: integer
+        detail:
+          type: string
+        code:
+          type: string
+          enum:
+            - VALIDATION_ERROR
+            - AUTH_REQUIRED
+            - TOKEN_EXPIRED
+            - INVALID_CREDENTIALS
+            - INVALID_REFRESH_TOKEN
+            - FORBIDDEN
+            - ACCOUNT_LOCKED
+            - EMAIL_ALREADY_EXISTS
+            - INTERNAL_ERROR
+        message:
+          type: string
+          description: Trùng detail, giữ cho web đọc
+        traceId:
+          type: string
+        errors:
+          type: array
+          description: Chỉ có khi code = VALIDATION_ERROR
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+              message:
+                type: string
