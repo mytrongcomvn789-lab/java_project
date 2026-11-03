@@ -1,0 +1,23 @@
+{
+  "passed": 16,
+  "failed": 0,
+  "database": "PostgreSQL 16.15",
+  "checks": [
+    "Production JAR starts against PostgreSQL and health returns 200",
+    "Existing users receive access_version DEFAULT 0 without losing their row",
+    "Bootstrap candidate registers as CUSTOMER",
+    "Candidate can log in before promotion",
+    "SQL bootstraps exactly one admin and revokes its refresh session",
+    "Pre-bootstrap JWT is invalidated",
+    "Promoted admin logs in with SYSTEM_ADMIN",
+    "Second account still registers as CUSTOMER",
+    "Bootstrap refuses a second admin once one exists",
+    "Production role catalog contains exactly five actors",
+    "Production admin user pagination works",
+    "Production customer cannot list users",
+    "Unimplemented order API returns 404; no test probe is packaged",
+    "Production admin grants DISPATCHER",
+    "Production grant revokes previous access token",
+    "Fresh login sees updated effective role"
+  ]
+}
