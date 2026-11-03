@@ -32,7 +32,10 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(ApiException.class)
     public ResponseEntity<Object> handleApiException(ApiException ex) {
-        return build(ex.getErrorCode(), ex.getMessage(), null);
+        ResponseEntity<Object> response = build(ex.getErrorCode(), ex.getMessage(), null);
+        ProblemDetail problem = (ProblemDetail) response.getBody();
+        problem.setStatus(ex.getStatus());
+        return respond(problem);
     }
 
     // Task 2.6 dùng @PreAuthorize: AccessDeniedException phải ra 403 chứ không phải 500.

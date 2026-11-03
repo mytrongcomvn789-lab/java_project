@@ -1,0 +1,4 @@
+-------------------------------------------------------------------------------
+Test set: com.smartdrone.api.security.RbacIntegrationTest
+-------------------------------------------------------------------------------
+Tests run: 254, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 19.98 s -- in com.smartdrone.api.security.RbacIntegrationTest

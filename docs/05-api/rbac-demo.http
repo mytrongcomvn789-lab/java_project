@@ -1,0 +1,45 @@
+### Ví dụ REST Client; điền các biến bằng kết quả login/ID thật trong DB dev.
+@baseUrl = http://localhost:5000/api
+@customerToken = PASTE_CUSTOMER_ACCESS_TOKEN
+@adminToken = PASTE_ADMIN_ACCESS_TOKEN
+@targetUserId = PASTE_TARGET_USER_UUID
+
+### 1. Khách hàng xem quyền của mình: 200
+GET {{baseUrl}}/v1/me/permissions
+Authorization: Bearer {{customerToken}}
+
+### 2. Khách hàng cố xem tài khoản: 403 FORBIDDEN
+GET {{baseUrl}}/v1/users
+Authorization: Bearer {{customerToken}}
+
+### 3. Admin xem danh mục đúng 5 vai trò: 200
+GET {{baseUrl}}/v1/roles
+Authorization: Bearer {{adminToken}}
+
+### 4. Admin tìm user: 200, dữ liệu phân trang không chứa passwordHash
+GET {{baseUrl}}/v1/users?page=1&pageSize=20
+Authorization: Bearer {{adminToken}}
+
+### 5. Admin cấp vai trò cho tài khoản khác: 200; tài khoản đó phải login lại
+PATCH {{baseUrl}}/v1/users/{{targetUserId}}/access
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{"role":"DISPATCHER"}
+
+### 6. Admin khóa tài khoản khác: 200
+PATCH {{baseUrl}}/v1/users/{{targetUserId}}/access
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{"enabled":false}
+
+### 7. Admin mở lại: 200; token cũ không được hồi sinh
+PATCH {{baseUrl}}/v1/users/{{targetUserId}}/access
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{"enabled":true}
+
+### 8. Không có token: 401 AUTH_REQUIRED
+GET {{baseUrl}}/v1/me/permissions

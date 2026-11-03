@@ -38,6 +38,11 @@ public class User {
     @Column(nullable = false)
     private boolean enabled = true;
 
+    // APDDMP-18: tăng khi đổi quyền/khóa tài khoản để JWT cũ không sống lại nếu role được cấp lại.
+    // DEFAULT 0 cho cả tài khoản đã tồn tại trước khi bổ sung RBAC (PostgreSQL/H2).
+    @Column(name = "access_version", nullable = false, columnDefinition = "bigint default 0")
+    private long accessVersion;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt = Instant.now();
 
@@ -62,6 +67,8 @@ public class User {
     public String getFullName() { return fullName; }
     public String getPhone() { return phone; }
     public boolean isEnabled() { return enabled; }
+    public long getAccessVersion() { return accessVersion; }
+    public void invalidateAccessTokens() { accessVersion++; }
     public Instant getCreatedAt() { return createdAt; }
     public Role getRole() { return role; }
 
@@ -69,4 +76,5 @@ public class User {
     public void setPhone(String phone) { this.phone = phone; }
     public void setEnabled(boolean enabled) { this.enabled = enabled; }
     public void setPasswordHash(String passwordHash) { this.passwordHash = passwordHash; }
+    public void setRole(Role role) { this.role = java.util.Objects.requireNonNull(role); }
 }
