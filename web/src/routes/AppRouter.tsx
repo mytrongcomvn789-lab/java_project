@@ -3,10 +3,13 @@ import AuthLayout from "../layouts/AuthLayout";
 import MainLayout from "../layouts/MainLayout";
 import NotFoundPage from "./NotFoundPage";
 import LoginPage from "../features/auth/LoginPage";
+import RequireAuth from "../features/auth/RequireAuth";
 import HomePage from "../features/home/HomePage";
 import ProfilePage from "../features/profile/ProfilePage";
+import PlaceholderPage from "../components/ui/PlaceholderPage";
+import { PLACEHOLDER_PATHS } from "../lib/navigation";
 
-// Task 2.6 sẽ bọc thêm ProtectedRoute/RoleRoute quanh nhóm MainLayout.
+// Task 2.6 sẽ bọc thêm RoleRoute (chặn theo vai trò) bên trong nhóm RequireAuth.
 export default function AppRouter() {
   return (
     <Routes>
@@ -14,9 +17,14 @@ export default function AppRouter() {
         <Route path="/login" element={<LoginPage />} />
       </Route>
 
-      <Route element={<MainLayout />}>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/profile" element={<ProfilePage />} />
+      <Route element={<RequireAuth />}>
+        <Route element={<MainLayout />}>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/profile" element={<ProfilePage />} />
+          {PLACEHOLDER_PATHS.map((p) => (
+            <Route key={p} path={p} element={<PlaceholderPage />} />
+          ))}
+        </Route>
       </Route>
 
       <Route path="*" element={<NotFoundPage />} />

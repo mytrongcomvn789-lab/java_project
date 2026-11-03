@@ -1,6 +1,7 @@
 import axios, { type InternalAxiosRequestConfig } from "axios";
-import { API_URL } from "./env";
+import { API_URL, IS_DEMO_AUTH } from "./env";
 import { tokenStorage } from "./token";
+import { userStorage } from "./session";
 import type { ApiError, TokenResponse } from "../types/api";
 
 // Lỗi đã chuẩn hoá: vẫn là Error(message) như trước, thêm status/code để form xử lý.
@@ -60,6 +61,9 @@ async function refreshAccessToken(): Promise<string> {
 
 function redirectToLogin() {
   tokenStorage.clear();
+  userStorage.clear();
+  // Báo cho AuthContext (task 2.8) đăng xuất trạng thái người dùng.
+  window.dispatchEvent(new Event("sd:unauthorized"));
   if (window.location.pathname !== "/login") {
     window.location.assign("/login");
   }
@@ -75,7 +79,13 @@ apiClient.interceptors.response.use(
     const isAuthCall = AUTH_PATHS.some((p) => original?.url?.includes(p));
 
     // 401 ở API thường: thử làm mới token một lần rồi gọi lại request ban đầu.
-    if (status === 401 && original && !original._retried && !isAuthCall) {
+    if (
+      !IS_DEMO_AUTH && // chế độ demo không có token thật nên không refresh
+      status === 401 &&
+      original &&
+      !original._retried &&
+      !isAuthCall
+    ) {
       if (tokenStorage.getRefresh()) {
         original._retried = true;
         try {
@@ -93,7 +103,7 @@ apiClient.interceptors.response.use(
       }
     }
 
-    // Chuẩn hoá lỗi về ApiRequestError(message)
+    // Chuẩn hóa lỗi: ApiRequestError(message, { status, code, traceId, errors })
     const data = error.response?.data as ApiError | undefined;
     const message =
       data?.message || error.message || "Không thể kết nối tới máy chủ";

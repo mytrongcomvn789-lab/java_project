@@ -53,3 +53,7 @@ export interface TokenResponse {
   expiresIn: number; // giây
   user: UserProfile;
 }
+
+// ---- Task 2.8: người dùng đang đăng nhập trên giao diện ----
+// Chỉ lấy phần cần hiển thị (tên, email, vai trò) từ UserProfile.
+export type AuthUser = Pick<UserProfile, "id" | "email" | "fullName" | "role">;
