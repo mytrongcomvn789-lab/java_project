@@ -32,9 +32,15 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(ApiException.class)
     public ResponseEntity<Object> handleApiException(ApiException ex) {
-        ResponseEntity<Object> response = build(ex.getErrorCode(), ex.getMessage(), null);
-        ProblemDetail problem = (ProblemDetail) response.getBody();
-        problem.setStatus(ex.getStatus());
+        if (ex.getErrorCode() != null) {
+            return build(ex.getErrorCode(), ex.getMessage(), null);
+        }
+        // Lỗi chung kiểu ApiException(HttpStatus, message): code lấy theo tên status.
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(ex.getStatus(), ex.getMessage());
+        problem.setTitle(ex.getStatus().getReasonPhrase());
+        problem.setProperty("code", ex.getStatus().name());
+        problem.setProperty("message", ex.getMessage());
+        problem.setProperty("traceId", UUID.randomUUID().toString());
         return respond(problem);
     }
 

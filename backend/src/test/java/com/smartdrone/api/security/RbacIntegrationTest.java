@@ -142,14 +142,14 @@ class RbacIntegrationTest {
                 "email", email, "password", PASSWORD, "fullName", "RBAC HTTP test",
                 "role", "SYSTEM_ADMIN", "enabled", true)));
         assertEquals(201, registered.statusCode(), registered.body());
-        assertEquals("CUSTOMER", json(registered).get("role").asText());
+        assertEquals("CUSTOMER", json(registered).get("role").asString());
         var login = login(email);
-        String token = login.get("accessToken").asText();
+        String token = login.get("accessToken").asString();
         assertProblem(call("GET", "/v1/users", token, null), 403, "FORBIDDEN");
-        assertProblem(call("PATCH", "/v1/users/" + json(registered).get("id").asText() + "/access",
+        assertProblem(call("PATCH", "/v1/users/" + json(registered).get("id").asString() + "/access",
                 token, "{\"role\":\"SYSTEM_ADMIN\"}"), 403, "FORBIDDEN");
         assertEquals(204, call("POST", "/v1/auth/logout", null,
-                JSON.writeValueAsString(Map.of("refreshToken", login.get("refreshToken").asText()))).statusCode());
+                JSON.writeValueAsString(Map.of("refreshToken", login.get("refreshToken").asString()))).statusCode());
     }
 
     @ParameterizedTest
@@ -159,7 +159,7 @@ class RbacIntegrationTest {
         User target = createUser(newRole == RoleName.CUSTOMER ? RoleName.DISPATCHER : RoleName.CUSTOMER);
         RoleName originalRole = target.getRole().getName();
         var session = login(target.getEmail());
-        String oldToken = session.get("accessToken").asText();
+        String oldToken = session.get("accessToken").asString();
         String path = "/v1/users/" + target.getId() + "/access";
         String body = JSON.writeValueAsString(Map.of("role", newRole.name()));
         for (RoleName actor : RoleName.values()) {
@@ -170,15 +170,15 @@ class RbacIntegrationTest {
         assertProblem(call("PATCH", path, null, body), 401, "AUTH_REQUIRED");
         var changed = call("PATCH", path, admin(), body);
         assertEquals(200, changed.statusCode(), changed.body());
-        assertEquals(newRole.name(), json(changed).get("role").asText());
+        assertEquals(newRole.name(), json(changed).get("role").asString());
         assertProblem(call("GET", "/v1/me/permissions", oldToken, null), 401, "AUTH_REQUIRED");
         assertProblem(call("POST", "/v1/auth/refresh", null,
-                JSON.writeValueAsString(Map.of("refreshToken", session.get("refreshToken").asText()))),
+                JSON.writeValueAsString(Map.of("refreshToken", session.get("refreshToken").asString()))),
                 401, "INVALID_REFRESH_TOKEN");
         var current = login(target.getEmail());
-        var permissions = call("GET", "/v1/me/permissions", current.get("accessToken").asText(), null);
+        var permissions = call("GET", "/v1/me/permissions", current.get("accessToken").asString(), null);
         assertEquals(200, permissions.statusCode(), permissions.body());
-        assertEquals(newRole.name(), json(permissions).get("role").asText());
+        assertEquals(newRole.name(), json(permissions).get("role").asString());
         // Cấp lại role cũ vẫn không được làm sống lại JWT đã thu hồi (accessVersion).
         assertEquals(200, call("PATCH", path, admin(),
                 JSON.writeValueAsString(Map.of("role", originalRole.name()))).statusCode());
@@ -189,7 +189,7 @@ class RbacIntegrationTest {
     void lockingAndUnlockingDoesNotReviveOldToken() throws Exception {
         User target = createUser(RoleName.DISPATCHER);
         var session = login(target.getEmail());
-        String oldToken = session.get("accessToken").asText();
+        String oldToken = session.get("accessToken").asString();
         String path = "/v1/users/" + target.getId() + "/access";
         assertEquals(200, call("PATCH", path, admin(), "{\"enabled\":false}").statusCode());
         assertProblem(call("GET", "/v1/me/permissions", oldToken, null), 401, "AUTH_REQUIRED");
@@ -197,7 +197,7 @@ class RbacIntegrationTest {
                 JSON.writeValueAsString(Map.of("email", target.getEmail(), "password", PASSWORD))), 403, "ACCOUNT_LOCKED");
         assertEquals(200, call("PATCH", path, admin(), "{\"enabled\":true}").statusCode());
         assertProblem(call("GET", "/v1/me/permissions", oldToken, null), 401, "AUTH_REQUIRED");
-        assertEquals(200, call("GET", "/v1/me/permissions", login(target.getEmail()).get("accessToken").asText(), null).statusCode());
+        assertEquals(200, call("GET", "/v1/me/permissions", login(target.getEmail()).get("accessToken").asString(), null).statusCode());
     }
 
     @Test
@@ -206,9 +206,9 @@ class RbacIntegrationTest {
         var session = login(target.getEmail());
         assertEquals(200, call("PATCH", "/v1/users/" + target.getId() + "/access", admin(),
                 "{\"role\":\"CUSTOMER\",\"enabled\":true}").statusCode());
-        assertEquals(200, call("GET", "/v1/me/permissions", session.get("accessToken").asText(), null).statusCode());
+        assertEquals(200, call("GET", "/v1/me/permissions", session.get("accessToken").asString(), null).statusCode());
         assertEquals(200, call("POST", "/v1/auth/refresh", null,
-                JSON.writeValueAsString(Map.of("refreshToken", session.get("refreshToken").asText()))).statusCode());
+                JSON.writeValueAsString(Map.of("refreshToken", session.get("refreshToken").asString()))).statusCode());
     }
 
     @Test
@@ -350,7 +350,7 @@ class RbacIntegrationTest {
 
     private static void assertProblem(HttpResponse<String> response, int status, String code) {
         assertEquals(status, response.statusCode(), response.body());
-        assertEquals(code, json(response).get("code").asText(), response.body());
+        assertEquals(code, json(response).get("code").asString(), response.body());
         assertTrue(response.headers().firstValue("Content-Type").orElse("").startsWith("application/problem+json"));
         assertNotNull(json(response).get("traceId"));
         assertEquals(status, json(response).get("status").asInt());
