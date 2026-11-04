@@ -123,6 +123,84 @@ class RbacIntegrationTest {
         assertProblem(call(method, path, null, null), 401, "AUTH_REQUIRED");
     }
 
+    @Test
+    void profileCanBeReadAndUpdatedWithValidationAndAuthentication() throws Exception {
+        assertProblem(call("GET", "/v1/me", null, null), 401, "AUTH_REQUIRED");
+        assertProblem(call("PATCH", "/v1/me", null, "{\"fullName\":\"Updated name\"}"),
+                401, "AUTH_REQUIRED");
+
+        User user = createUser(RoleName.CUSTOMER);
+        String token = login(user.getEmail()).get("accessToken").asString();
+
+        var profile = call("GET", "/v1/me", token, null);
+        assertEquals(200, profile.statusCode(), profile.body());
+        assertEquals(user.getId().toString(), json(profile).get("id").asString());
+        assertEquals(user.getEmail(), json(profile).get("email").asString());
+        assertEquals(user.getFullName(), json(profile).get("fullName").asString());
+        assertEquals("no-store", profile.headers().firstValue("Cache-Control").orElse(""));
+        assertFalse(profile.body().contains("passwordHash"));
+
+        var nameUpdate = call("PATCH", "/v1/me", token, "{\"fullName\":\"  Updated name  \"}");
+        assertEquals(200, nameUpdate.statusCode(), nameUpdate.body());
+        assertEquals("Updated name", json(nameUpdate).get("fullName").asString());
+        assertEquals(user.getEmail(), json(nameUpdate).get("email").asString());
+
+        var phoneUpdate = call("PATCH", "/v1/me", token,
+                "{\"phone\":\"+84901234567\",\"email\":\"attacker@example.test\",\"role\":\"SYSTEM_ADMIN\"}");
+        assertEquals(200, phoneUpdate.statusCode(), phoneUpdate.body());
+        assertEquals("+84901234567", json(phoneUpdate).get("phone").asString());
+        assertEquals("CUSTOMER", json(phoneUpdate).get("role").asString());
+        assertEquals(user.getEmail(), json(phoneUpdate).get("email").asString());
+        assertEquals("Updated name", json(phoneUpdate).get("fullName").asString());
+
+        assertProblem(call("PATCH", "/v1/me", token, "{}"), 400, "VALIDATION_ERROR");
+        assertProblem(call("PATCH", "/v1/me", token, "{\"fullName\":\"   \"}"),
+                400, "VALIDATION_ERROR");
+        assertProblem(call("PATCH", "/v1/me", token, "{\"phone\":\"not-a-phone\"}"),
+                400, "VALIDATION_ERROR");
+
+        var clearPhone = call("PATCH", "/v1/me", token, "{\"phone\":\"\"}");
+        assertEquals(200, clearPhone.statusCode(), clearPhone.body());
+        assertTrue(json(clearPhone).get("phone").isNull());
+    }
+
+    @Test
+    void changingPasswordValidatesCurrentPasswordAndRevokesExistingSessions() throws Exception {
+        assertProblem(call("POST", "/v1/me/password", null,
+                "{\"currentPassword\":\"old\",\"newPassword\":\"NewPassword123\"}"),
+                401, "AUTH_REQUIRED");
+
+        User user = createUser(RoleName.CUSTOMER);
+        var session = login(user.getEmail());
+        String oldAccessToken = session.get("accessToken").asString();
+        String oldRefreshToken = session.get("refreshToken").asString();
+
+        assertProblem(call("POST", "/v1/me/password", oldAccessToken,
+                "{\"currentPassword\":\"wrong\",\"newPassword\":\"NewPassword123\"}"),
+                400, "INVALID_CURRENT_PASSWORD");
+        assertProblem(call("POST", "/v1/me/password", oldAccessToken,
+                "{\"currentPassword\":\"" + PASSWORD + "\",\"newPassword\":\"" + PASSWORD + "\"}"),
+                400, "VALIDATION_ERROR");
+        assertProblem(call("POST", "/v1/me/password", oldAccessToken,
+                "{\"currentPassword\":\"" + PASSWORD + "\",\"newPassword\":\"Ab"
+                        + "é".repeat(36) + "\"}"),
+                400, "VALIDATION_ERROR");
+        assertEquals(200, call("GET", "/v1/me", oldAccessToken, null).statusCode());
+
+        var changed = call("POST", "/v1/me/password", oldAccessToken,
+                "{\"currentPassword\":\"" + PASSWORD + "\",\"newPassword\":\"NewPassword123\"}");
+        assertEquals(204, changed.statusCode(), changed.body());
+        assertProblem(call("GET", "/v1/me", oldAccessToken, null), 401, "AUTH_REQUIRED");
+        assertProblem(call("POST", "/v1/auth/refresh", null,
+                JSON.writeValueAsString(Map.of("refreshToken", oldRefreshToken))),
+                401, "INVALID_REFRESH_TOKEN");
+        assertProblem(call("POST", "/v1/auth/login", null,
+                JSON.writeValueAsString(Map.of("email", user.getEmail(), "password", PASSWORD))),
+                401, "INVALID_CREDENTIALS");
+        assertEquals(user.getId().toString(),
+                login(user.getEmail(), "NewPassword123").get("user").get("id").asString());
+    }
+
     @ParameterizedTest
     @EnumSource(RoleName.class)
     void unknownRoutesWrongMethodsAndIntegrationAreDenied(RoleName role) throws Exception {
@@ -322,8 +400,12 @@ class RbacIntegrationTest {
     }
 
     private JsonNode login(String email) throws Exception {
+        return login(email, PASSWORD);
+    }
+
+    private JsonNode login(String email, String password) throws Exception {
         var response = call("POST", "/v1/auth/login", null,
-                JSON.writeValueAsString(Map.of("email", email, "password", PASSWORD)));
+                JSON.writeValueAsString(Map.of("email", email, "password", password)));
         assertEquals(200, response.statusCode(), response.body());
         return json(response);
     }

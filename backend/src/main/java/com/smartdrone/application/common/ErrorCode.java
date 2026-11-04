@@ -16,8 +16,9 @@ public enum ErrorCode {
     REQUEST_ERROR(HttpStatus.BAD_REQUEST, "Yêu cầu không hợp lệ"),
     SELF_ACCESS_CHANGE(HttpStatus.CONFLICT, "Không được tự thay đổi vai trò hoặc khóa tài khoản của mình"),
     EMAIL_ALREADY_EXISTS(HttpStatus.CONFLICT, "Email đã được đăng ký"),
+    INVALID_CURRENT_PASSWORD(HttpStatus.BAD_REQUEST, "Mật khẩu hiện tại không đúng"),
     INTERNAL_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "Lỗi hệ thống, vui lòng thử lại sau");
-
+    
     private final HttpStatus status;
     private final String defaultMessage;
 
