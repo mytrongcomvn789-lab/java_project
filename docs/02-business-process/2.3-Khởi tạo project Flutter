@@ -1,0 +1,108 @@
+
+1. Khởi tạo ứng dụng Flutter trong main.dart
+Mục đích thực hiện:
+
+Tệp main.dart là điểm khởi chạy chính của ứng dụng Flutter. Việc thiết lập tệp này giúp khởi tạo ứng dụng, cấu hình môi trường quản lý trạng thái và kết nối với hệ thống điều hướng. Đây là bước nền tảng để các chức năng khác có thể được phát triển và tích hợp vào ứng dụng.
+
+Nội dung đã triển khai
+- Sử dụng thư viện flutter/material.dart để xây dựng ứng dụng theo Material Design.
+- Tích hợp flutter_riverpod thông qua ProviderScope nhằm thiết lập môi trường quản lý trạng thái cho toàn bộ ứng dụng.
+- Khởi tạo lớp MyApp kế thừa từ StatelessWidget.
+- Sử dụng MaterialApp.router để kết nối ứng dụng với hệ thống điều hướng được cấu hình trong app_router.dart.
+- Thiết lập tên ứng dụng là SmartDroneDelivery và tắt nhãn Debug mặc định.
+Kết quả
+Ứng dụng Flutter đã được khởi tạo với cấu hình cơ bản, đồng thời tích hợp môi trường Riverpod và hệ thống điều hướng. Tệp main.dart đóng vai trò là điểm kết nối các thành phần nền tảng của ứng dụng.
+---------------------------------------------------------
+
+2. Thiết lập hệ thống điều hướng với GoRouter
+Mục đích thực hiện
+
+GoRouter được sử dụng để quản lý việc chuyển đổi giữa các màn hình trong ứng dụng. Việc thiết lập hệ thống điều hướng ngay từ giai đoạn khởi tạo giúp tổ chức các đường dẫn rõ ràng, thuận tiện khi bổ sung những màn hình và chức năng nghiệp vụ trong tương lai.
+
+Nội dung đã triển khai
+- Tích hợp thư viện go_router để quản lý điều hướng.
+- Khởi tạo đối tượng appRouter bằng GoRouter.
+- Thiết lập đường dẫn mặc định của ứng dụng là /.
+- Khai báo HomePage làm màn hình được hiển thị khi người dùng truy cập vào đường dẫn mặc định.
+- Xây dựng HomePage dưới dạng ConsumerWidget để có thể sử dụng dữ liệu được cung cấp từ Riverpod.
+- Sử dụng ref.watch() để theo dõi dữ liệu từ homeMessageProvider và hiển thị nội dung lên giao diện.
+Kết quả
+Hệ thống điều hướng GoRouter đã được tích hợp vào ứng dụng. Khi khởi chạy, ứng dụng tự động chuyển đến màn hình Home thông qua đường dẫn /. Cấu trúc này tạo cơ sở để bổ sung các tuyến điều hướng cho những chức năng khác của SmartDroneDelivery.
+----------------------------------------------------------
+
+3. Thiết lập quản lý trạng thái với Riverpod
+Mục đích thực hiện
+
+Riverpod được sử dụng để quản lý và cung cấp dữ liệu cho các thành phần giao diện trong ứng dụng. Việc thiết lập thư viện này ngay từ giai đoạn khởi tạo giúp dự án có cơ chế quản lý trạng thái thống nhất, thuận tiện khi phát triển các chức năng nghiệp vụ sau này.
+
+Nội dung đã triển khai
+- Cài đặt thư viện flutter_riverpod.
+- Khởi tạo ProviderScope trong main.dart để thiết lập môi trường sử dụng Riverpod.
+- Tạo homeMessageProvider trong home_provider.dart nhằm cung cấp dữ liệu cho màn hình Home.
+- Sử dụng ConsumerWidget trong HomePage để cho phép giao diện truy cập vào hệ thống Provider.
+- Sử dụng ref.watch() để lấy dữ liệu từ Provider và hiển thị lên giao diện.
+Kết quả
+Riverpod đã được tích hợp vào ứng dụng và kiểm tra thông qua Provider mẫu. Dữ liệu được cung cấp từ homeMessageProvider và hiển thị thành công trên màn hình Home. Đây là cơ sở ban đầu để quản lý dữ liệu và trạng thái cho các chức năng của ứng dụng trong những giai đoạn tiếp theo.
+-----------------------------------------------------------
+
+4. Thiết lập giao tiếp API với Dio
+Mục đích thực hiện
+
+Dio là thư viện hỗ trợ gửi và nhận dữ liệu thông qua các yêu cầu HTTP. Trong dự án SmartDroneDelivery, Dio được sử dụng để xây dựng thành phần giao tiếp giữa ứng dụng Flutter và hệ thống Backend.
+
+Việc tách cấu hình giao tiếp API thành một thành phần riêng giúp thống nhất cách gửi yêu cầu đến máy chủ, đồng thời thuận tiện cho việc quản lý các cấu hình mạng và thông tin xác thực.
+
+Nội dung đã triển khai
+- Cài đặt thư viện dio để hỗ trợ giao tiếp HTTP.
+- Tạo lớp DioClient trong thư mục core/network.
+- Khởi tạo đối tượng Dio với các cấu hình cơ bản:
+  - baseUrl: Địa chỉ cơ sở của API.
+  - connectTimeout: Thời gian chờ thiết lập kết nối.
+  - receiveTimeout: Thời gian chờ nhận dữ liệu phản hồi.
+  - headers: Thiết lập kiểu dữ liệu gửi và nhận mặc định là JSON.
+- Thiết lập InterceptorsWrapper để can thiệp vào quá trình gửi yêu cầu HTTP.
+- Trong onRequest, lấy Access Token từ StorageService và tự động thêm vào Header dưới dạng Authorization: Bearer <token> nếu Token tồn tại.
+Kết quả
+Thành phần DioClient đã được xây dựng để quản lý cấu hình giao tiếp API tập trung. Interceptor cũng đã được thiết lập nhằm hỗ trợ tự động đính kèm Access Token vào các yêu cầu gửi đến Backend khi có Token hợp lệ.
+
+Lưu ý: Địa chỉ API hiện tại mới là cấu hình ban đầu, cần được điều chỉnh theo địa chỉ và cổng thực tế của Backend khi tích hợp. Chức năng gọi API thực tế chưa được kiểm chứng trong giai đoạn khởi tạo này.
+-----------------------------------------------------------------------------
+
+5. Thiết lập lưu trữ thông tin xác thực với Flutter Secure Storage
+Mục đích thực hiện
+
+Trong quá trình sử dụng ứng dụng, hệ thống có thể cần lưu trữ các thông tin xác thực như Access Token và Refresh Token để phục vụ cho những yêu cầu cần xác thực từ Backend.
+
+Flutter Secure Storage được sử dụng nhằm hỗ trợ lưu trữ các thông tin này trên thiết bị theo cơ chế lưu trữ an toàn, hạn chế việc lưu Token trực tiếp trong mã nguồn hoặc các vùng lưu trữ thông thường.
+
+Nội dung đã triển khai
+- Cài đặt thư viện flutter_secure_storage.
+- Tạo lớp StorageService trong thư mục core/storage để quản lý các thao tác lưu trữ.
+- Xây dựng các phương thức xử lý Access Token:
+  - saveAccessToken(): Lưu Access Token.
+  - getAccessToken(): Đọc Access Token.
+- Xây dựng các phương thức xử lý Refresh Token:
+  - saveRefreshToken(): Lưu Refresh Token.
+  - getRefreshToken(): Đọc Refresh Token.
+- Xây dựng phương thức clearTokens() để xóa Access Token và Refresh Token khi cần thiết.
+- Sử dụng FlutterSecureStorage làm đối tượng thực hiện các thao tác đọc, ghi và xóa dữ liệu.
+Kết quả
+StorageService đã được xây dựng với các phương thức cơ bản để lưu trữ, truy xuất và xóa thông tin xác thực. Thành phần này được sử dụng kết hợp với DioClient để hỗ trợ lấy Access Token và đính kèm vào Header của các yêu cầu API.
+------------------------------------------------------------------------------------
+
+6. Tổng kết kết quả thực hiện
+Sau khi hoàn thành các nội dung khởi tạo, ứng dụng Flutter của dự án SmartDroneDelivery đã có những thành phần nền tảng phục vụ cho quá trình phát triển tiếp theo:
+Thành phần	Kết quả triển khai
+1. main.dart	Khởi tạo ứng dụng và tích hợp Riverpod, GoRouter
+2. app_router.dart	Thiết lập điều hướng và màn hình Home
+3. home_provider.dart	Tạo Provider mẫu để cung cấp dữ liệu cho giao diện
+4. dio_client.dart	Cấu hình Dio và Interceptor xử lý Access Token
+5 storage_service.dart	Xây dựng các phương thức lưu trữ Token
+
+Kết quả kiểm tra
+- Ứng dụng khởi chạy thành công trên Android Emulator.
+- Màn hình Home hiển thị nội dung SmartDroneDelivery - Mobile App.
+- Hệ thống điều hướng GoRouter hoạt động với tuyến đường mặc định /.
+- Riverpod được kiểm tra thông qua Provider mẫu.
+- Lệnh flutter analyze được thực hiện và không phát hiện lỗi phân tích mã nguồn.
+Như vậy, mục 2.3 đã hoàn thành việc thiết lập các thành phần nền tảng cho ứng dụng Flutter, bao gồm khởi tạo ứng dụng, quản lý trạng thái, điều hướng, cấu hình giao tiếp API và lưu trữ thông tin xác thực. Các thành phần này tạo cơ sở để tiếp tục phát triển và tích hợp những chức năng nghiệp vụ của hệ thống SmartDroneDelivery.
