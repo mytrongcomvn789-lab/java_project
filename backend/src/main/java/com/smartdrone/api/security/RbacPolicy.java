@@ -76,6 +76,9 @@ public final class RbacPolicy {
             rule(POST, "/v1/assistant/messages", CUSTOMER),
             rule(GET, "/v1/analytics/deliveries", LOGISTICS_MANAGER),
             rule(POST, "/v1/files/upload-tickets", CUSTOMER, STATION_OPERATOR),
+            rule(POST, "/v1/files/upload-tickets", CUSTOMER, STATION_OPERATOR),
+            rule(POST, "/v1/files/{id}/complete", CUSTOMER, STATION_OPERATOR),
+            rule(GET, "/v1/files/{id}/download-link", CUSTOMER, STATION_OPERATOR, DISPATCHER),
             rule(GET, "/v1/files/{id}/download-link", CUSTOMER, STATION_OPERATOR, DISPATCHER)
     );
     // /integration/** chưa có xác thực service-to-service: mặc định bị từ chối.

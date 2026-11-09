@@ -3,7 +3,7 @@ server:
   servlet:
     context-path: /api
   error:
-    include-message: always   # để web đọc được trường "message" khi có lỗi
+    include-message: always # để web đọc được trường "message" khi có lỗi
 
 spring:
   application:
@@ -15,7 +15,7 @@ spring:
   jpa:
     open-in-view: false
     hibernate:
-      ddl-auto: update        # tự tạo/cập nhật bảng khi dev (sau này có thể chuyển sang Flyway)
+      ddl-auto: update # tự tạo/cập nhật bảng khi dev (sau này có thể chuyển sang Flyway)
     show-sql: false
 
 springdoc:
@@ -28,11 +28,27 @@ app:
   cors:
     allowed-origins: http://localhost:5173
   jwt:
-    key: ${APP_JWT_KEY:CHANGE_ME_TO_A_LONG_RANDOM_SECRET_KEY_32+}   # chạy thật: đặt biến môi trường APP_JWT_KEY
+    key: ${APP_JWT_KEY:CHANGE_ME_TO_A_LONG_RANDOM_SECRET_KEY_32+} # chạy thật: đặt biến môi trường APP_JWT_KEY
     issuer: SmartDrone
     audience: SmartDroneClients
     access-token-minutes: 15
     refresh-token-days: 7
+
+  storage:
+    endpoint: ${MINIO_ENDPOINT:http://localhost:9000}
+    public-endpoint: ${MINIO_PUBLIC_ENDPOINT:${MINIO_ENDPOINT:http://localhost:9000}} # host mà TRÌNH DUYỆT truy cập được
+    access-key: ${MINIO_ACCESS_KEY:} # không có giá trị mặc định: không commit secret
+    secret-key: ${MINIO_SECRET_KEY:}
+    bucket: ${MINIO_BUCKET:smartdrone-files}
+    region: us-east-1
+    auto-create-bucket: true
+    max-file-size-bytes: 5242880 # 5 MiB (đề xuất, chờ nhóm chốt)
+    upload-ticket-ttl: PT5M # 5 phút (đề xuất, chờ nhóm chốt)
+    download-link-ttl: PT5M
+    allowed-content-types: image/jpeg,image/png,image/webp
+    max-pending-per-user: 20
+    pending-grace: PT1H
+    unattached-retention: PT24H
 
 logging:
   level:

@@ -17,6 +17,12 @@ public enum ErrorCode {
     SELF_ACCESS_CHANGE(HttpStatus.CONFLICT, "Không được tự thay đổi vai trò hoặc khóa tài khoản của mình"),
     EMAIL_ALREADY_EXISTS(HttpStatus.CONFLICT, "Email đã được đăng ký"),
     INVALID_CURRENT_PASSWORD(HttpStatus.BAD_REQUEST, "Mật khẩu hiện tại không đúng"),
+    FILE_TOO_LARGE(HttpStatus.PAYLOAD_TOO_LARGE, "Tệp vượt quá dung lượng cho phép"),
+    FILE_TYPE_NOT_ALLOWED(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "Loại tệp không được phép"),
+    FILE_NOT_UPLOADED(HttpStatus.CONFLICT, "Chưa tìm thấy tệp trên kho lưu trữ"),
+    FILE_INVALID_STATE(HttpStatus.CONFLICT, "Tệp không ở trạng thái phù hợp"),
+    UPLOAD_LIMIT_REACHED(HttpStatus.TOO_MANY_REQUESTS, "Có quá nhiều yêu cầu tải lên đang chờ"),
+    STORAGE_UNAVAILABLE(HttpStatus.SERVICE_UNAVAILABLE, "Kho lưu trữ tệp chưa sẵn sàng"),
     INTERNAL_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "Lỗi hệ thống, vui lòng thử lại sau");
     
     private final HttpStatus status;

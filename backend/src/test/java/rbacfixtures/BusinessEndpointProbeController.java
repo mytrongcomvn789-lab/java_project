@@ -8,8 +8,8 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class BusinessEndpointProbeController {
     @RequestMapping({"/v1/orders", "/v1/orders/**",
-            "/v1/stations", "/v1/stations/**",
-            "/v1/audit-events", "/v1/analytics/**", "/v1/files/**", "/v1/assistant/**",
+            "/v1/addresses", "/v1/addresses/**", "/v1/stations", "/v1/stations/**",
+            "/v1/audit-events", "/v1/analytics/**", "/v1/assistant/**",
             "/v1/integration/**", "/v1/not-in-policy"})
     public ResponseEntity<Void> probe() {
         return ResponseEntity.noContent().build();
