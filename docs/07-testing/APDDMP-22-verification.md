@@ -1,8 +1,8 @@
 # APDDMP-22 — Bàn giao và kiểm thử mục 3.1
 
-Ngày: 09/11/2026. Nhánh bàn giao: feature/APDDMP-22-customer-addresses.
+Ngày: 09/11/2026. Nhánh bàn giao: 3.1-address-and-customer.
 Đã fast-forward main từ ce373ec lên ebd313f trước khi triển khai; cây làm việc ban đầu sạch.
-Giữ nguyên lịch phân công/deadline. Bàn giao trên nhánh riêng feature/APDDMP-22-customer-addresses; việc merge vào main thực hiện sau review.
+Giữ nguyên lịch phân công/deadline. Bàn giao trên nhánh riêng 3.1-address-and-customer; việc merge vào main thực hiện sau review.
 
 ## Kết quả đã kiểm chứng
 

@@ -1,7 +1,7 @@
 # APDDMP-22 — Hồ sơ khách hàng và sổ địa chỉ (3.1)
 
 Ngày triển khai: 09/11/2026. Nền: main ebd313f; Java 21 / Spring Boot 4.0.5.
-Nhánh: feature/APDDMP-22-customer-addresses.
+Nhánh: 3.1-address-and-customer.
 
 ## Phạm vi thực hiện
 
