@@ -8,6 +8,8 @@ import HomePage from "../features/home/HomePage";
 import ProfilePage from "../features/profile/ProfilePage";
 import PlaceholderPage from "../components/ui/PlaceholderPage";
 import { PLACEHOLDER_PATHS } from "../lib/navigation";
+import AddressesPage from "../features/addresses/AddressesPage";
+import "../features/addresses/customer.css";
 
 // Task 2.6 sẽ bọc thêm RoleRoute (chặn theo vai trò) bên trong nhóm RequireAuth.
 export default function AppRouter() {
@@ -21,6 +23,7 @@ export default function AppRouter() {
         <Route element={<MainLayout />}>
           <Route path="/" element={<HomePage />} />
           <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/addresses" element={<AddressesPage />} />
           {PLACEHOLDER_PATHS.map((p) => (
             <Route key={p} path={p} element={<PlaceholderPage />} />
           ))}

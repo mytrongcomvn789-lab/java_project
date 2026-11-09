@@ -21,6 +21,7 @@ interface AuthContextValue {
   login: (email: string, password: string) => Promise<void>;
   demoLogin: (role: RoleName) => void;
   logout: () => void;
+  updateProfile: (profile: AuthUser) => void;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -74,9 +75,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
   }, []);
 
+  const updateProfile = useCallback((profile: AuthUser) => {
+    const updated: AuthUser = { id: profile.id, email: profile.email, fullName: profile.fullName, role: profile.role };
+    userStorage.set(updated);
+    setUser(updated);
+  }, []);
+
   const value = useMemo<AuthContextValue>(
-    () => ({ user, loading, isDemo: IS_DEMO_AUTH, login, demoLogin, logout }),
-    [user, loading, login, demoLogin, logout],
+    () => ({ user, loading, isDemo: IS_DEMO_AUTH, login, demoLogin, logout, updateProfile }),
+    [user, loading, login, demoLogin, logout, updateProfile],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

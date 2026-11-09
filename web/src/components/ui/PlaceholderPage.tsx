@@ -2,6 +2,7 @@ import { useLocation } from "react-router-dom";
 import PageHeader from "./PageHeader";
 import { useAuth } from "../../features/auth/AuthContext";
 import { findNavItem } from "../../lib/navigation";
+import DeliveryAddressPreview from "../../features/addresses/DeliveryAddressPreview";
 
 // Trang tạm cho các mục menu chưa có chức năng thật: hiển thị các chức năng sẽ làm (theo SRS).
 export default function PlaceholderPage() {
@@ -17,6 +18,7 @@ export default function PlaceholderPage() {
         subtitle={item?.summary}
         code={item?.code}
       />
+      {pathname === "/deliveries/new" && <DeliveryAddressPreview />}
       <div className="card placeholder">
         <p className="muted">Trang này sẽ được triển khai ở task sau.</p>
         {item?.features && (
