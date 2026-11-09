@@ -1,0 +1,37 @@
+.customer-area { display: grid; gap: 20px; }
+.customer-panel, .customer-notice { padding: 24px; overflow-wrap: anywhere; }
+.customer-panel h3 { margin-bottom: 12px; }
+.customer-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.customer-actions a, .customer-panel a { text-decoration: underline; color: #42582f; }
+.customer-area button, .customer-panel button { border: 1px solid var(--border); background: white; color: var(--text); border-radius: 8px; padding: 10px 16px; cursor: pointer; font: inherit; }
+.customer-area button.customer-primary { background: var(--dark); color: white; }
+.customer-area button.customer-danger { background: #a82b24; color: white; }
+.customer-area button:disabled, .customer-panel button:disabled { opacity: .55; cursor: not-allowed; }
+.customer-form-grid, .address-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+.customer-field { display: grid; gap: 8px; align-content: start; }
+.customer-field input { width: 100%; border: 1px solid #a9b39f; border-radius: 8px; padding: 12px; color: var(--text); background: white; font: inherit; }
+.customer-field input[readonly] { background: var(--bg); }
+.customer-field input[aria-invalid="true"] { border-color: #a82b24; }
+.customer-error { color: #a12520; }
+.customer-success { color: #2e5b28; padding: 12px; background: #e6efdf; border-radius: 8px; }
+.customer-area :focus-visible, .customer-panel :focus-visible { outline: 3px solid #698543; outline-offset: 3px; }
+.address-options { display: grid; gap: 12px; margin-bottom: 16px; }
+.address-option { display: flex; align-items: flex-start; gap: 12px; border: 1px solid var(--border); border-radius: 8px; padding: 16px; cursor: pointer; }
+.address-option input { margin-top: 5px; }
+@media (max-width: 700px) {
+  .customer-form-grid, .address-grid { grid-template-columns: minmax(0, 1fr); }
+  .customer-panel { padding: 18px; }
+}
+
+/* Keep the address/profile forms readable on phones; the desktop sidebar otherwise
+   consumes half the viewport even when there is no horizontal overflow. */
+@media (max-width: 700px) {
+  .app .header { padding: 16px; gap: 16px; flex-wrap: wrap; }
+  .app .header-right { gap: 12px; min-width: 0; flex-wrap: wrap; }
+  .app .body { flex-direction: column; min-width: 0; }
+  .app .sidebar { width: 100%; padding: 8px 12px; border-right: 0; border-bottom: 1px solid var(--border); }
+  .app .sidebar-title, .app .sidebar-foot { display: none; }
+  .app .sidebar-nav { flex-direction: row; overflow-x: auto; }
+  .app .sidebar-nav a { flex: 0 0 auto; white-space: nowrap; }
+  .app .content { padding: 24px 16px; min-width: 0; }
+}

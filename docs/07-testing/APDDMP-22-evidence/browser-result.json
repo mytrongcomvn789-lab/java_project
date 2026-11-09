@@ -1,0 +1,13 @@
+{
+  "result": "PASS",
+  "checks": [
+    "real login",
+    "profile save/reload",
+    "address create/reload/edit",
+    "address picker",
+    "mobile no overflow",
+    "cancel deletion",
+    "confirm deletion",
+    "no JavaScript page errors"
+  ]
+}
