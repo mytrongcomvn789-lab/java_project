@@ -10,44 +10,28 @@ services:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+
   minio:
-    image: minio/minio:latest # nên ghim tag RELEASE.* cụ thể khi nhóm chốt
+    # Silo: bản fork MinIO còn được duy trì (minio/minio và quay.io/minio/minio không còn tải được)
+    image: docker.io/pgsty/silo:RELEASE.2026-10-26T00-00-00Z
     container_name: smartdrone-minio
     command: server /data --console-address ":9001"
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER:?Đặt MINIO_ROOT_USER trong file .env}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?Đặt MINIO_ROOT_PASSWORD trong file .env}
-      MINIO_API_CORS_ALLOW_ORIGIN: http://localhost:5173 # để web upload thẳng lên MinIO
+      MINIO_API_CORS_ALLOW_ORIGIN: http://localhost:5173
+      MINIO_UPDATE: "off"
     ports:
-      - "9000:9000" # S3 API
-      - "9001:9001" # Console
+      - "9000:9000"
+      - "9001:9001"
     volumes:
       - miniodata:/data
     healthcheck:
-      test: ["CMD", "mc", "ready", "local"]
+      test: ["CMD", "silo", "healthcheck", "ready"]
       interval: 5s
       timeout: 5s
       retries: 12
-  minio-init:
-    image: minio/mc:latest
-    depends_on:
-      minio:
-        condition: service_healthy
-    restart: "no"
-    environment:
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
-      MINIO_BUCKET: ${MINIO_BUCKET:-smartdrone-files}
-      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:?Đặt MINIO_ACCESS_KEY trong file .env}
-      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:?Đặt MINIO_SECRET_KEY trong file .env}
-    entrypoint: >
-      /bin/sh -c "
-      mc alias set local http://minio:9000 $$MINIO_ROOT_USER $$MINIO_ROOT_PASSWORD &&
-      mc mb --ignore-existing local/$$MINIO_BUCKET &&
-      mc anonymous set none local/$$MINIO_BUCKET &&
-      (mc admin user add local $$MINIO_ACCESS_KEY $$MINIO_SECRET_KEY || true) &&
-      (mc admin policy attach local readwrite --user $$MINIO_ACCESS_KEY || true)
-      "
+
 volumes:
   pgdata:
   miniodata:

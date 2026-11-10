@@ -19,9 +19,7 @@ jobs:
           echo "MINIO_TEST_SECRET_KEY=$SK" >> "$GITHUB_ENV"
           docker run -d --name minio -p 9000:9000 \
             -e MINIO_ROOT_USER="$AK" -e MINIO_ROOT_PASSWORD="$SK" \
-            minio/minio server /data
+            docker.io/pgsty/silo:RELEASE.2026-10-26T00-00-00Z server /data
           for i in $(seq 1 30); do curl -sf http://localhost:9000/minio/health/ready && break; sleep 1; done
-      - name: Build and test backend
-        run: mvn -B -f backend/pom.xml verify
       - name: Build and test backend
         run: mvn -B -f backend/pom.xml verify

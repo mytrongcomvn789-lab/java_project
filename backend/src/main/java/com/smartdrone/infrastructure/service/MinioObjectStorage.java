@@ -62,15 +62,18 @@ public class MinioObjectStorage implements ObjectStorage {
         }
     }
 
-    @Override
+        @Override
     public PresignedUpload presignUpload(String objectKey, String contentType, long maxBytes, Instant expiresAt) {
-        MinioClient s = require();
+        require();
         try {
             PostPolicy policy = new PostPolicy(props.bucket(), ZonedDateTime.ofInstant(expiresAt, ZoneOffset.UTC));
             policy.addEqualsCondition("key", objectKey);
             policy.addEqualsCondition("Content-Type", contentType);
             policy.addContentLengthRangeCondition(1, maxBytes);
-            Map<String, String> fields = signer.getPresignedPostFormData(policy);
+            Map<String, String> fields = new java.util.LinkedHashMap<>(signer.getPresignedPostFormData(policy));
+            // SDK chỉ đưa điều kiện vào policy; client phải gửi cả key và Content-Type trong form.
+            fields.put("key", objectKey);
+            fields.put("Content-Type", contentType);
             String url = trimSlash(props.effectivePublicEndpoint()) + "/" + props.bucket();
             return new PresignedUpload(url, fields);
         } catch (Exception ex) {
@@ -95,14 +98,16 @@ public class MinioObjectStorage implements ObjectStorage {
         }
     }
 
-    @Override
+        @Override
     public Optional<StoredObjectInfo> stat(String objectKey) {
         MinioClient c = require();
         try {
             var stat = c.statObject(StatObjectArgs.builder().bucket(props.bucket()).object(objectKey).build());
             return Optional.of(new StoredObjectInfo(stat.size()));
         } catch (ErrorResponseException ex) {
-            if (MISSING.contains(ex.errorResponse().code())) return Optional.empty();
+            boolean missing = MISSING.contains(ex.errorResponse().code())
+                    || (ex.response() != null && ex.response().code() == 404);
+            if (missing) return Optional.empty();
             throw unavailable("stat", ex);
         } catch (Exception ex) {
             throw unavailable("stat", ex);
@@ -139,7 +144,8 @@ public class MinioObjectStorage implements ObjectStorage {
 
     // Log tên thao tác + loại lỗi, không log secret, URL đã ký hay object key.
     private ApiException unavailable(String operation, Exception ex) {
-        log.error("Lỗi kho tệp ở thao tác {}: {}", operation, ex.getClass().getSimpleName());
+        String detail = ex instanceof ErrorResponseException e ? " code=" + e.errorResponse().code() : "";
+        log.error("Lỗi kho tệp ở thao tác {}: {}{}", operation, ex.getClass().getSimpleName(), detail);
         return new ApiException(ErrorCode.STORAGE_UNAVAILABLE);
     }
 
