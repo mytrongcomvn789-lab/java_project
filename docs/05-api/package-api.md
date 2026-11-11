@@ -108,3 +108,60 @@ script tham khảo: `backend/scripts/3.4-order-packages.sql`.
 | PackageSummary.tsx | Đây là thẻ hiển thị chỉ-đọc thông tin gói hàng |
 | PackageFormPreviewPage.tsx | Đây là trang demo để bạn thử biểu mẫu khi màn tạo đơn của 3.6 chưa có. Nó không phải một chức năng của sản phẩm. |
 | AppRouter.tsx | Là bảng định tuyến của toàn bộ web |
+
+## 9. Cách chạy
+
+### Yêu cầu môi trường
+
+- JDK 21, Maven, Node.js (cho web)
+- PostgreSQL (`localhost:5432`, database `smartdrone`, user/password `postgres`/`postgres`): chỉ cần khi chạy ứng dụng thật, **không cần** khi chạy test
+- MinIO + biến môi trường `MINIO_ACCESS_KEY`, `MINIO_SECRET_KEY`: chỉ cần khi thử tải ảnh
+
+### Cách test backend (không cần PostgreSQL/MinIO)
+
+Test dùng H2 trong bộ nhớ và mock `FileService`.
+
+```bash
+cd backend
+mvn test "-Dtest=Package*Test"
+```
+
+Hoặc trong VS Code: mở **Testing** → chạy các class trong `com.smartdrone.application.packages` và `com.smartdrone.api.packages`.
+
+| Test                                | Nội dung                                                                              |
+| ----------------------------------- | ------------------------------------------------------------------------------------- |
+| `PackageInputValidationTest`        | Validation DTO: trim mô tả, số > 0, thiếu/thừa trường                                 |
+| `PackageServiceTest`                | Giới hạn cấu hình, ảnh trùng/thừa, tạo lần hai → 409, `replace` khi chưa có gói → 404 |
+| `PackagePersistenceIntegrationTest` | Lưu/đọc trên H2, giữ thứ tự ảnh, unique theo đơn, chỉ `CUSTOMER` được ghi             |
+
+Kết quả khi chạy: 3/3 test class đạt.
+
+### Cách chạy và thử biểu mẫu trên web
+
+1. Bật PostgreSQL, rồi chạy backend (class `SmartDroneApplication`, cổng 5000). Bảng `order_packages` và `order_package_photos` được Hibernate tự tạo (`ddl-auto=update`).
+2. Chạy web:
+   ```bash
+   cd web
+   npm install
+   npm run dev
+   ```
+3. Đăng nhập bằng tài khoản **Khách hàng**, mở `http://localhost:5173/dev/package-form`.
+4. Các ca nên thử:
+
+| Nhập                                  | Kết quả mong đợi                                                       |
+| ------------------------------------- | ---------------------------------------------------------------------- |
+| Để trống, bấm "Kiểm tra dữ liệu"      | Báo lỗi từng ô                                                         |
+| Trọng lượng > 5 kg                    | "Trọng lượng tối đa 5 kg"                                              |
+| Kích thước > 50 cm                    | "... tối đa 50 cm"                                                     |
+| Dữ liệu hợp lệ (ví dụ 2 kg, 24×12×12) | Hiện tóm tắt và payload `{ "package": {... "weightGrams": 2000 ...} }` |
+
+Ô mô tả có `maxLength=500` nên trình duyệt tự chặn khi gõ quá 500 ký tự (giới hạn này được kiểm tra ở test backend).
+Trang `/dev/package-form` không gọi API đơn hàng (chưa có task 3.6) và không có mục trên menu; truy cập bằng đường dẫn trực tiếp.
+
+### Lưu ý
+
+- **Tải ảnh** dùng `ImageUploader` của task 3.3, cần backend + MinIO chạy, logic ảnh (trùng, quá số lượng, sai chủ, thứ tự) được kiểm tra bằng test với `FileService` mock.
+- Giới hạn trong `application.yml` (`app.order-package.*`: 5000 g, 50 cm, 0–3 ảnh) là **đề xuất, chờ nhóm chốt**. Thiếu hoặc ≤ 0 thì ứng dụng không khởi động (chủ ý).
+- Tên và kiểu trường được dựng từ mô tả nghiệp vụ; cần đối chiếu APDDMP-9 / APDDMP-8 trước khi merge. Nếu khác, chỉ cần sửa `PackageInput`, `PackageView`, `OrderPackage`.
+- `FileService` chưa có thao tác gỡ ảnh: ảnh bị bỏ khỏi danh sách khi `replace` vẫn ở trạng thái `ATTACHED`. Đề nghị người làm 3.3 thêm `detach`.
+- Khi merge, kiểm tra các file dùng chung (`application.yml`, `customer.css`, `AppRouter.tsx`) không ghi đè phần của task khác.
