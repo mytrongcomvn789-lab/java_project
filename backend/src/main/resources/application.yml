@@ -50,6 +50,14 @@ app:
     pending-grace: PT1H
     unattached-retention: PT24H
 
+  order-package:
+    max-weight-grams: 5000
+    max-length-cm: 50
+    max-width-cm: 50
+    max-height-cm: 50
+    min-photos: 0
+    max-photos: 3
+
 logging:
   level:
     root: INFO
