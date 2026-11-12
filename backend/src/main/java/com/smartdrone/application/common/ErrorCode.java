@@ -23,6 +23,9 @@ public enum ErrorCode {
     FILE_INVALID_STATE(HttpStatus.CONFLICT, "Tệp không ở trạng thái phù hợp"),
     UPLOAD_LIMIT_REACHED(HttpStatus.TOO_MANY_REQUESTS, "Có quá nhiều yêu cầu tải lên đang chờ"),
     STORAGE_UNAVAILABLE(HttpStatus.SERVICE_UNAVAILABLE, "Kho lưu trữ tệp chưa sẵn sàng"),
+    INVALID_STATE_TRANSITION(HttpStatus.CONFLICT, "Không thể chuyển đơn hàng sang trạng thái này"),
+    VERSION_CONFLICT(HttpStatus.PRECONDITION_FAILED, "Đơn hàng vừa được cập nhật bởi người khác, vui lòng tải lại"),
+    PRECONDITION_REQUIRED(HttpStatus.PRECONDITION_REQUIRED, "Thiếu header If-Match"),
     INTERNAL_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "Lỗi hệ thống, vui lòng thử lại sau");
     
     private final HttpStatus status;

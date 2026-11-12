@@ -1,7 +1,11 @@
 package com.smartdrone.api.filter;
 
-import java.io.IOException;
+import com.smartdrone.application.common.TraceContext;
 
+import java.io.IOException;
+import java.util.UUID;
+
+import org.slf4j.MDC;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.Ordered;
@@ -26,13 +30,17 @@ public class RequestLoggingFilter extends OncePerRequestFilter {
                                     HttpServletResponse response,
                                     FilterChain chain) throws ServletException, IOException {
         long start = System.currentTimeMillis();
+        String traceId = UUID.randomUUID().toString();   // luôn tự sinh, không tin header từ client
+        MDC.put(TraceContext.KEY, traceId);
+        response.setHeader("X-Trace-Id", traceId);
         try {
             chain.doFilter(request, response); // cho request đi tiếp tới controller
         } finally {
             // finally: dù controller thành công hay lỗi vẫn ghi log
             long ms = System.currentTimeMillis() - start;
-            log.info("{} {} -> {} ({} ms)",
-                    request.getMethod(), request.getRequestURI(), response.getStatus(), ms);
+            log.info("{} {} -> {} ({} ms) traceId={}",
+                request.getMethod(), request.getRequestURI(), response.getStatus(), ms, traceId);
+            MDC.remove(TraceContext.KEY);
         }
     }
 
