@@ -2,12 +2,14 @@ package com.smartdrone.application.workflow;
 
 import java.time.Clock;
 import java.time.Instant;
+import java.util.UUID;
 
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.smartdrone.domain.enums.RoleName;
 import com.smartdrone.application.common.ApiException;
 import com.smartdrone.application.common.ErrorCode;
 import com.smartdrone.application.common.TraceContext;
@@ -64,5 +66,14 @@ public class OrderTransitionService {
         }
 
         return new TransitionResult(from, rule.to(), rule.event(), newVersion);
+    }
+        /** Dòng lịch sử đầu tiên khi đơn vừa được tạo: from = null, to = trạng thái ban đầu (PENDING). */
+    @Transactional
+    public void recordCreation(StatefulOrder order, UUID actorId, RoleName actorRole) {
+        OrderStatusHistory entry = new OrderStatusHistory(
+                order.getId(), order.getVersion(), null, order.getStatus(), null,
+                actorId, actorRole, ChangeSource.API, null, null,
+                TraceContext.current(), Instant.now(clock));
+        historyRepository.saveAndFlush(entry);
     }
 }
