@@ -26,6 +26,7 @@ public enum ErrorCode {
     INVALID_STATE_TRANSITION(HttpStatus.CONFLICT, "Không thể chuyển đơn hàng sang trạng thái này"),
     VERSION_CONFLICT(HttpStatus.PRECONDITION_FAILED, "Đơn hàng vừa được cập nhật bởi người khác, vui lòng tải lại"),
     PRECONDITION_REQUIRED(HttpStatus.PRECONDITION_REQUIRED, "Thiếu header If-Match"),
+    IDEMPOTENCY_KEY_CONFLICT(HttpStatus.CONFLICT, "Idempotency-Key đã được dùng cho nội dung yêu cầu khác"),
     INTERNAL_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "Lỗi hệ thống, vui lòng thử lại sau");
     
     private final HttpStatus status;
