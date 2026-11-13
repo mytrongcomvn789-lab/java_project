@@ -1,0 +1,12 @@
+package com.smartdrone.infrastructure.persistence;
+
+import java.util.Optional;
+import java.util.UUID;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import com.smartdrone.domain.entity.IdempotencyRecord;
+
+public interface IdempotencyRecordRepository extends JpaRepository<IdempotencyRecord, UUID> {
+    Optional<IdempotencyRecord> findByUserIdAndIdemKey(UUID userId, String idemKey);
+}
