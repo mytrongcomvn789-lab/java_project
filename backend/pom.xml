@@ -50,6 +50,12 @@
       <scope>runtime</scope>
     </dependency>
 
+    <dependency>
+      <groupId>com.microsoft.sqlserver</groupId>
+      <artifactId>mssql-jdbc</artifactId>
+      <scope>runtime</scope>
+    </dependency>
+
     <!-- Swagger UI / OpenAPI (bản 3.x dành cho Spring Boot 4) -->
     <dependency>
       <groupId>org.springdoc</groupId>

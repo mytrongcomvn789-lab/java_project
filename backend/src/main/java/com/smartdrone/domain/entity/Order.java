@@ -22,7 +22,9 @@ import jakarta.persistence.Version;
 @Entity
 @Table(name = "orders", indexes = {
         @Index(name = "ix_orders_customer_created", columnList = "customer_id, created_at"),
-        @Index(name = "ix_orders_status", columnList = "status")})
+        @Index(name = "ix_orders_status", columnList = "status"),
+        @Index(name = "ix_orders_pickup_created", columnList = "pickup_station_id, created_at"),
+        @Index(name = "ix_orders_dropoff_created", columnList = "dropoff_station_id, created_at")})
 public class Order implements StatefulOrder {
 
     @Id

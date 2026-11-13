@@ -268,7 +268,9 @@ export const getMenuForRole = (role: RoleName): NavItem[] =>
 // Các đường dẫn tạm (chưa có trang thật) - AppRouter dùng để tạo route.
 export const PLACEHOLDER_PATHS: string[] = Array.from(
   new Set(
-    NAV_ITEMS.map((i) => i.to).filter((p) => !["/", "/profile", "/addresses"].includes(p)),
+    NAV_ITEMS.map((i) => i.to).filter(
+      (p) => !["/", "/profile", "/addresses", "/deliveries"].includes(p),
+    ),
   ),
 );
 
