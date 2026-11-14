@@ -3,6 +3,7 @@ package com.smartdrone.domain.entity;
 import java.time.Instant;
 import java.util.UUID;
 import jakarta.persistence.*;
+import org.hibernate.annotations.Nationalized;
 
 @Entity
 @Table(name = "addresses", indexes = @Index(name = "ix_addresses_owner_active_created",
@@ -13,12 +14,15 @@ public class Address {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id", nullable = false, updatable = false)
     private User owner;
+    @Nationalized
     @Column(nullable = false, length = 500)
     private String label;
+    @Nationalized
     @Column(name = "recipient_name", nullable = false, length = 500)
     private String recipientName;
     @Column(nullable = false, length = 16)
     private String phone;
+    @Nationalized
     @Column(name = "address_line", nullable = false, length = 500)
     private String addressLine;
     @Column(nullable = false)

@@ -64,7 +64,7 @@ Chưa tự thêm trường mặc định, phục vụ theo trạm hoặc endpoin
 Địa chỉ người nhận chưa có nghĩa hệ thống đã hỗ trợ drone giao tận nhà; v1 vẫn theo mô hình trạm–trạm.
 
 Schema local dùng Hibernate ddl-auto=update của dự án; H2 profile tạo/xóa schema khi chạy.
-Có script backend/scripts/APDDMP-22-addresses.sql cho môi trường PostgreSQL muốn tạo bảng trước.
+Có script `backend/scripts/APDDMP-22-addresses.sql` cho SQL Server muốn tạo bảng trước.
 Script không tự chạy và không phải hệ thống migration mới.
 
 ## Bàn giao cho 3.6 — quan trọng
@@ -105,7 +105,8 @@ Terminal 1 tại backend:
 ```powershell
 mvn spring-boot:run "-Dspring-boot.run.profiles=h2"
 ```
-H2 chỉ dùng demo, dữ liệu mất khi dừng. Nếu dùng PostgreSQL của nhóm, chạy không bật h2 sau khi cấu hình DB.
+H2 chỉ dùng demo, dữ liệu mất khi dừng. Khi dùng SQL Server, cấu hình `DB_URL`, `DB_USERNAME`,
+`DB_PASSWORD` rồi chạy không bật profile h2.
 
 Terminal 2 tại web:
 ```powershell

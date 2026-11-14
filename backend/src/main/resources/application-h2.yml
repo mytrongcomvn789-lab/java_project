@@ -1,8 +1,8 @@
-# Chạy không cần cài PostgreSQL (dữ liệu nằm trong RAM, mất khi tắt app):
+# Chạy không cần cài SQL Server (dữ liệu nằm trong RAM, mất khi tắt app):
 #   mvn spring-boot:run -Dspring-boot.run.profiles=h2
 spring:
   datasource:
-    url: jdbc:h2:mem:smartdrone;MODE=PostgreSQL;DB_CLOSE_DELAY=-1
+    url: jdbc:h2:mem:smartdrone;MODE=MSSQLServer;DB_CLOSE_DELAY=-1
     driver-class-name: org.h2.Driver
     username: sa
     password:

@@ -14,7 +14,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
 // Người dùng hệ thống. Task 2.5 (đăng ký/đăng nhập) và 2.7 (hồ sơ) sẽ mở rộng tiếp.
-// Lưu ý: tên bảng là "users" vì "user" là từ khóa của PostgreSQL.
+// Lưu ý: tên bảng là "users" vì "user" là từ khóa của SQL.
 @Entity
 @Table(name = "users")
 public class User {
@@ -39,7 +39,7 @@ public class User {
     private boolean enabled = true;
 
     // APDDMP-18: tăng khi đổi quyền/khóa tài khoản để JWT cũ không sống lại nếu role được cấp lại.
-    // DEFAULT 0 cho cả tài khoản đã tồn tại trước khi bổ sung RBAC (PostgreSQL/H2).
+    // DEFAULT 0 cho cả tài khoản đã tồn tại trước khi bổ sung RBAC (SQL Server/H2).
     @Column(name = "access_version", nullable = false, columnDefinition = "bigint default 0")
     private long accessVersion;
 

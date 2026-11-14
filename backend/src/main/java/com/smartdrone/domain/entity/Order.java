@@ -40,7 +40,7 @@ public class Order implements StatefulOrder {
     @Column(nullable = false, length = 20)
     private OrderStatus status;
 
-    // v1 là trạm - trạm. Chưa có bảng stations nên tạm là UUID thường, chưa có khóa ngoại.
+    // Giữ stationId dưới dạng UUID để đơn cũ tiếp tục tham chiếu trạm sau khi trạm ngừng hoạt động.
     @Column(name = "pickup_station_id", nullable = false)
     private UUID pickupStationId;
 

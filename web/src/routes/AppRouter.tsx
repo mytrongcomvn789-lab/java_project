@@ -11,6 +11,7 @@ import { PLACEHOLDER_PATHS } from '../lib/navigation';
 import AddressesPage from '../features/addresses/AddressesPage';
 import '../features/addresses/customer.css';
 import PackageFormPreviewPage from '../features/packages/PackageFormPreviewPage';
+import StationsPage from '../features/stations/StationsPage';
 // Task 2.6 sẽ bọc thêm RoleRoute (chặn theo vai trò) bên trong nhóm RequireAuth.
 export default function AppRouter() {
   return (
@@ -24,6 +25,7 @@ export default function AppRouter() {
           <Route path="/" element={<HomePage />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/addresses" element={<AddressesPage />} />
+          <Route path="/stations" element={<StationsPage />} />
           {import.meta.env.DEV && (
             <Route
               path="/dev/package-form"

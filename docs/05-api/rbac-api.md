@@ -11,7 +11,7 @@ Căn cứ [APDDMP-18](https://nnha90190-1791007728869.atlassian.net/browse/APDDM
 [hợp đồng endpoint APDDMP-9](https://nnha90190-1791007728869.atlassian.net/browse/APDDMP-9),
 và code Java tại commit gốc `5caf2ea3298ad4068627b953a40434a6c685d7e4`.
 
-Backend tiếp tục dùng Spring Boot 4.0.5, Spring Security, JPA, PostgreSQL và cấu trúc hiện có của nhóm.
+Backend tiếp tục dùng Spring Boot 4.0.5, Spring Security, JPA, SQL Server và cấu trúc hiện có của nhóm.
 Giữ mô hình **một tài khoản — một vai trò** của Java hiện tại. Tên `ADMIN` trong đặc tả được ánh xạ thành `SYSTEM_ADMIN` trong code/DB/JWT; không tạo vai trò thứ sáu.
 
 ## 2. Phạm vi đã triển khai
@@ -41,8 +41,8 @@ Giữ mô hình **một tài khoản — một vai trò** của Java hiện tạ
 | Duyệt/từ chối, lên lịch, xử lý thất bại/hoàn | — | ✓ | — | — | — |
 | Nhận kiện, xuất phát, nhận đích, bàn giao, nhận hoàn | — | — | ✓ | — | — |
 | Tạo/sửa thông tin trạm | — | — | — | ✓ | — |
-| Cập nhật trạng thái trạm | — | — | ✓ | ✓ | — |
-| Kiểm tra sức chứa trạm | — | ✓ | ✓ | ✓ | — |
+| Cập nhật trạng thái trạm | — | — | Chưa cấp đến khi có phân công | ✓ | — |
+| Availability/sức chứa theo lịch | Chưa triển khai | Chưa triển khai | Chưa triển khai | Chưa triển khai | Chưa triển khai |
 | Thống kê giao hàng | — | — | — | ✓ | — |
 | Tóm tắt đơn | ✓ | ✓ | — | ✓ | — |
 | Trợ lý khách hàng | ✓ | — | — | — | — |
@@ -53,6 +53,7 @@ Giữ mô hình **một tài khoản — một vai trò** của Java hiện tạ
 Danh sách chính xác từng method/path: `RbacPolicy.java`. Ma trận kiểm thử độc lập: `backend/src/test/resources/rbac-matrix.csv`.
 
 APDDMP-3 ghi một số quyền `O*` chưa chi tiết. Bản này dùng APDDMP-9 để chốt thao tác cụ thể; ví dụ Admin không được tự bàn giao thay operator. Mô hình nhiều vai trò và quan hệ phân công trạm chưa được bổ sung trong 2.6 vì code Java hiện tại chưa có các bảng đó.
+Task 3.2 hiện triển khai CRUD trạm và từ chối thao tác đổi trạng thái của operator cho tới khi có mô hình phân công. API availability chưa được triển khai.
 
 ## 4. Luồng kiểm tra
 
@@ -79,7 +80,7 @@ sequenceDiagram
     participant A as Admin
     participant S as Spring Security
     participant U as UserAccessService
-    participant DB as PostgreSQL
+    participant DB as SQL Server
     A->>S: PATCH /api/v1/users/id/access
     S->>DB: Đọc tài khoản Admin và phiên bản quyền
     S->>U: ROLE_SYSTEM_ADMIN hợp lệ
@@ -160,14 +161,13 @@ Thêm `users.access_version BIGINT NOT NULL DEFAULT 0`. Cấu hình `ddl-auto=up
 
 JWT mới có claim `accessVersion`. JWT 2.5 thiếu claim này chỉ được chấp nhận nếu tài khoản vẫn ở version 0, role khớp và tài khoản đang bật. Khi quyền thay đổi, token cũ bị từ chối kể cả lúc role được cấp lại.
 
-Để có Admin đầu tiên: đăng ký một tài khoản bình thường, rồi **người quản trị DB** chạy script `backend/scripts/bootstrap-admin.sql` với email đã xác minh. Script chỉ cấp tài khoản đầu tiên khi chưa có Admin đang hoạt động, không có mật khẩu mặc định và không có API public tự nâng quyền. Những lần cấp quyền tiếp theo dùng API của Admin.
+Để có Admin đầu tiên: đăng ký một tài khoản bình thường, sửa biến `@admin_email` trong `backend/scripts/bootstrap-admin.sql` thành email đã xác minh, rồi **người quản trị DB** chạy script. Script chỉ cấp tài khoản đầu tiên khi chưa có Admin đang hoạt động, không có mật khẩu mặc định và không có API public tự nâng quyền. Những lần cấp quyền tiếp theo dùng API của Admin.
 
 ```powershell
 # Chỉ trên database dev của nhóm sau khi app đã khởi tạo schema.
-# Thay email mẫu bằng tài khoản đã đăng ký và được nhóm chỉ định.
-psql -h localhost -p 5432 -U postgres -d smartdrone `
-  -v admin_email='admin-da-dang-ky@example.com' `
-  -f backend/scripts/bootstrap-admin.sql
+# Email được sửa trong biến @admin_email của script trước khi chạy.
+sqlcmd -S localhost -U sa -P "$env:MSSQL_SA_PASSWORD" -C -d smartdrone `
+  -i backend/scripts/bootstrap-admin.sql
 ```
 
 Kết quả `promoted_accounts = 1` là đã cấp; `0` nghĩa là đã có Admin hoặc email không khớp tài khoản đang bật. Đăng nhập lại sau khi cấp.
@@ -175,7 +175,7 @@ Kết quả `promoted_accounts = 1` là đã cấp; `0` nghĩa là đã có Admi
 ## 7. Hướng dẫn demo
 
 1. Dùng JDK 21+ và Maven 3.9+. Tại thư mục gốc chạy `mvn -B -f backend/pom.xml verify`.
-2. Chạy PostgreSQL dev theo `docker-compose.yml`, rồi `mvn -f backend/pom.xml spring-boot:run`. Hoặc dùng profile RAM: `mvn -f backend/pom.xml spring-boot:run "-Dspring-boot.run.profiles=h2"`.
+2. Chạy SQL Server dev theo `docker-compose.yml`, rồi `mvn -f backend/pom.xml spring-boot:run`. Hoặc dùng profile RAM: `mvn -f backend/pom.xml spring-boot:run "-Dspring-boot.run.profiles=h2"`.
 3. Mở `http://localhost:5000/api/swagger-ui.html`. Nhóm **Access** hiển thị 4 endpoint của 2.6.
 4. Đăng ký khách hàng, login, lấy accessToken. Trong Swagger chọn Authorize và nhập accessToken.
 5. Gọi `/me/permissions` → CUSTOMER, 200. Gọi `/users` → 403.

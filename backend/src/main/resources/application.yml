@@ -9,9 +9,9 @@ spring:
   application:
     name: smartdrone-backend
   datasource:
-    url: jdbc:postgresql://localhost:5432/smartdrone
-    username: postgres
-    password: postgres
+    url: ${DB_URL:jdbc:sqlserver://localhost:1433;databaseName=smartdrone;encrypt=true;trustServerCertificate=true}
+    username: ${DB_USERNAME:sa}
+    password: ${DB_PASSWORD:${MSSQL_SA_PASSWORD:}}
   jpa:
     open-in-view: false
     hibernate:

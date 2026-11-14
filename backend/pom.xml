@@ -38,10 +38,11 @@
       <artifactId>spring-boot-starter-data-jpa</artifactId>
     </dependency>
 
-    <!-- Database: PostgreSQL (mặc định) và H2 (profile h2, chạy không cần cài PostgreSQL) -->
+    <!-- Database: SQL Server (mặc định) và H2 (profile h2, chạy không cần SQL Server) -->
     <dependency>
-      <groupId>org.postgresql</groupId>
-      <artifactId>postgresql</artifactId>
+      <groupId>com.microsoft.sqlserver</groupId>
+      <artifactId>mssql-jdbc</artifactId>
+      <version>12.10.1.jre11</version>
       <scope>runtime</scope>
     </dependency>
     <dependency>

@@ -2,17 +2,20 @@ package com.smartdrone.domain.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
+import org.hibernate.annotations.Nationalized;
 
 /** Bản chụp người nhận lúc đặt đơn (không liên kết sống tới bảng addresses). */
 @Embeddable
 public class RecipientSnapshot {
 
+    @Nationalized
     @Column(name = "recipient_name", nullable = false, length = 120)
     private String name;
 
     @Column(name = "recipient_phone", nullable = false, length = 20)
     private String phone;
 
+    @Nationalized
     @Column(name = "recipient_address_line", nullable = false, length = 500)
     private String addressLine;
 

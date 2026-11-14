@@ -1,20 +1,25 @@
--- Task 3.5: schema tùy chọn cho PostgreSQL dev. Hibernate ddl-auto=update đã tự tạo bảng này khi chạy local.
--- Không chạy trên môi trường thật khi chưa qua quy trình migration của dự án.
--- order_id chưa có khóa ngoại vì bảng orders thuộc task 3.6; 3.6 thêm FK khi có bảng đó.
-CREATE TABLE IF NOT EXISTS order_status_history (
-    id uuid PRIMARY KEY,
-    order_id uuid NOT NULL,
-    order_version bigint NOT NULL,
-    from_status varchar(20),
-    to_status varchar(20) NOT NULL,
-    action varchar(30),
-    actor_id uuid,
-    actor_role varchar(30),
-    source varchar(20) NOT NULL,
-    reason varchar(500),
-    attempt_id uuid,
-    trace_id varchar(64),
-    occurred_at timestamptz NOT NULL,
-    CONSTRAINT uq_order_status_history_version UNIQUE (order_id, order_version)
-);
-CREATE INDEX IF NOT EXISTS idx_order_status_history_order ON order_status_history (order_id);
+-- Task 3.5: optional SQL Server schema setup. Hibernate ddl-auto=update creates this locally.
+-- Do not run on production without the project's migration procedure.
+IF OBJECT_ID(N'dbo.order_status_history', N'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.order_status_history (
+        id uniqueidentifier NOT NULL CONSTRAINT pk_order_status_history PRIMARY KEY,
+        order_id uniqueidentifier NOT NULL,
+        order_version bigint NOT NULL,
+        from_status nvarchar(20),
+        to_status nvarchar(20) NOT NULL,
+        action nvarchar(30),
+        actor_id uniqueidentifier,
+        actor_role nvarchar(30),
+        source nvarchar(20) NOT NULL,
+        reason nvarchar(500),
+        attempt_id uniqueidentifier,
+        trace_id nvarchar(64),
+        occurred_at datetime2(7) NOT NULL,
+        CONSTRAINT uq_order_status_history_version UNIQUE (order_id, order_version)
+    );
+END;
+
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'idx_order_status_history_order'
+               AND object_id = OBJECT_ID(N'dbo.order_status_history'))
+    CREATE INDEX idx_order_status_history_order ON dbo.order_status_history (order_id);

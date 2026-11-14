@@ -25,7 +25,7 @@ import com.smartdrone.infrastructure.persistence.*;
 import tools.jackson.databind.*;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = {
-    "spring.datasource.url=${ADDRESS_TEST_DATABASE_URL:jdbc:h2:mem:address-test;MODE=PostgreSQL;DB_CLOSE_DELAY=-1}",
+    "spring.datasource.url=${ADDRESS_TEST_DATABASE_URL:jdbc:h2:mem:address-test;MODE=MSSQLServer;DB_CLOSE_DELAY=-1}",
     "spring.datasource.driver-class-name=${ADDRESS_TEST_DATABASE_DRIVER:org.h2.Driver}",
     "spring.datasource.username=${ADDRESS_TEST_DATABASE_USER:sa}",
     "spring.datasource.password=${ADDRESS_TEST_DATABASE_PASSWORD:}",

@@ -16,6 +16,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OrderColumn;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
+import org.hibernate.annotations.Nationalized;
 
 // Gói hàng là thành phần của đơn (1 đơn - 1 gói trong v1). order_id là UUID thường, chưa có khóa ngoại
 // Ảnh: chỉ lưu fileId, giữ thứ tự do khách sắp xếp.
@@ -27,6 +28,7 @@ public class OrderPackage {
     private UUID id;
     @Column(name = "order_id", nullable = false, updatable = false)
     private UUID orderId;
+    @Nationalized
     @Column(nullable = false, length = 500)
     private String description;
     @Column(name = "weight_grams", nullable = false)
