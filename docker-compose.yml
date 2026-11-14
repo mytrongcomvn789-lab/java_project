@@ -1,15 +1,39 @@
 services:
-  postgres:
-    image: postgres:16
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
     container_name: smartdrone-db
     environment:
-      POSTGRES_DB: smartdrone
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      ACCEPT_EULA: "Y"
+      MSSQL_PID: Developer
+      MSSQL_SA_PASSWORD: ${MSSQL_SA_PASSWORD:?Set MSSQL_SA_PASSWORD in .env}
     ports:
-      - "5432:5432"
+      - "1433:1433"
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - mssqldata:/var/opt/mssql
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c 'echo > /dev/tcp/127.0.0.1/1433'"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  sqlserver-init:
+    image: mcr.microsoft.com/mssql-tools18:latest
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    environment:
+      MSSQL_SA_PASSWORD: ${MSSQL_SA_PASSWORD:?Set MSSQL_SA_PASSWORD in .env}
+    entrypoint: ["/bin/bash", "-c"]
+    command:
+      - |
+        for attempt in {1..60}; do
+          if sqlcmd -S sqlserver -U sa -P "$$MSSQL_SA_PASSWORD" -C -b \
+            -Q "IF DB_ID(N'smartdrone') IS NULL CREATE DATABASE [smartdrone]"; then
+            exit 0
+          fi
+          sleep 2
+        done
+        exit 1
 
   minio:
     # Silo: bản fork MinIO còn được duy trì (minio/minio và quay.io/minio/minio không còn tải được)
@@ -33,5 +57,5 @@ services:
       retries: 12
 
 volumes:
-  pgdata:
+  mssqldata:
   miniodata:

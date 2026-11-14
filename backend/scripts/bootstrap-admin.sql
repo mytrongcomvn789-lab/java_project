@@ -1,29 +1,43 @@
--- Chỉ dùng bởi quản trị DB để cấp ADMIN đầu tiên trên môi trường dev.
--- psql -v admin_email='email-da-dang-ky@example.com' -f backend/scripts/bootstrap-admin.sql
--- Không chứa mật khẩu, không tạo user mới, không cấp thêm khi đã có ADMIN đang hoạt động.
-\set ON_ERROR_STOP on
-BEGIN;
-SELECT id FROM roles WHERE name = 'SYSTEM_ADMIN' FOR UPDATE;
-WITH promoted AS (
-    UPDATE users u
-    SET role_id = r.id, access_version = u.access_version + 1
-    FROM roles r
-    WHERE r.name = 'SYSTEM_ADMIN'
-      AND u.email = lower(trim(:'admin_email'))
-      AND u.enabled = true
-      AND NOT EXISTS (
-          SELECT 1 FROM users existing
-          JOIN roles er ON er.id = existing.role_id
-          WHERE existing.enabled = true AND er.name = 'SYSTEM_ADMIN'
-      )
-    RETURNING u.id
-), revoked AS (
-    UPDATE refresh_tokens t
-    SET revoked_at = CURRENT_TIMESTAMP
-    FROM promoted p
-    WHERE t.user_id = p.id AND t.revoked_at IS NULL
-    RETURNING t.id
-)
-SELECT (SELECT count(*) FROM promoted) AS promoted_accounts,
-       (SELECT count(*) FROM revoked) AS revoked_sessions;
-COMMIT;
+-- Chỉ dùng bởi quản trị DB để cấp SYSTEM_ADMIN đầu tiên trên môi trường dev.
+-- Sửa @admin_email trước khi chạy bằng sqlcmd; script không chứa mật khẩu.
+-- Không tạo user mới, không cấp thêm khi đã có SYSTEM_ADMIN đang hoạt động.
+DECLARE @admin_email nvarchar(150) = N'email-da-dang-ky@example.com';
+DECLARE @role_id uniqueidentifier;
+DECLARE @admin_id uniqueidentifier;
+DECLARE @promoted int = 0;
+DECLARE @revoked int = 0;
+
+BEGIN TRANSACTION;
+
+SELECT @role_id = id
+FROM dbo.roles WITH (UPDLOCK, HOLDLOCK)
+WHERE name = N'SYSTEM_ADMIN';
+
+SELECT TOP (1) @admin_id = u.id
+FROM dbo.users u WITH (UPDLOCK, HOLDLOCK)
+WHERE LOWER(LTRIM(RTRIM(u.email))) = LOWER(LTRIM(RTRIM(@admin_email)))
+  AND u.enabled = 1
+  AND @role_id IS NOT NULL
+  AND NOT EXISTS (
+      SELECT 1
+      FROM dbo.users existing WITH (UPDLOCK, HOLDLOCK)
+      JOIN dbo.roles existing_role ON existing_role.id = existing.role_id
+      WHERE existing.enabled = 1 AND existing_role.name = N'SYSTEM_ADMIN'
+  );
+
+IF @admin_id IS NOT NULL
+BEGIN
+    UPDATE dbo.users
+    SET role_id = @role_id, access_version = access_version + 1
+    WHERE id = @admin_id;
+    SET @promoted = @@ROWCOUNT;
+
+    UPDATE dbo.refresh_tokens
+    SET revoked_at = SYSUTCDATETIME()
+    WHERE user_id = @admin_id AND revoked_at IS NULL;
+    SET @revoked = @@ROWCOUNT;
+END;
+
+COMMIT TRANSACTION;
+
+SELECT @promoted AS promoted_accounts, @revoked AS revoked_sessions;

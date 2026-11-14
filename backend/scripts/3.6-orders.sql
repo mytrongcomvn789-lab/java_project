@@ -1,33 +1,39 @@
--- Task 3.6: schema tùy chọn cho PostgreSQL dev. Hibernate ddl-auto=update đã tự tạo bảng này khi chạy local.
--- Không chạy trên môi trường thật khi chưa qua quy trình migration của dự án.
-CREATE TABLE IF NOT EXISTS orders (
-    id uuid PRIMARY KEY,
-    version bigint NOT NULL,
-    customer_id uuid NOT NULL,
-    status varchar(20) NOT NULL,
-    pickup_station_id uuid NOT NULL,
-    dropoff_station_id uuid NOT NULL,
-    recipient_name varchar(120) NOT NULL,
-    recipient_phone varchar(20) NOT NULL,
-    recipient_address_line varchar(500) NOT NULL,
-    recipient_latitude double precision NOT NULL,
-    recipient_longitude double precision NOT NULL,
-    created_at timestamptz NOT NULL,
-    updated_at timestamptz NOT NULL
-);
-CREATE INDEX IF NOT EXISTS ix_orders_customer_created ON orders (customer_id, created_at);
-CREATE INDEX IF NOT EXISTS ix_orders_status ON orders (status);
+-- Task 3.6: optional SQL Server schema setup. Hibernate ddl-auto=update creates these locally.
+-- Do not run on production without the project's migration procedure.
+IF OBJECT_ID(N'dbo.orders', N'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.orders (
+        id uniqueidentifier NOT NULL CONSTRAINT pk_orders PRIMARY KEY,
+        version bigint NOT NULL,
+        customer_id uniqueidentifier NOT NULL,
+        status nvarchar(20) NOT NULL,
+        pickup_station_id uniqueidentifier NOT NULL,
+        dropoff_station_id uniqueidentifier NOT NULL,
+        recipient_name nvarchar(120) NOT NULL,
+        recipient_phone nvarchar(20) NOT NULL,
+        recipient_address_line nvarchar(500) NOT NULL,
+        recipient_latitude float NOT NULL,
+        recipient_longitude float NOT NULL,
+        created_at datetime2(7) NOT NULL,
+        updated_at datetime2(7) NOT NULL
+    );
+    CREATE INDEX ix_orders_customer_created ON dbo.orders (customer_id, created_at);
+    CREATE INDEX ix_orders_status ON dbo.orders (status);
+END;
 
--- Khóa ngoại về orders (chạy MỘT LẦN, sau khi đã dọn dữ liệu thử không có đơn tương ứng):
---   ALTER TABLE order_packages ADD CONSTRAINT fk_order_packages_order FOREIGN KEY (order_id) REFERENCES orders(id);
---   ALTER TABLE order_status_history ADD CONSTRAINT fk_order_status_history_order FOREIGN KEY (order_id) REFERENCES orders(id);
+-- Optional foreign keys (apply only after resolving legacy orders with missing parent rows):
+-- ALTER TABLE dbo.order_packages ADD CONSTRAINT fk_order_packages_order FOREIGN KEY (order_id) REFERENCES dbo.orders(id);
+-- ALTER TABLE dbo.order_status_history ADD CONSTRAINT fk_order_status_history_order FOREIGN KEY (order_id) REFERENCES dbo.orders(id);
 
-CREATE TABLE IF NOT EXISTS idempotency_keys (
-    id uuid PRIMARY KEY,
-    user_id uuid NOT NULL,
-    idem_key varchar(100) NOT NULL,
-    request_hash varchar(64) NOT NULL,
-    order_id uuid,
-    created_at timestamptz NOT NULL,
-    CONSTRAINT uq_idempotency_user_key UNIQUE (user_id, idem_key)
-);
+IF OBJECT_ID(N'dbo.idempotency_keys', N'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.idempotency_keys (
+        id uniqueidentifier NOT NULL CONSTRAINT pk_idempotency_keys PRIMARY KEY,
+        user_id uniqueidentifier NOT NULL,
+        idem_key nvarchar(100) NOT NULL,
+        request_hash nvarchar(64) NOT NULL,
+        order_id uniqueidentifier,
+        created_at datetime2(7) NOT NULL,
+        CONSTRAINT uq_idempotency_user_key UNIQUE (user_id, idem_key)
+    );
+END;

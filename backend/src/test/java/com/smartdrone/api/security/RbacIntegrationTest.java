@@ -56,7 +56,7 @@ import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = {
-        "spring.datasource.url=${RBAC_TEST_DATABASE_URL:jdbc:h2:mem:rbac-test;MODE=PostgreSQL;DB_CLOSE_DELAY=-1}",
+        "spring.datasource.url=${RBAC_TEST_DATABASE_URL:jdbc:h2:mem:rbac-test;MODE=MSSQLServer;DB_CLOSE_DELAY=-1}",
         "spring.datasource.driver-class-name=${RBAC_TEST_DATABASE_DRIVER:org.h2.Driver}",
         "spring.datasource.username=${RBAC_TEST_DATABASE_USER:sa}",
         "spring.datasource.password=${RBAC_TEST_DATABASE_PASSWORD:}",

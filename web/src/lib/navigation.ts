@@ -124,15 +124,15 @@ export const NAV_ITEMS: NavItem[] = [
     features: ["Xem và cập nhật thông tin khách hàng"],
   },
 
-  // ===== Nhân viên trạm =====
+  // ===== Trạm =====
   {
-    to: "/station",
-    label: "Thông tin trạm",
+    to: "/stations",
+    label: "Danh sách trạm",
     icon: "⌂",
-    roles: ["STATION_OPERATOR"],
+    roles: "ALL",
     code: "FR-07",
-    summary: "Quản lý thông tin trạm hạ cánh.",
-    features: ["Xem và cập nhật thông tin trạm"],
+    summary: "Xem thông tin, vị trí, sức chứa và trạng thái các trạm.",
+    features: ["Xem danh sách trạm", "Quản lý thông tin trạm theo quyền"],
   },
   {
     to: "/station/availability",
@@ -268,7 +268,7 @@ export const getMenuForRole = (role: RoleName): NavItem[] =>
 // Các đường dẫn tạm (chưa có trang thật) - AppRouter dùng để tạo route.
 export const PLACEHOLDER_PATHS: string[] = Array.from(
   new Set(
-    NAV_ITEMS.map((i) => i.to).filter((p) => !["/", "/profile", "/addresses"].includes(p)),
+  NAV_ITEMS.map((i) => i.to).filter((p) => !["/", "/profile", "/addresses", "/stations"].includes(p)),
   ),
 );
 

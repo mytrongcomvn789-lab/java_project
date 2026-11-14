@@ -21,7 +21,7 @@ import com.smartdrone.application.packages.dto.PackageInput;
 // Kiểm tra lưu/đọc thật trên H2 (ánh xạ @ElementCollection + @OrderColumn, ràng buộc unique, @PreAuthorize).
 // FileService được mock vì MinIO không thuộc phạm vi 3.4 (đã có MinioFileFlowTest của 3.3).
 @SpringBootTest(properties = {
-        "spring.datasource.url=jdbc:h2:mem:package-test;MODE=PostgreSQL;DB_CLOSE_DELAY=-1",
+        "spring.datasource.url=jdbc:h2:mem:package-test;MODE=MSSQLServer;DB_CLOSE_DELAY=-1",
         "spring.datasource.driver-class-name=org.h2.Driver",
         "spring.datasource.username=sa",
         "spring.datasource.password=",

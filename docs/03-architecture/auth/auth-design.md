@@ -265,7 +265,7 @@ Web nên dựa vào trường `code` để quyết định hành động, không
 
 > Khóa mặc định `CHANGE_ME_...` chỉ để chạy thử trên máy dev. **Khi triển khai thật bắt buộc đặt biến môi trường `APP_JWT_KEY`** thành một chuỗi ngẫu nhiên dài và không đưa vào repo.
 
-**Chạy thử không cần cài PostgreSQL** (dữ liệu nằm trong RAM, mất khi tắt):
+**Chạy thử không cần cài SQL Server** (dữ liệu nằm trong RAM, mất khi tắt):
 
 ```bash
 cd backend

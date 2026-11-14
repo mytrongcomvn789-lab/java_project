@@ -114,10 +114,10 @@ script tham khảo: `backend/scripts/3.4-order-packages.sql`.
 ### Yêu cầu môi trường
 
 - JDK 21, Maven, Node.js (cho web)
-- PostgreSQL (`localhost:5432`, database `smartdrone`, user/password `postgres`/`postgres`): chỉ cần khi chạy ứng dụng thật, **không cần** khi chạy test
+- SQL Server (`localhost:1433`, database `smartdrone`): chỉ cần khi chạy ứng dụng thật, **không cần** khi chạy test
 - MinIO + biến môi trường `MINIO_ACCESS_KEY`, `MINIO_SECRET_KEY`: chỉ cần khi thử tải ảnh
 
-### Cách test backend (không cần PostgreSQL/MinIO)
+### Cách test backend (không cần SQL Server/MinIO)
 
 Test dùng H2 trong bộ nhớ và mock `FileService`.
 
@@ -138,7 +138,7 @@ Kết quả khi chạy: 3/3 test class đạt.
 
 ### Cách chạy và thử biểu mẫu trên web
 
-1. Bật PostgreSQL, rồi chạy backend (class `SmartDroneApplication`, cổng 5000). Bảng `order_packages` và `order_package_photos` được Hibernate tự tạo (`ddl-auto=update`).
+1. Bật SQL Server theo `docker-compose.yml`, rồi chạy backend (class `SmartDroneApplication`, cổng 5000). Bảng `order_packages` và `order_package_photos` được Hibernate tự tạo (`ddl-auto=update`).
 2. Chạy web:
    ```bash
    cd web

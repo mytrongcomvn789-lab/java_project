@@ -51,8 +51,6 @@ public final class RbacPolicy {
             rule(POST, "/v1/stations", LOGISTICS_MANAGER),
             rule(PUT, "/v1/stations/{id}", LOGISTICS_MANAGER),
             rule(PATCH, "/v1/stations/{id}/status", STATION_OPERATOR, LOGISTICS_MANAGER),
-            rule(GET, "/v1/stations/{id}/availability", DISPATCHER, STATION_OPERATOR, LOGISTICS_MANAGER),
-
             rule(POST, "/v1/orders", CUSTOMER),
             rule(GET, "/v1/orders", CUSTOMER, DISPATCHER, STATION_OPERATOR, LOGISTICS_MANAGER),
             rule(GET, "/v1/orders/{id}", CUSTOMER, DISPATCHER, STATION_OPERATOR, LOGISTICS_MANAGER),

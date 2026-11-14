@@ -23,6 +23,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,23 +36,26 @@ import com.smartdrone.application.auth.AccessTokenIssuer;
 import com.smartdrone.application.common.ApiException;
 import com.smartdrone.application.common.ErrorCode;
 import com.smartdrone.application.files.FileService;
+import com.smartdrone.domain.entity.Station;
 import com.smartdrone.domain.entity.User;
 import com.smartdrone.domain.enums.FilePurpose;
 import com.smartdrone.domain.enums.OrderAction;
 import com.smartdrone.domain.enums.OrderStatus;
 import com.smartdrone.domain.enums.RoleName;
+import com.smartdrone.domain.enums.StationStatus;
 import com.smartdrone.infrastructure.persistence.IdempotencyRecordRepository;
 import com.smartdrone.infrastructure.persistence.OrderPackageRepository;
 import com.smartdrone.infrastructure.persistence.OrderRepository;
 import com.smartdrone.infrastructure.persistence.OrderStatusHistoryRepository;
 import com.smartdrone.infrastructure.persistence.RoleRepository;
+import com.smartdrone.infrastructure.persistence.StationRepository;
 import com.smartdrone.infrastructure.persistence.UserRepository;
 
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = {
-    "spring.datasource.url=${ORDER_TEST_DATABASE_URL:jdbc:h2:mem:order-test;MODE=PostgreSQL;DB_CLOSE_DELAY=-1}",
+    "spring.datasource.url=${ORDER_TEST_DATABASE_URL:jdbc:h2:mem:order-test;MODE=MSSQLServer;DB_CLOSE_DELAY=-1}",
     "spring.datasource.driver-class-name=${ORDER_TEST_DATABASE_DRIVER:org.h2.Driver}",
     "spring.datasource.username=${ORDER_TEST_DATABASE_USER:sa}",
     "spring.datasource.password=${ORDER_TEST_DATABASE_PASSWORD:}",
@@ -63,6 +67,8 @@ class OrderIntegrationTest {
 
     private static final ObjectMapper JSON = new ObjectMapper();
     private final HttpClient http = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).build();
+    private UUID pickupStationId;
+    private UUID dropoffStationId;
 
     @LocalServerPort int port;
     @Autowired UserRepository users;
@@ -72,11 +78,25 @@ class OrderIntegrationTest {
     @Autowired OrderPackageRepository packages;
     @Autowired OrderStatusHistoryRepository history;
     @Autowired IdempotencyRecordRepository idempotency;
+    @Autowired StationRepository stations;
     @MockitoBean FileService files; // MinIO không thuộc phạm vi 3.6 (đã có MinioFileFlowTest của 3.3)
 
     record Actor(UUID id, String token) { }
 
     // ---------- tiện ích ----------
+
+    @BeforeEach
+    void ensureStationsExist() {
+        var existing = stations.findAll();
+        pickupStationId = existing.stream().filter(s -> "Trạm gửi test".equals(s.getName()))
+                .findFirst().orElseGet(() -> stations.saveAndFlush(
+                        new Station("Trạm gửi test", 10.77, 106.70, 2))).getId();
+        dropoffStationId = existing.stream().filter(s -> "Trạm nhận test".equals(s.getName()))
+                .findFirst().orElseGet(() -> stations.saveAndFlush(
+                        new Station("Trạm nhận test", 10.78, 106.71, 2))).getId();
+        setStationStatus(pickupStationId, StationStatus.ACTIVE);
+        setStationStatus(dropoffStationId, StationStatus.ACTIVE);
+    }
 
     private Actor actor(RoleName role) {
         var user = users.saveAndFlush(new User(UUID.randomUUID() + "@order.test", "unused-test-hash",
@@ -118,8 +138,8 @@ class OrderIntegrationTest {
         pkg.put("heightCm", 8.0);
         pkg.put("photoFileIds", List.of(photos));
         Map<String, Object> body = new LinkedHashMap<>();
-        body.put("pickupStationId", UUID.randomUUID());
-        body.put("dropoffStationId", UUID.randomUUID());
+        body.put("pickupStationId", pickupStationId);
+        body.put("dropoffStationId", dropoffStationId);
         body.put("recipientAddressId", addressId);
         body.put("package", pkg);
         return body;
@@ -145,6 +165,12 @@ class OrderIntegrationTest {
         var order = orders.findById(orderId).orElseThrow();
         order.changeStatus(status);
         orders.saveAndFlush(order);
+    }
+
+    private void setStationStatus(UUID stationId, StationStatus status) {
+        var station = stations.findById(stationId).orElseThrow();
+        station.changeStatus(status);
+        stations.saveAndFlush(station);
     }
 
     private static String etag(long version) { return "\"" + version + "\""; }
@@ -235,6 +261,60 @@ class OrderIntegrationTest {
         var read = call("GET", "/orders/" + id, a.token(), null);
         assertEquals(200, read.statusCode(), read.body());
         assertEquals("Nguyễn An", json(read).get("recipient").get("name").asString());
+    }
+
+    @Test
+    void orderCreationRejectsUnknownStationAndLeavesNothingBehind() throws Exception {
+        var a = actor(RoleName.CUSTOMER);
+        UUID address = createAddress(a);
+        var body = validBody(address);
+        body.put("dropoffStationId", UUID.randomUUID());
+        var before = counts();
+
+        var response = call("POST", "/orders", a.token(), body, "Idempotency-Key", "station-missing-1");
+
+        assertEquals(400, response.statusCode(), response.body());
+        assertEquals("VALIDATION_ERROR", json(response).get("code").asString());
+        assertEquals(before, counts());
+    }
+
+    @Test
+    void orderCreationRejectsInactiveStationAndLeavesNothingBehind() throws Exception {
+        var a = actor(RoleName.CUSTOMER);
+        UUID address = createAddress(a);
+        var before = counts();
+
+        setStationStatus(pickupStationId, StationStatus.INACTIVE);
+        try {
+            var response = call("POST", "/orders", a.token(), validBody(address),
+                    "Idempotency-Key", "station-inactive-1");
+
+            assertEquals(400, response.statusCode(), response.body());
+            assertEquals("VALIDATION_ERROR", json(response).get("code").asString());
+            assertEquals(before, counts());
+        } finally {
+            setStationStatus(pickupStationId, StationStatus.ACTIVE);
+        }
+    }
+
+    @Test
+    void existingOrderRemainsReadableAfterItsStationIsDeactivated() throws Exception {
+        var a = actor(RoleName.CUSTOMER);
+        UUID address = createAddress(a);
+        UUID id = createOrder(a, validBody(address), "station-history-1");
+
+        setStationStatus(dropoffStationId, StationStatus.INACTIVE);
+        try {
+            var read = call("GET", "/orders/" + id, a.token(), null);
+
+            assertEquals(200, read.statusCode(), read.body());
+            assertEquals(id.toString(), json(read).get("id").asString());
+            assertEquals(pickupStationId.toString(), json(read).get("pickupStationId").asString());
+            assertEquals(dropoffStationId.toString(), json(read).get("dropoffStationId").asString());
+            assertEquals(OrderStatus.PENDING.name(), json(read).get("status").asString());
+        } finally {
+            setStationStatus(dropoffStationId, StationStatus.ACTIVE);
+        }
     }
 
     // ---------- Transaction: một thứ sai thì rollback tất cả ----------
@@ -419,7 +499,7 @@ class OrderIntegrationTest {
         assertNotEquals(idA, idB);
     }
 
-    // ---------- Đồng thời: cần PostgreSQL (H2 xử lý khóa dòng khác PostgreSQL) ----------
+    // ---------- Đồng thời: cần database thật (H2 không tái hiện chính xác khóa dòng) ----------
 
     @Test
     @EnabledIfEnvironmentVariable(named = "ORDER_TEST_DATABASE_URL", matches = ".+")
