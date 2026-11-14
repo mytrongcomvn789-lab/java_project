@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
@@ -22,10 +23,15 @@ import com.smartdrone.application.common.ApiException;
 import com.smartdrone.application.common.ErrorCode;
 import com.smartdrone.application.common.IfMatchVersion;
 import com.smartdrone.application.orders.OrderCreationFacade;
+import com.smartdrone.application.orders.OrderQueryService;
 import com.smartdrone.application.orders.OrderService;
 import com.smartdrone.application.orders.dto.OrderCreation;
+import com.smartdrone.application.orders.dto.OrderDetail;
+import com.smartdrone.application.orders.dto.OrderListQuery;
+import com.smartdrone.application.orders.dto.OrderPage;
 import com.smartdrone.application.orders.dto.OrderRequest;
 import com.smartdrone.application.orders.dto.OrderView;
+import com.smartdrone.domain.enums.RoleName;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -34,16 +40,19 @@ import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/v1/orders")
-@Tag(name = "Orders", description = "Đơn giao hàng: khách tạo, sửa, hủy khi còn chờ duyệt")
+@Tag(name = "Orders", description = "Đơn giao hàng: khách tạo, sửa, hủy khi còn chờ duyệt; xem danh sách và chi tiết theo phạm vi")
 @SecurityRequirement(name = "bearerAuth")
 public class OrderController {
 
     private final OrderCreationFacade creation;
     private final OrderService service;
+    private final OrderQueryService queries;
 
-    public OrderController(OrderCreationFacade creation, OrderService service) {
+    public OrderController(OrderCreationFacade creation, OrderService service,
+                           OrderQueryService queries) {
         this.creation = creation;
         this.service = service;
+        this.queries = queries;
     }
 
     @PostMapping
@@ -63,16 +72,30 @@ public class OrderController {
         return withOrderHeaders(ResponseEntity.created(location), order).body(order);
     }
 
+    @GetMapping
+    @PreAuthorize("hasAnyRole('CUSTOMER','DISPATCHER','STATION_OPERATOR','LOGISTICS_MANAGER')")
+    @Operation(summary = "Danh sách đơn trong phạm vi của tôi (lọc, tìm kiếm, phân trang)")
+    public ResponseEntity<OrderPage> list(JwtAuthenticationToken auth,
+            @RequestParam(required = false) String code,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String from,
+            @RequestParam(required = false) String to,
+            @RequestParam(required = false) String stationId,
+            @RequestParam(required = false) String sort,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "20") int pageSize) {
+        OrderListQuery query = OrderListQuery.of(code, status, from, to, stationId, page, pageSize, sort);
+        return ResponseEntity.ok().cacheControl(CacheControl.noStore())
+                .body(queries.list(userId(auth), roleOf(auth), query));
+    }
+
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('CUSTOMER','DISPATCHER','STATION_OPERATOR','LOGISTICS_MANAGER')")
-    @Operation(summary = "Xem một đơn (khách chỉ xem đơn của mình)")
-    public ResponseEntity<OrderView> get(JwtAuthenticationToken auth, @PathVariable UUID id) {
-        if (!isCustomer(auth)) {
-            // Phạm vi dữ liệu của nhân viên (theo trạm/tổ chức) do 3.7 quyết định. Tới lúc đó, mặc định không thấy gì.
-            throw new ApiException(ErrorCode.RESOURCE_NOT_FOUND);
-        }
-        OrderView order = service.getOwn(userId(auth), id);
-        return withOrderHeaders(ResponseEntity.ok(), order).body(order);
+    @Operation(summary = "Chi tiết một đơn trong phạm vi của tôi")
+    public ResponseEntity<OrderDetail> get(JwtAuthenticationToken auth, @PathVariable UUID id) {
+        OrderDetail order = queries.get(userId(auth), roleOf(auth), id);
+        return ResponseEntity.ok().cacheControl(CacheControl.noStore())
+                .header(HttpHeaders.ETAG, IfMatchVersion.format(order.version())).body(order);
     }
 
     @PutMapping("/{id}")
@@ -105,7 +128,13 @@ public class OrderController {
         return UUID.fromString(auth.getName());
     }
 
-    private static boolean isCustomer(JwtAuthenticationToken auth) {
-        return auth.getAuthorities().stream().anyMatch(a -> "ROLE_CUSTOMER".equals(a.getAuthority()));
+    // Đọc vai trò từ token (authority dạng ROLE_CUSTOMER -> CUSTOMER).
+    private static RoleName roleOf(JwtAuthenticationToken auth) {
+        return auth.getAuthorities().stream()
+                .map(a -> a.getAuthority())
+                .filter(a -> a.startsWith("ROLE_"))
+                .map(a -> RoleName.valueOf(a.substring(5)))
+                .findFirst()
+                .orElseThrow(() -> new ApiException(ErrorCode.FORBIDDEN));
     }
 }
