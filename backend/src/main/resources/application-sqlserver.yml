@@ -1,9 +1,12 @@
+# Chạy với SQL Server:
+#   $env:DB_PASSWORD = "mat-khau-cua-sa"
+#   mvn spring-boot:run "-Dspring-boot.run.profiles=sqlserver"
 spring:
   datasource:
     url: jdbc:sqlserver://localhost:1433;databaseName=smartdrone;encrypt=true;trustServerCertificate=true
-    username: sa
-    password: YourStrong!Pass1
     driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
+    username: ${DB_USERNAME:sa}
+    password: ${DB_PASSWORD}
   jpa:
     hibernate:
       ddl-auto: update
