@@ -85,6 +85,11 @@ export const ORDER_STATUS_OPTIONS: [string, string][] = [
   ['RETURNED', 'Đã hoàn hàng'],
 ];
 
+// If-Match: ưu tiên ETag server trả (đã có dấu nháy kép), không có thì dựng từ version.
+export function ifMatchOf(order: Pick<OrderDetail, 'etag' | 'version'>): string {
+  return order.etag ?? `"${order.version}"`;
+}
+
 export const orderService = {
   list: async (f: OrderFilters, page: number, pageSize: number) => {
     const params: Record<string, string | number> = { page, pageSize };
@@ -104,6 +109,20 @@ export const orderService = {
     );
     return { ...response.data, etag: response.headers.etag };
   },
+    // Khách sửa đơn PENDING của mình (thay toàn bộ nội dung). Sai phiên bản: 412; đơn không còn PENDING: 409.
+  update: async (id: string, etag: string, body: OrderRequestBody) =>
+    (
+      await apiClient.put<OrderCreated>(`/v1/orders/${id}`, body, {
+        headers: { 'If-Match': etag },
+      })
+    ).data,
+  // Khách hủy đơn PENDING của mình.
+  cancel: async (id: string, etag: string) =>
+    (
+      await apiClient.post<OrderCreated>(`/v1/orders/${id}/cancel`, undefined, {
+        headers: { 'If-Match': etag },
+      })
+    ).data,
   // Idempotency-Key bắt buộc: gửi lại cùng key và cùng nội dung thì không tạo đơn thứ hai.
   create: async (body: OrderRequestBody, idempotencyKey: string) =>
     (
