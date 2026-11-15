@@ -5,12 +5,14 @@ import PackageSummary from "../packages/PackageSummary";
 import { ApiRequestError } from "../../lib/apiClient";
 import { orderService, type OrderDetail } from "../../lib/orderService";
 import { useAuth } from "../auth/AuthContext";
+import OrderReviewActions from "./OrderReviewActions";
 
 const when = (v: string) => new Date(v).toLocaleString("vi-VN");
 
 export default function OrderDetailPage() {
   const { id = "" } = useParams();
-  const { isDemo } = useAuth();
+  const { isDemo, user } = useAuth();
+  const [notice, setNotice] = useState("");
   const [order, setOrder] = useState<OrderDetail | null>(null);
   const [error, setError] = useState("");
   const [retry, setRetry] = useState(0);
@@ -20,6 +22,7 @@ export default function OrderDetailPage() {
     let active = true;
     setOrder(null);
     setError("");
+    setNotice("");
     orderService
       .get(id)
       .then((o) => {
@@ -61,6 +64,12 @@ export default function OrderDetailPage() {
           <p role="status">Đang tải chi tiết đơn…</p>
         ) : (
           <>
+            {notice && <p role="status">{notice}</p>}
+            {user?.role === "DISPATCHER" && order.status === "PENDING" && (
+              <OrderReviewActions key={`${order.id}:${order.version}`} order={order}
+                onReviewed={(updated, message) => { setOrder(updated); setNotice(message); }}
+                onReload={() => setRetry((n) => n + 1)} />
+            )}
             <section className="card customer-panel">
               <h3>Đơn {order.id}</h3>
               <p>
@@ -92,7 +101,7 @@ export default function OrderDetailPage() {
               style={{ overflowX: "auto" }}
             >
               <h3>Lịch sử trạng thái</h3>
-              <table>
+              <table style={{ minWidth: 760, width: "100%", borderSpacing: "12px 8px", textAlign: "left" }}>
                 <thead>
                   <tr>
                     <th>Thời điểm</th>
@@ -110,7 +119,7 @@ export default function OrderDetailPage() {
                       <td>{h.fromStatus ?? "—"}</td>
                       <td>{h.toStatus}</td>
                       <td>{h.action ?? "Tạo đơn"}</td>
-                      <td>{h.actorRole ?? "Hệ thống"}</td>
+                      <td>{h.actorRole ?? "Hệ thống"}{h.actorId && <><br /><small>{h.actorId}</small></>}</td>
                       <td>{h.reason ?? ""}</td>
                     </tr>
                   ))}

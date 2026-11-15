@@ -1,0 +1,41 @@
+{
+  "tests": [
+    {
+      "name": "Dispatcher queue contains only 3 pending orders in assigned stations",
+      "status": "PASS"
+    },
+    {
+      "name": "Approve from UI persists decision, hides buttons and displays audit history",
+      "status": "PASS"
+    },
+    {
+      "name": "Reject requires nonblank reason and persists Vietnamese reason",
+      "status": "PASS"
+    },
+    {
+      "name": "Customer sees actual rejected status/reason and cannot review",
+      "status": "PASS"
+    },
+    {
+      "name": "Unassigned dispatcher sees no orders and cannot open known detail",
+      "status": "PASS"
+    },
+    {
+      "name": "Stale second dispatcher receives conflict, reload shows winner decision",
+      "status": "PASS"
+    },
+    {
+      "name": "Processed orders disappear from pending queue",
+      "status": "PASS"
+    },
+    {
+      "name": "Browser can read ETag for review If-Match",
+      "status": "PASS"
+    },
+    {
+      "name": "No unhandled JavaScript errors",
+      "status": "PASS"
+    }
+  ],
+  "pageErrors": []
+}

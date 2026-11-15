@@ -2,6 +2,7 @@ import { Routes, Route } from 'react-router-dom';
 import AuthLayout from '../layouts/AuthLayout';
 import MainLayout from '../layouts/MainLayout';
 import OrdersPage from '../features/orders/OrdersPage';
+import DispatchRequestsPage from '../features/orders/DispatchRequestsPage';
 import OrderDetailPage from '../features/orders/OrderDetailPage';
 import CreateOrderPage from '../features/orders/CreateOrderPage';
 import NotFoundPage from './NotFoundPage';
@@ -27,7 +28,8 @@ export default function AppRouter() {
         <Route element={<MainLayout />}>
           <Route path="/" element={<HomePage />} />
           <Route path="/profile" element={<ProfilePage />} />
-          <Route path="/deliveries" element={<OrdersPage />} />
+          <Route path="/deliveries" element={<OrdersPage key="all-orders" />} />
+          <Route path="/dispatch/requests" element={<DispatchRequestsPage />} />
           <Route path="/deliveries/new" element={<CreateOrderPage />} />
           <Route path="/deliveries/:id" element={<OrderDetailPage />} />
           <Route path="/addresses" element={<AddressesPage />} />

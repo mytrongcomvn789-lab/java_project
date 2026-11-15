@@ -26,12 +26,14 @@ export interface StatusHistory {
   fromStatus: string | null;
   toStatus: string;
   action: string | null;
+  actorId: string | null;
   actorRole: string | null;
   source: string;
   reason: string | null;
   occurredAt: string;
 }
 export interface OrderDetail {
+  etag?: string;
   id: string;
   version: number;
   status: string;
@@ -91,8 +93,17 @@ export const orderService = {
     });
     return (await apiClient.get<OrderPage>('/v1/orders', { params })).data;
   },
-  get: async (id: string) =>
-    (await apiClient.get<OrderDetail>(`/v1/orders/${id}`)).data,
+  get: async (id: string): Promise<OrderDetail> => {
+    const response = await apiClient.get<OrderDetail>(`/v1/orders/${id}`);
+    return { ...response.data, etag: response.headers.etag };
+  },
+  review: async (id: string, action: 'approve' | 'reject', etag: string, reason: string): Promise<OrderDetail> => {
+    const response = await apiClient.post<OrderDetail>(
+      `/v1/orders/${id}/${action}`, action === 'reject' ? { reason } : undefined,
+      { headers: { 'If-Match': etag } },
+    );
+    return { ...response.data, etag: response.headers.etag };
+  },
   // Idempotency-Key bắt buộc: gửi lại cùng key và cùng nội dung thì không tạo đơn thứ hai.
   create: async (body: OrderRequestBody, idempotencyKey: string) =>
     (

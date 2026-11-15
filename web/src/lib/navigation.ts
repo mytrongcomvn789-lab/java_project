@@ -276,6 +276,8 @@ export const PLACEHOLDER_PATHS: string[] = Array.from(
           "/addresses",
           "/stations",
           "/deliveries",
+          "/deliveries/new",
+          "/dispatch/requests",
         ].includes(p),
     ),
   ),
