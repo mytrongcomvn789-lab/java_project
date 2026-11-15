@@ -65,6 +65,7 @@ public class OrderStatusHistory {
     @Column(nullable = false, length = 20, updatable = false)
     private ChangeSource source;
 
+    @org.hibernate.annotations.Nationalized
     @Column(length = 500, updatable = false)
     private String reason;
 

@@ -30,10 +30,11 @@ const nextDay = (d: string) => {
   return t.toISOString();
 };
 
-export default function OrdersPage() {
+export default function OrdersPage({ pendingOnly = false }: { pendingOnly?: boolean }) {
+  const initial = { ...EMPTY, status: pendingOnly ? "PENDING" : "" };
   const { isDemo } = useAuth();
-  const [form, setForm] = useState({ ...EMPTY }); // giá trị đang gõ
-  const [applied, setApplied] = useState({ ...EMPTY }); // giá trị đã áp dụng (gửi lên server)
+  const [form, setForm] = useState(initial); // giá trị đang gõ
+  const [applied, setApplied] = useState(initial); // giá trị đã áp dụng (gửi lên server)
   const [page, setPage] = useState(1);
   const [data, setData] = useState<OrderPage | null>(null);
   const [error, setError] = useState("");
@@ -73,8 +74,8 @@ export default function OrdersPage() {
     setApplied({ ...form });
   }
   function reset() {
-    setForm({ ...EMPTY });
-    setApplied({ ...EMPTY });
+    setForm(initial);
+    setApplied(initial);
     setPage(1);
   }
   const set = (k: keyof OrderFilters, v: string) =>
@@ -84,7 +85,7 @@ export default function OrdersPage() {
   return (
     <>
       <PageHeader
-        title="Đơn giao hàng"
+        title={pendingOnly ? "Yêu cầu chờ duyệt" : "Đơn giao hàng"}
         subtitle="Tìm kiếm, lọc và xem chi tiết đơn trong phạm vi của bạn."
         crumbs={["Trang chủ", "Đơn giao hàng"]}
       />
@@ -109,6 +110,7 @@ export default function OrdersPage() {
                 <span>Trạng thái</span>
                 <select
                   value={form.status}
+                  disabled={pendingOnly}
                   onChange={(e) => set("status", e.target.value)}
                 >
                   <option value="">Tất cả</option>
