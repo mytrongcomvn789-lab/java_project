@@ -58,6 +58,11 @@ app:
     min-photos: 0
     max-photos: 3
 
+  schedule:
+    slot-minutes: 30 # độ dài một slot; hoạt động 24/24 nên phải chia hết 1440 phút
+    min-lead-minutes: 30 # lịch phải bắt đầu sau hiện tại ít nhất ngần này phút
+    max-days-ahead: 7 # đặt xa nhất bao nhiêu ngày
+
 logging:
   level:
     root: INFO
