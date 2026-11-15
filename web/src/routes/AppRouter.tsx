@@ -3,6 +3,7 @@ import AuthLayout from '../layouts/AuthLayout';
 import MainLayout from '../layouts/MainLayout';
 import OrdersPage from '../features/orders/OrdersPage';
 import OrderDetailPage from '../features/orders/OrderDetailPage';
+import CreateOrderPage from '../features/orders/CreateOrderPage';
 import NotFoundPage from './NotFoundPage';
 import LoginPage from '../features/auth/LoginPage';
 import RequireAuth from '../features/auth/RequireAuth';
@@ -27,6 +28,7 @@ export default function AppRouter() {
           <Route path="/" element={<HomePage />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/deliveries" element={<OrdersPage />} />
+          <Route path="/deliveries/new" element={<CreateOrderPage />} />
           <Route path="/deliveries/:id" element={<OrderDetailPage />} />
           <Route path="/addresses" element={<AddressesPage />} />
           <Route path="/stations" element={<StationsPage />} />
@@ -36,7 +38,7 @@ export default function AppRouter() {
               element={<PackageFormPreviewPage />}
             />
           )}
-          {PLACEHOLDER_PATHS.map((p) => (
+          {PLACEHOLDER_PATHS.filter((p) => p !== '/deliveries/new').map((p) => (
             <Route key={p} path={p} element={<PlaceholderPage />} />
           ))}
         </Route>
