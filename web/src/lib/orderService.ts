@@ -1,5 +1,6 @@
-import apiClient from "./apiClient";
-import type { PackageView } from "./packageService";
+import apiClient from './apiClient';
+import type { PackageView } from './packageService';
+import type { OrderRequestBody } from './orderForm';
 
 export interface OrderSummary {
   id: string;
@@ -49,6 +50,14 @@ export interface OrderDetail {
   createdAt: string;
   updatedAt: string;
 }
+
+export interface OrderCreated {
+  id: string;
+  version: number;
+  status: string;
+  statusLabel: string;
+}
+
 export interface OrderFilters {
   code: string;
   status: string;
@@ -60,18 +69,18 @@ export interface OrderFilters {
 
 // Trạng thái theo backend (OrderStatus), khác danh sách cũ trong deliveryStatus.ts.
 export const ORDER_STATUS_OPTIONS: [string, string][] = [
-  ["PENDING", "Chờ duyệt"],
-  ["APPROVED", "Đã duyệt"],
-  ["REJECTED", "Bị từ chối"],
-  ["CANCELLED", "Đã hủy"],
-  ["SCHEDULED", "Đã lên lịch"],
-  ["PREPARING", "Đang chuẩn bị"],
-  ["IN_TRANSIT", "Đang giao"],
-  ["AWAITING_PICKUP", "Chờ nhận hàng"],
-  ["DELIVERED", "Đã giao"],
-  ["FAILED", "Giao thất bại"],
-  ["RETURNING", "Đang hoàn hàng"],
-  ["RETURNED", "Đã hoàn hàng"],
+  ['PENDING', 'Chờ duyệt'],
+  ['APPROVED', 'Đã duyệt'],
+  ['REJECTED', 'Bị từ chối'],
+  ['CANCELLED', 'Đã hủy'],
+  ['SCHEDULED', 'Đã lên lịch'],
+  ['PREPARING', 'Đang chuẩn bị'],
+  ['IN_TRANSIT', 'Đang giao'],
+  ['AWAITING_PICKUP', 'Chờ nhận hàng'],
+  ['DELIVERED', 'Đã giao'],
+  ['FAILED', 'Giao thất bại'],
+  ['RETURNING', 'Đang hoàn hàng'],
+  ['RETURNED', 'Đã hoàn hàng'],
 ];
 
 export const orderService = {
@@ -80,8 +89,15 @@ export const orderService = {
     (Object.keys(f) as (keyof OrderFilters)[]).forEach((k) => {
       if (f[k]) params[k] = f[k];
     });
-    return (await apiClient.get<OrderPage>("/v1/orders", { params })).data;
+    return (await apiClient.get<OrderPage>('/v1/orders', { params })).data;
   },
   get: async (id: string) =>
     (await apiClient.get<OrderDetail>(`/v1/orders/${id}`)).data,
+  // Idempotency-Key bắt buộc: gửi lại cùng key và cùng nội dung thì không tạo đơn thứ hai.
+  create: async (body: OrderRequestBody, idempotencyKey: string) =>
+    (
+      await apiClient.post<OrderCreated>('/v1/orders', body, {
+        headers: { 'Idempotency-Key': idempotencyKey },
+      })
+    ).data,
 };
