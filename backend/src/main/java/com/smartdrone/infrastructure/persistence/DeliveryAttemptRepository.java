@@ -1,10 +1,9 @@
 package com.smartdrone.infrastructure.persistence;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-
-import java.time.Instant;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -17,15 +16,14 @@ public interface DeliveryAttemptRepository extends JpaRepository<DeliveryAttempt
 
     List<DeliveryAttempt> findByOrderIdOrderByAttemptNoAsc(UUID orderId);
 
-    // Lần đang giữ chỗ của đơn (bước giao lại/thất bại dùng để trả chỗ).
+    // Lan dang giu cho cua don (buoc giao lai/that bai dung de tra cho).
     Optional<DeliveryAttempt> findByOrderIdAndStatus(UUID orderId, AttemptStatus status);
 
-    // Số thứ tự lần thử lớn nhất của đơn; chưa có lần nào thì trả 0.
+    // So thu tu lan thu lon nhat cua don; chua co lan nao thi tra 0.
     @Query("select coalesce(max(a.attemptNo), 0) from DeliveryAttempt a where a.orderId = :orderId")
     int findMaxAttemptNo(@Param("orderId") UUID orderId);
 
-    
-    // Số lần lên lịch đang giữ chỗ ở một trạm (gửi hoặc nhận) chồng lên khung [slotStart, slotEnd).
+    // So lan len lich dang giu cho o mot tram (gui hoac nhan) chong len khung [slotStart, slotEnd).
     @Query("""
             select count(a) from DeliveryAttempt a
             where a.status = com.smartdrone.domain.enums.AttemptStatus.ACTIVE
@@ -36,4 +34,16 @@ public interface DeliveryAttemptRepository extends JpaRepository<DeliveryAttempt
     long countActiveOverlapping(@Param("stationId") UUID stationId,
                                 @Param("slotStart") Instant slotStart,
                                 @Param("slotEnd") Instant slotEnd);
+
+    // Cac lan giu cho dang ACTIVE cua mot tram chong len khoang [rangeStart, rangeEnd).
+    @Query("""
+            select a from DeliveryAttempt a
+            where a.status = com.smartdrone.domain.enums.AttemptStatus.ACTIVE
+              and (a.pickupStationId = :stationId or a.dropoffStationId = :stationId)
+              and a.slotStart < :rangeEnd
+              and a.slotEnd > :rangeStart
+            """)
+    List<DeliveryAttempt> findActiveOverlapping(@Param("stationId") UUID stationId,
+                                                @Param("rangeStart") Instant rangeStart,
+                                                @Param("rangeEnd") Instant rangeEnd);
 }
