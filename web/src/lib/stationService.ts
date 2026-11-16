@@ -1,6 +1,6 @@
 import apiClient from "./apiClient";
 
-export type StationStatus = "ACTIVE" | "INACTIVE";
+export type StationStatus = "ACTIVE" | "MAINTENANCE" | "INACTIVE";
 
 export interface StationInput {
   name: string;

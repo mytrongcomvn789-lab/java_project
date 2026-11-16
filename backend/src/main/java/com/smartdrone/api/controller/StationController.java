@@ -7,6 +7,7 @@ import java.util.UUID;
 import org.springframework.http.CacheControl;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -21,6 +22,7 @@ import com.smartdrone.application.stations.StationService;
 import com.smartdrone.application.stations.dto.StationInput;
 import com.smartdrone.application.stations.dto.StationStatusInput;
 import com.smartdrone.application.stations.dto.StationView;
+import com.smartdrone.domain.enums.RoleName;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -64,9 +66,13 @@ public class StationController {
 
     @PatchMapping("/{id}/status")
     @PreAuthorize("hasAnyRole('LOGISTICS_MANAGER','STATION_OPERATOR')")
-    @Operation(summary = "Đổi trạng thái trạm")
-    public ResponseEntity<StationView> changeStatus(@PathVariable UUID id,
+    @Operation(summary = "Đổi trạng thái vận hành trạm (ACTIVE, MAINTENANCE, INACTIVE); operator chỉ đổi trạm được phân công")
+    public ResponseEntity<StationView> changeStatus(JwtAuthenticationToken auth, @PathVariable UUID id,
             @Valid @RequestBody StationStatusInput input) {
-        return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(service.changeStatus(id, input));
+        var role = auth.getAuthorities().stream()
+                .anyMatch(a -> "ROLE_LOGISTICS_MANAGER".equals(a.getAuthority()))
+                ? RoleName.LOGISTICS_MANAGER : RoleName.STATION_OPERATOR;
+        return ResponseEntity.ok().cacheControl(CacheControl.noStore())
+                .body(service.changeStatus(UUID.fromString(auth.getName()), role, id, input));
     }
 }

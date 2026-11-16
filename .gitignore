@@ -8,3 +8,5 @@ dist/
 build/
 *.user
 .vite/
+hs_err_pid*.log
+*.log
