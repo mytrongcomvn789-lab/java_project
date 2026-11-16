@@ -37,7 +37,7 @@ public class OrderScheduleController {
         this.service = service;
     }
 
-    @PostMapping("/{id}/schedule")
+    @PostMapping("/{id}/schedules")
     @Operation(summary = "Lên lịch đơn APPROVED hoặc giao lại đơn FAILED; bắt buộc If-Match và slotStart")
     public ResponseEntity<OrderDetail> schedule(JwtAuthenticationToken auth, @PathVariable UUID id,
             @RequestHeader(value = "If-Match", required = false) String ifMatch,
