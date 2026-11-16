@@ -11,6 +11,7 @@ import { IS_DEMO_AUTH } from "../../lib/env";
 import { tokenStorage } from "../../lib/token";
 import { userStorage } from "../../lib/session";
 import { authService } from "../../lib/authService";
+import { realtime } from "../../lib/realtime";
 import { buildDemoUser } from "../../lib/demoAuth";
 import type { AuthUser, RoleName } from "../../types/api";
 
@@ -41,6 +42,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // apiClient báo 401 (token hết hạn/không hợp lệ) → đăng xuất
   useEffect(() => {
     const onUnauthorized = () => {
+      realtime.disconnect();
       userStorage.clear();
       setUser(null);
     };
@@ -68,6 +70,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const logout = useCallback(() => {
+    realtime.disconnect(); // đóng WebSocket và dọn mọi đăng ký trước khi xóa phiên
     // Thu hồi refresh token ở backend (lỗi mạng cũng không chặn đăng xuất cục bộ).
     // authService.logout tự xóa token khi xong; giao diện đăng xuất ngay.
     void authService.logout().catch(() => undefined);
@@ -76,13 +79,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const updateProfile = useCallback((profile: AuthUser) => {
-    const updated: AuthUser = { id: profile.id, email: profile.email, fullName: profile.fullName, role: profile.role };
+    const updated: AuthUser = {
+      id: profile.id,
+      email: profile.email,
+      fullName: profile.fullName,
+      role: profile.role,
+    };
     userStorage.set(updated);
     setUser(updated);
   }, []);
 
   const value = useMemo<AuthContextValue>(
-    () => ({ user, loading, isDemo: IS_DEMO_AUTH, login, demoLogin, logout, updateProfile }),
+    () => ({
+      user,
+      loading,
+      isDemo: IS_DEMO_AUTH,
+      login,
+      demoLogin,
+      logout,
+      updateProfile,
+    }),
     [user, loading, login, demoLogin, logout, updateProfile],
   );
 

@@ -1,14 +1,31 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Link, useLocation, useParams } from "react-router-dom";
 import PageHeader from "../../components/ui/PageHeader";
 import PackageSummary from "../packages/PackageSummary";
 import { ApiRequestError } from "../../lib/apiClient";
-import { orderService, type OrderDetail } from "../../lib/orderService";
+import {
+  ORDER_STATUS_OPTIONS,
+  orderService,
+  type OrderDetail,
+} from "../../lib/orderService";
+import type { OrderRealtimeEvent, RealtimeState } from "../../lib/realtime";
+import { useOrderRealtime } from "../../lib/useOrderRealtime";
 import { useAuth } from "../auth/AuthContext";
 import OrderReviewActions from "./OrderReviewActions";
 import OrderCustomerActions from "./OrderCustomerActions";
 
 const when = (v: string) => new Date(v).toLocaleString("vi-VN");
+
+const STATUS_LABEL: Record<string, string> =
+  Object.fromEntries(ORDER_STATUS_OPTIONS);
+
+const LIVE_TEXT: Record<RealtimeState, string> = {
+  live: "● Đang cập nhật trực tiếp",
+  connecting: "Đang kết nối cập nhật trực tiếp…",
+  reconnecting:
+    "Mất kết nối, đang thử lại… (dữ liệu sẽ được tải bù khi nối lại)",
+  offline: "Chưa bật cập nhật trực tiếp",
+};
 
 export default function OrderDetailPage() {
   const { id = "" } = useParams();
@@ -44,6 +61,45 @@ export default function OrderDetailPage() {
     };
   }, [id, retry, isDemo]);
 
+  // Tải lại ngầm (không quay về màn hình "đang tải"). Bản cũ hơn bản đang có thì bỏ.
+  const refresh = useCallback(() => {
+    orderService
+      .get(id)
+      .then((fresh) =>
+        setOrder((cur) =>
+          cur && cur.id === fresh.id && cur.version > fresh.version
+            ? cur
+            : fresh,
+        ),
+      )
+      .catch(() => undefined);
+  }, [id]);
+
+  const onEvent = useCallback(
+    (e: OrderRealtimeEvent) => {
+      setOrder((cur) => {
+        if (!cur || e.orderId !== cur.id || e.version <= cur.version)
+          return cur;
+        return {
+          ...cur,
+          version: e.version,
+          etag: undefined, // bỏ ETag cũ để If-Match tính lại từ version mới
+          status: e.status,
+          statusLabel: STATUS_LABEL[e.status] ?? e.status,
+          updatedAt: e.occurredAt,
+        };
+      });
+      refresh(); // lấy lịch sử đầy đủ (hành động, người thực hiện, lý do) từ REST
+    },
+    [refresh],
+  );
+
+  const { state, denied } = useOrderRealtime(
+    id,
+    { onEvent, onResync: refresh },
+    !isDemo && !!order,
+  );
+
   return (
     <>
       <PageHeader
@@ -69,11 +125,17 @@ export default function OrderDetailPage() {
           <>
             {notice && <p role="status">{notice}</p>}
             {user?.role === "DISPATCHER" && order.status === "PENDING" && (
-              <OrderReviewActions key={`${order.id}:${order.version}`} order={order}
-                onReviewed={(updated, message) => { setOrder(updated); setNotice(message); }}
-                onReload={() => setRetry((n) => n + 1)} />
+              <OrderReviewActions
+                key={`${order.id}:${order.version}`}
+                order={order}
+                onReviewed={(updated, message) => {
+                  setOrder(updated);
+                  setNotice(message);
+                }}
+                onReload={() => setRetry((n) => n + 1)}
+              />
             )}
-                        {user?.role === "CUSTOMER" && order.status === "PENDING" && (
+            {user?.role === "CUSTOMER" && order.status === "PENDING" && (
               <OrderCustomerActions
                 key={`${order.id}:${order.version}`}
                 order={order}
@@ -90,6 +152,11 @@ export default function OrderDetailPage() {
                 <span className={`badge st-${order.status.toLowerCase()}`}>
                   {order.statusLabel}
                 </span>
+              </p>
+              <p className="muted" role="status">
+                {denied
+                  ? "Không thể theo dõi trực tiếp đơn này."
+                  : LIVE_TEXT[state]}
               </p>
               <p className="muted">
                 Tạo lúc {when(order.createdAt)} · Cập nhật{" "}
@@ -115,7 +182,7 @@ export default function OrderDetailPage() {
               style={{ overflowX: "auto" }}
             >
               <h3>Lịch sử trạng thái</h3>
-              <table style={{ minWidth: 760, width: "100%", borderSpacing: "12px 8px", textAlign: "left" }}>
+              <table>
                 <thead>
                   <tr>
                     <th>Thời điểm</th>
@@ -128,12 +195,12 @@ export default function OrderDetailPage() {
                 </thead>
                 <tbody>
                   {order.history.map((h) => (
-                    <tr key={h.orderVersion}>
+                    <tr key={h.eventId ?? h.orderVersion}>
                       <td>{when(h.occurredAt)}</td>
                       <td>{h.fromStatus ?? "—"}</td>
                       <td>{h.toStatus}</td>
                       <td>{h.action ?? "Tạo đơn"}</td>
-                      <td>{h.actorRole ?? "Hệ thống"}{h.actorId && <><br /><small>{h.actorId}</small></>}</td>
+                      <td>{h.actorRole ?? "Hệ thống"}</td>
                       <td>{h.reason ?? ""}</td>
                     </tr>
                   ))}

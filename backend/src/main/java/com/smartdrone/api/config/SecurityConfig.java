@@ -69,6 +69,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/health",
                                 "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         // logout công khai: refresh token chính là bằng chứng, và access token có thể đã hết hạn
+                        // Bắt tay WebSocket (GET /ws). Trình duyệt không gắn được header Authorization khi mở
+                        // WebSocket, nên JWT được kiểm tra ở khung STOMP CONNECT (StompSecurityInterceptor).
+                        .requestMatchers(HttpMethod.GET, "/ws", "/ws/**").permitAll()
                         .requestMatchers(HttpMethod.POST,
                                 "/v1/auth/register", "/v1/auth/login",
                                 "/v1/auth/refresh", "/v1/auth/logout").permitAll();

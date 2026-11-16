@@ -118,4 +118,26 @@ apiClient.interceptors.response.use(
   },
 );
 
+// Cho realtime.ts: làm mới token chủ động. Dùng chung một promise với interceptor 401
+// để không bao giờ có hai lần refresh song song trong cùng một tab.
+export async function refreshAccessTokenOnce(): Promise<string> {
+  try {
+    refreshing ??= refreshAccessToken().finally(() => {
+      refreshing = null;
+    });
+    return await refreshing;
+  } catch (e) {
+    // Refresh token bị từ chối (4xx) = phiên đã hết, về trang đăng nhập. Lỗi mạng thì để nơi gọi thử lại.
+    if (
+      axios.isAxiosError(e) &&
+      e.response &&
+      e.response.status >= 400 &&
+      e.response.status < 500
+    ) {
+      redirectToLogin();
+    }
+    throw e;
+  }
+}
+
 export default apiClient;
