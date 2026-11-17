@@ -104,4 +104,18 @@
       </plugin>
     </plugins>
   </build>
+  <profiles>
+    <!-- Windows/JDK 25 workaround: forked Surefire exits before reporting tests on this setup.
+         Run the same tests in Maven JVM; Linux CI and Java 21 retain the normal forked execution. -->
+    <profile>
+      <id>windows-jdk25-tests</id>
+      <activation><os><family>Windows</family></os><jdk>[25,26)</jdk></activation>
+      <build><plugins><plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration><forkCount>0</forkCount></configuration>
+      </plugin></plugins></build>
+    </profile>
+  </profiles>
+
 </project>

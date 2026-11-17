@@ -530,4 +530,15 @@ class OrderIntegrationTest {
         assertEquals(json(results.get(0)).get("id").asString(), json(results.get(1)).get("id").asString());
         assertEquals(before + 1, orders.count());
     }
+
+    @Test
+    void malformedSortAndExcessivePaginationReturn400InsteadOf500() throws Exception {
+        var a = actor(RoleName.CUSTOMER);
+        for (String query : List.of("sort=%2C", "sort=%2C%2C", "sort=createdAt%2C",
+                "page=2147483647&pageSize=100")) {
+            var response = call("GET", "/orders?" + query, a.token(), null);
+            assertEquals(400, response.statusCode(), query + ": " + response.body());
+            assertEquals("VALIDATION_ERROR", json(response).get("code").asString());
+        }
+    }
 }
