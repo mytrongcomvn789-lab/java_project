@@ -1,0 +1,37 @@
+{
+  "tests": [
+    {
+      "name": "Create order from real web form",
+      "status": "PASS"
+    },
+    {
+      "name": "Edit order persists package changes and version",
+      "status": "PASS"
+    },
+    {
+      "name": "Cancel confirmation can be dismissed then cancelled persistently",
+      "status": "PASS"
+    },
+    {
+      "name": "Concurrent approval makes customer edit stale; reload prevents overwrite",
+      "status": "PASS"
+    },
+    {
+      "name": "Reject reason remains visible to customer",
+      "status": "PASS"
+    },
+    {
+      "name": "Customer cannot open another customer order edit page",
+      "status": "PASS"
+    },
+    {
+      "name": "Fixed invalid list queries return 400 with useful code",
+      "status": "PASS"
+    },
+    {
+      "name": "No unhandled JavaScript errors",
+      "status": "PASS"
+    }
+  ],
+  "pageErrors": []
+}

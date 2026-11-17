@@ -22,8 +22,8 @@ public record OrderListQuery(UUID orderId, OrderStatus status, Instant from, Ins
 
     public static OrderListQuery of(String code, String status, String from, String to, String stationId,
                                     int page, int pageSize, String sort) {
-        if (page < 1 || pageSize < 1 || pageSize > MAX_PAGE_SIZE) {
-            throw bad("page phải từ 1; pageSize từ 1 đến " + MAX_PAGE_SIZE);
+        if (page < 1 || pageSize < 1 || pageSize > MAX_PAGE_SIZE || (long) (page - 1) * pageSize > Integer.MAX_VALUE) {
+            throw bad("page phải từ 1 và offset không vượt 2147483647; pageSize từ 1 đến " + MAX_PAGE_SIZE);
         }
         Instant f = instant("from", from);
         Instant t = instant("to", to);
@@ -67,7 +67,7 @@ public record OrderListQuery(UUID orderId, OrderStatus status, Instant from, Ins
         String field = "createdAt";
         Sort.Direction dir = Sort.Direction.DESC;
         if (!blank(v)) {
-            String[] p = limit("sort", v).split(",");
+            String[] p = limit("sort", v).split(",", -1);
             if (p.length > 2 || !SORT_FIELDS.contains(p[0].trim())) {
                 throw bad("sort chỉ hỗ trợ: " + SORT_FIELDS);
             }

@@ -93,7 +93,7 @@ Ghi chú về giao diện: nút Sửa/Hủy chỉ là tiện lợi. Quyền th�
 
 ## Kiểm thử
 
-Xem [báo cáo kiểm chứng 3.6](../07-testing/3.6-edit-cancel-verification.md).
+Xem [báo cáo kiểm thử tích hợp, gồm sửa/hủy đơn](../07-testing/integration-2026-11-16.md).
 
 ```powershell
 # Trong web
