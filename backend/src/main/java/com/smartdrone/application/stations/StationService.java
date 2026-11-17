@@ -1,5 +1,6 @@
 package com.smartdrone.application.stations;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
@@ -14,15 +15,23 @@ import com.smartdrone.application.stations.dto.StationInput;
 import com.smartdrone.application.stations.dto.StationStatusInput;
 import com.smartdrone.application.stations.dto.StationView;
 import com.smartdrone.domain.entity.Station;
+import com.smartdrone.domain.entity.StationStatusEvent;
+import com.smartdrone.domain.enums.RoleName;
 import com.smartdrone.domain.enums.StationStatus;
 import com.smartdrone.infrastructure.persistence.StationRepository;
+import com.smartdrone.infrastructure.persistence.StationStatusEventRepository;
 
 @Service
 public class StationService implements StationDirectory {
     private final StationRepository stations;
+    private final StaffStationScope scope;
+    private final StationStatusEventRepository events;
 
-    public StationService(StationRepository stations) {
+    public StationService(StationRepository stations, StaffStationScope scope,
+            StationStatusEventRepository events) {
         this.stations = stations;
+        this.scope = scope;
+        this.events = events;
     }
 
     @Transactional(readOnly = true)
@@ -48,11 +57,22 @@ public class StationService implements StationDirectory {
     }
 
     @Transactional
-    @PreAuthorize("hasRole('LOGISTICS_MANAGER')")
-    public StationView changeStatus(UUID id, StationStatusInput input) {
+    @PreAuthorize("hasAnyRole('LOGISTICS_MANAGER','STATION_OPERATOR')")
+    public StationView changeStatus(UUID actorId, RoleName actorRole, UUID id, StationStatusInput input) {
         var station = stations.findById(id).orElseThrow(StationService::notFound);
+        // Operator chỉ đổi được trạm mình được phân công; không có dòng phân công thì bị chặn.
+        if (actorRole == RoleName.STATION_OPERATOR
+                && !scope.stationIdsFor(actorId, actorRole).contains(id)) {
+            throw new ApiException(ErrorCode.FORBIDDEN, "Bạn chỉ được đổi trạng thái trạm được phân công");
+        }
+        var from = station.getStatus();
+        if (from == input.status()) {
+            return StationView.from(station); // không đổi gì thì không ghi audit
+        }
         station.changeStatus(input.status());
-        return StationView.from(stations.saveAndFlush(station));
+        var saved = stations.saveAndFlush(station);
+        events.save(new StationStatusEvent(id, from, input.status(), actorId, actorRole, Instant.now()));
+        return StationView.from(saved);
     }
 
     @Override
