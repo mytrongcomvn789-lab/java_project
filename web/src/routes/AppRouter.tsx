@@ -1,6 +1,8 @@
 import { Routes, Route } from 'react-router-dom';
 import AuthLayout from '../layouts/AuthLayout';
 import MainLayout from '../layouts/MainLayout';
+import StationParcelsPage from '../features/orders/StationParcelsPage';
+import StationReceiptPage from '../features/orders/StationReceiptPage';
 import OrdersPage from '../features/orders/OrdersPage';
 import DispatchRequestsPage from '../features/orders/DispatchRequestsPage';
 import OrderDetailPage from '../features/orders/OrderDetailPage';
@@ -36,6 +38,8 @@ export default function AppRouter() {
           <Route path="/deliveries/:id/edit" element={<EditOrderPage />} />
           <Route path="/addresses" element={<AddressesPage />} />
           <Route path="/stations" element={<StationsPage />} />
+          <Route path="/station/parcels" element={<StationParcelsPage />} />
+          <Route path="/station/parcels/:id" element={<StationReceiptPage />} />
           {import.meta.env.DEV && (
             <Route
               path="/dev/package-form"

@@ -1,0 +1,156 @@
+[
+  {
+    "suite": "com.smartdrone.api.addresses.AddressIntegrationTest",
+    "tests": 40,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "suite": "com.smartdrone.api.controller.HealthControllerTest",
+    "tests": 1,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "suite": "com.smartdrone.api.controller.MinioFileFlowTest",
+    "tests": 7,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 7
+  },
+  {
+    "suite": "com.smartdrone.api.error.GlobalExceptionHandlerTest",
+    "tests": 5,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "suite": "com.smartdrone.api.orders.OrderIntegrationTest",
+    "tests": 18,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 2
+  },
+  {
+    "suite": "com.smartdrone.api.orders.OrderListQueryTest",
+    "tests": 4,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "suite": "com.smartdrone.api.orders.OrderReceiptIntegrationTest",
+    "tests": 21,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "suite": "com.smartdrone.api.orders.OrderReviewIntegrationTest",
+    "tests": 20,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "suite": "com.smartdrone.api.packages.PackagePersistenceIntegrationTest",
+    "tests": 3,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "suite": "com.smartdrone.api.security.RbacIntegrationTest",
+    "tests": 202,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "suite": "com.smartdrone.api.stations.StationIntegrationTest",
+    "tests": 12,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "suite": "com.smartdrone.application.auth.AuthServiceTest",
+    "tests": 13,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "suite": "com.smartdrone.application.common.IfMatchVersionTest",
+    "tests": 4,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "suite": "com.smartdrone.application.files.FileServiceTest",
+    "tests": 9,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "suite": "com.smartdrone.application.files.ImageSignatureTest",
+    "tests": 2,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "suite": "com.smartdrone.application.orders.OrderServiceTest",
+    "tests": 16,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "suite": "com.smartdrone.application.packages.PackageInputValidationTest",
+    "tests": 6,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "suite": "com.smartdrone.application.packages.PackageServiceTest",
+    "tests": 9,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "suite": "com.smartdrone.application.workflow.OrderTransitionServiceTest",
+    "tests": 9,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "suite": "com.smartdrone.domain.enums.RoleNameTest",
+    "tests": 1,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "suite": "com.smartdrone.domain.workflow.TransitionRulesTest",
+    "tests": 11,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "suite": "com.smartdrone.infrastructure.service.JwtAccessTokenIssuerTest",
+    "tests": 6,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  }
+]

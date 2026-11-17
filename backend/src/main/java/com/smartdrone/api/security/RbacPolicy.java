@@ -62,6 +62,8 @@ public final class RbacPolicy {
             rule(POST, "/v1/orders/{id}/return", DISPATCHER),
             rule(POST, "/v1/orders/{id}/schedules", DISPATCHER),
             rule(POST, "/v1/orders/{id}/receipts", STATION_OPERATOR),
+            rule(GET, "/v1/station-receipts", STATION_OPERATOR),
+            rule(GET, "/v1/orders/{id}/receipt-context", STATION_OPERATOR),
             rule(POST, "/v1/orders/{id}/dispatch", STATION_OPERATOR),
             rule(POST, "/v1/orders/{id}/arrive", STATION_OPERATOR),
             rule(POST, "/v1/orders/{id}/complete-return", STATION_OPERATOR),
