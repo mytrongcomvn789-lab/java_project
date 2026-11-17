@@ -1,8 +1,29 @@
 name: mobile-ci
 on: [push, pull_request]
+permissions:
+  contents: read
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      CI: "true"
+      FLUTTER_SUPPRESS_ANALYTICS: "true"
     steps:
       - uses: actions/checkout@v4
-      # TODO: thêm bước build/test cho mobile
+      - name: Install the tested Flutter SDK
+        run: |
+          git clone --depth 1 --branch 3.50.0 https://github.com/flutter/flutter.git "$RUNNER_TEMP/flutter"
+          test "$(git -C "$RUNNER_TEMP/flutter" rev-parse HEAD)" = "ab2912035e160d9cad6306df307576da6128ebdb"
+          echo "$RUNNER_TEMP/flutter/bin" >> "$GITHUB_PATH"
+      - name: Install dependencies
+        working-directory: mobile
+        run: flutter pub get --enforce-lockfile
+      - name: Analyze
+        working-directory: mobile
+        # Flutter 3.50 reports legacy material.dart imports at info level.
+        # Keep these visible; errors and warnings still fail this job.
+        run: flutter analyze --no-pub --no-fatal-infos
+      - name: Run widget tests
+        working-directory: mobile
+        run: flutter test --no-pub

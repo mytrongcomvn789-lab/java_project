@@ -1,0 +1,22 @@
+[
+  {
+    "query": "sort=%2C",
+    "status": 400,
+    "code": "VALIDATION_ERROR"
+  },
+  {
+    "query": "sort=%2C%2C",
+    "status": 400,
+    "code": "VALIDATION_ERROR"
+  },
+  {
+    "query": "sort=createdAt%2C",
+    "status": 400,
+    "code": "VALIDATION_ERROR"
+  },
+  {
+    "query": "page=2147483647&pageSize=100",
+    "status": 400,
+    "code": "VALIDATION_ERROR"
+  }
+]

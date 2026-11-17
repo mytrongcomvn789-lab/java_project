@@ -1,0 +1,38 @@
+{
+  "fixtureNotice": "Local H2 qa34. Scheduling records are explicit test fixtures because API 4.2 is not complete. Receipt API/UI are real.",
+  "tests": [
+    {
+      "name": "Pickup operator sees only the scheduled receipt queue",
+      "status": "PASS"
+    },
+    {
+      "name": "Receipt displays sender parcel and attempt; confirmation can be cancelled",
+      "status": "PASS"
+    },
+    {
+      "name": "API rejects wrong package, wrong attempt and stale version without mutation",
+      "status": "PASS"
+    },
+    {
+      "name": "Real UI receives parcel and persists one receipt after reload",
+      "status": "PASS"
+    },
+    {
+      "name": "Two operator tabs cannot receive the same order twice",
+      "status": "PASS"
+    },
+    {
+      "name": "Dropoff operator cannot read reception context or see pickup queue",
+      "status": "PASS"
+    },
+    {
+      "name": "Customer sees receipt status but cannot access reception screen",
+      "status": "PASS"
+    },
+    {
+      "name": "Received orders leave queue; no unhandled browser exceptions",
+      "status": "PASS"
+    }
+  ],
+  "pageErrors": []
+}

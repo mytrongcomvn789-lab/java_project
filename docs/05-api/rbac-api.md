@@ -42,7 +42,7 @@ Giữ mô hình **một tài khoản — một vai trò** của Java hiện tạ
 | Nhận kiện, xuất phát, nhận đích, bàn giao, nhận hoàn | — | — | ✓ | — | — |
 | Tạo/sửa thông tin trạm | — | — | — | ✓ | — |
 | Cập nhật trạng thái trạm | — | — | Chưa cấp đến khi có phân công | ✓ | — |
-| Availability/sức chứa theo lịch | Chưa triển khai | Chưa triển khai | Chưa triển khai | Chưa triển khai | Chưa triển khai |
+| Availability/sức chứa theo lịch (4.2) | — | ✓ | ✓ | ✓ | — |
 | Thống kê giao hàng | — | — | — | ✓ | — |
 | Tóm tắt đơn | ✓ | ✓ | — | ✓ | — |
 | Trợ lý khách hàng | ✓ | — | — | — | — |
