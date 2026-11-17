@@ -1,10 +1,13 @@
 import { Routes, Route } from 'react-router-dom';
 import AuthLayout from '../layouts/AuthLayout';
 import MainLayout from '../layouts/MainLayout';
+import StationParcelsPage from '../features/orders/StationParcelsPage';
+import StationReceiptPage from '../features/orders/StationReceiptPage';
 import OrdersPage from '../features/orders/OrdersPage';
 import DispatchRequestsPage from '../features/orders/DispatchRequestsPage';
 import OrderDetailPage from '../features/orders/OrderDetailPage';
 import CreateOrderPage from '../features/orders/CreateOrderPage';
+import EditOrderPage from '../features/orders/EditOrderPage';
 import NotFoundPage from './NotFoundPage';
 import LoginPage from '../features/auth/LoginPage';
 import RequireAuth from '../features/auth/RequireAuth';
@@ -32,8 +35,11 @@ export default function AppRouter() {
           <Route path="/dispatch/requests" element={<DispatchRequestsPage />} />
           <Route path="/deliveries/new" element={<CreateOrderPage />} />
           <Route path="/deliveries/:id" element={<OrderDetailPage />} />
+          <Route path="/deliveries/:id/edit" element={<EditOrderPage />} />
           <Route path="/addresses" element={<AddressesPage />} />
           <Route path="/stations" element={<StationsPage />} />
+          <Route path="/station/parcels" element={<StationParcelsPage />} />
+          <Route path="/station/parcels/:id" element={<StationReceiptPage />} />
           {import.meta.env.DEV && (
             <Route
               path="/dev/package-form"

@@ -578,6 +578,22 @@ h3 {
   background: #eee;
   color: #555;
 }
+.badge.st-in_transit {
+  background: #d6f0f0;
+  color: #0f6b6b;
+}
+.badge.st-awaiting_pickup {
+  background: #e3f1d9;
+  color: #2f6b1f;
+}
+.badge.st-returning {
+  background: #ffe3cf;
+  color: #a14a00;
+}
+.badge.st-returned {
+  background: #e6e0f5;
+  color: #4b3a8a;
+}
 @media (max-width: 900px) {
   .feature-grid {
     grid-template-columns: 1fr;

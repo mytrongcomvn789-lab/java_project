@@ -1,18 +1,22 @@
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useLocation, useParams } from "react-router-dom";
 import PageHeader from "../../components/ui/PageHeader";
 import PackageSummary from "../packages/PackageSummary";
 import { ApiRequestError } from "../../lib/apiClient";
 import { orderService, type OrderDetail } from "../../lib/orderService";
 import { useAuth } from "../auth/AuthContext";
 import OrderReviewActions from "./OrderReviewActions";
+import OrderCustomerActions from "./OrderCustomerActions";
 
 const when = (v: string) => new Date(v).toLocaleString("vi-VN");
 
 export default function OrderDetailPage() {
   const { id = "" } = useParams();
   const { isDemo, user } = useAuth();
-  const [notice, setNotice] = useState("");
+  const location = useLocation();
+  const [notice, setNotice] = useState(
+    () => (location.state as { notice?: string } | null)?.notice ?? "",
+  );
   const [order, setOrder] = useState<OrderDetail | null>(null);
   const [error, setError] = useState("");
   const [retry, setRetry] = useState(0);
@@ -22,7 +26,6 @@ export default function OrderDetailPage() {
     let active = true;
     setOrder(null);
     setError("");
-    setNotice("");
     orderService
       .get(id)
       .then((o) => {
@@ -69,6 +72,17 @@ export default function OrderDetailPage() {
               <OrderReviewActions key={`${order.id}:${order.version}`} order={order}
                 onReviewed={(updated, message) => { setOrder(updated); setNotice(message); }}
                 onReload={() => setRetry((n) => n + 1)} />
+            )}
+                        {user?.role === "CUSTOMER" && order.status === "PENDING" && (
+              <OrderCustomerActions
+                key={`${order.id}:${order.version}`}
+                order={order}
+                onChanged={(updated, message) => {
+                  setOrder(updated);
+                  setNotice(message);
+                }}
+                onReload={() => setRetry((n) => n + 1)}
+              />
             )}
             <section className="card customer-panel">
               <h3>Đơn {order.id}</h3>

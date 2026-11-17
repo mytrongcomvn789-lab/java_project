@@ -1,0 +1,3 @@
+00:00 +0: loading D:/HOC/1. LT_JAVA/BTL/java_project/mobile/test/widget_test.dart
+00:00 +0: Home renders inside the application ProviderScope
+00:00 +1: All tests passed!
