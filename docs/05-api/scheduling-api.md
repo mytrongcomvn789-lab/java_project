@@ -127,10 +127,20 @@ Bảng `delivery_attempts` do Hibernate `ddl-auto=update` tạo khi khởi độ
 5. Gọi lại availability: slot vừa đặt phải có `used` tăng 1, `free` giảm 1.
 6. Đặt thêm đơn vào cùng slot khi `free = 0` để thấy 409 `SLOT_FULL`.
 
+## Kết quả kiểm thử
+
+Bộ `OrderScheduleIntegrationTest` (server Spring thật, JWT thật, H2 riêng): **17 lượt chạy, 0 lỗi, 0 bỏ qua** (ngày 17/11/2026). Gồm: lên lịch thành công và lịch sử, số chỗ đã đặt/còn trống theo từng slot, `SLOT_FULL` ở trạm gửi và trạm nhận, trạm không hoạt động, đầu vào sai (428/400/412), trạng thái và phạm vi (409/404), quyền của các vai trò, giao lại giải phóng chỗ cũ, trả chỗ một lần, rollback, và hai đơn tranh chỗ cuối (đúng một đơn thắng, lặp 3 lần).
+`ScheduleSlotPolicyTest`: 10/10. `RbacIntegrationTest` vẫn đạt sau khi thêm quy tắc availability.
+
+```powershell
+mvn -B test "-DforkCount=0" "-Dtest=OrderScheduleIntegrationTest,ScheduleSlotPolicyTest"
+```
+
 ## Chưa kiểm chứng
 
-- **Cả hai API chưa được chạy qua request thật.** Mã đã biên dịch và backend khởi động được; chưa có kết quả test API nào, nên 4.2 chưa được coi là hoàn thành.
-- Có test đơn vị cho luật khung giờ (`ScheduleSlotPolicyTest`); chưa có test tích hợp cho sức chứa, tranh chấp đồng thời, rollback.
-- Khóa dòng `PESSIMISTIC_WRITE` chưa được kiểm trên SQL Server thật.
+- Test chạy trên H2. **Chưa chạy trên SQL Server thật**: khóa dòng `PESSIMISTIC_WRITE` và hành vi tranh chấp cần kiểm trên database test riêng.
+- Test chưa đọc `attemptId` trong lịch sử đơn.
+- Chưa gọi tay qua Swagger với dữ liệu trên máy dev.
 - Chưa có giao diện web chọn slot.
-- Cần đối chiếu quy tắc RBAC của endpoint availability (xem `rbac-api.md`).
+- API availability chưa lọc theo phạm vi trạm của người gọi.
+- Chưa phát sự kiện realtime sau khi lên lịch (chờ DTO sự kiện của 4.3).
