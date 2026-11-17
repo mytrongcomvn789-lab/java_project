@@ -7,6 +7,7 @@ import { orderService, type OrderDetail } from "../../lib/orderService";
 import { useAuth } from "../auth/AuthContext";
 import OrderReviewActions from "./OrderReviewActions";
 import OrderCustomerActions from "./OrderCustomerActions";
+import OrderScheduleActions from "./OrderScheduleActions";
 
 const when = (v: string) => new Date(v).toLocaleString("vi-VN");
 
@@ -73,7 +74,12 @@ export default function OrderDetailPage() {
                 onReviewed={(updated, message) => { setOrder(updated); setNotice(message); }}
                 onReload={() => setRetry((n) => n + 1)} />
             )}
-                        {user?.role === "CUSTOMER" && order.status === "PENDING" && (
+            {user?.role === "DISPATCHER" && (order.status === "APPROVED" || order.status === "FAILED") && (
+              <OrderScheduleActions key={`${order.id}:${order.version}`} order={order}
+                onScheduled={(updated, message) => { setOrder(updated); setNotice(message); }}
+                onReload={() => setRetry((n) => n + 1)} />
+            )}
+            {user?.role === "CUSTOMER" && order.status === "PENDING" && (
               <OrderCustomerActions
                 key={`${order.id}:${order.version}`}
                 order={order}
