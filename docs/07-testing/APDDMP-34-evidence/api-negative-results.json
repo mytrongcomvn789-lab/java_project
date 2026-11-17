@@ -1,0 +1,17 @@
+[
+  {
+    "name": "wrongPackage",
+    "expected": 400,
+    "status": 400
+  },
+  {
+    "name": "wrongAttempt",
+    "expected": 409,
+    "status": 409
+  },
+  {
+    "name": "staleVersion",
+    "expected": 412,
+    "status": 412
+  }
+]

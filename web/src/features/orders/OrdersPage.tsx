@@ -8,6 +8,7 @@ import {
   type OrderFilters,
   type OrderPage,
 } from "../../lib/orderService";
+import { receiptService } from "../../lib/receiptService";
 import { useAuth } from "../auth/AuthContext";
 
 const PAGE_SIZE = 20;
@@ -30,8 +31,8 @@ const nextDay = (d: string) => {
   return t.toISOString();
 };
 
-export default function OrdersPage({ pendingOnly = false }: { pendingOnly?: boolean }) {
-  const initial = { ...EMPTY, status: pendingOnly ? "PENDING" : "" };
+export default function OrdersPage({ pendingOnly = false, receiptOnly = false }: { pendingOnly?: boolean; receiptOnly?: boolean }) {
+  const initial = { ...EMPTY, status: receiptOnly ? "SCHEDULED" : pendingOnly ? "PENDING" : "" };
   const { isDemo } = useAuth();
   const [form, setForm] = useState(initial); // giá trị đang gõ
   const [applied, setApplied] = useState(initial); // giá trị đã áp dụng (gửi lên server)
@@ -50,7 +51,7 @@ export default function OrdersPage({ pendingOnly = false }: { pendingOnly?: bool
       from: startOfDay(applied.from),
       to: nextDay(applied.to),
     };
-    orderService
+    (receiptOnly ? receiptService : orderService)
       .list(f, page, PAGE_SIZE)
       .then((r) => {
         if (active) setData(r);
@@ -66,7 +67,7 @@ export default function OrdersPage({ pendingOnly = false }: { pendingOnly?: bool
     return () => {
       active = false;
     };
-  }, [applied, page, retry, isDemo]);
+  }, [applied, page, retry, isDemo, receiptOnly]);
 
   function submit(e: FormEvent) {
     e.preventDefault();
@@ -85,7 +86,7 @@ export default function OrdersPage({ pendingOnly = false }: { pendingOnly?: bool
   return (
     <>
       <PageHeader
-        title={pendingOnly ? "Yêu cầu chờ duyệt" : "Đơn giao hàng"}
+        title={receiptOnly ? "Kiện chờ nhận tại trạm gửi" : pendingOnly ? "Yêu cầu chờ duyệt" : "Đơn giao hàng"}
         subtitle="Tìm kiếm, lọc và xem chi tiết đơn trong phạm vi của bạn."
         crumbs={["Trang chủ", "Đơn giao hàng"]}
       />
@@ -110,7 +111,7 @@ export default function OrdersPage({ pendingOnly = false }: { pendingOnly?: bool
                 <span>Trạng thái</span>
                 <select
                   value={form.status}
-                  disabled={pendingOnly}
+                  disabled={pendingOnly || receiptOnly}
                   onChange={(e) => set("status", e.target.value)}
                 >
                   <option value="">Tất cả</option>
@@ -206,7 +207,7 @@ export default function OrdersPage({ pendingOnly = false }: { pendingOnly?: bool
                     {data.items.map((o) => (
                       <tr key={o.id}>
                         <td>
-                          <Link to={`/deliveries/${o.id}`}>
+                          <Link to={receiptOnly ? `/station/parcels/${o.id}` : `/deliveries/${o.id}`}>
                             {o.id.slice(0, 8)}…
                           </Link>
                         </td>

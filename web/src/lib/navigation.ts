@@ -278,6 +278,7 @@ export const PLACEHOLDER_PATHS: string[] = Array.from(
           "/deliveries",
           "/deliveries/new",
           "/dispatch/requests",
+          "/station/parcels",
         ].includes(p),
     ),
   ),
