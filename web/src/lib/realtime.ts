@@ -7,6 +7,10 @@ import {
 import { refreshAccessTokenOnce } from "./apiClient";
 import { IS_DEMO_AUTH, WS_URL } from "./env";
 import { tokenStorage } from "./token";
+import type {
+  NotificationItem,
+  NotificationRealtimeEvent,
+} from "./notificationService";
 
 /** Sự kiện đơn hàng, khớp OrderRealtimeEvent ở backend (docs/05-api/realtime-api.md). */
 export interface OrderRealtimeEvent {
@@ -30,6 +34,12 @@ interface OrderListener {
   onResync?: () => void;
   /** Server từ chối đăng ký kênh (không có quyền hoặc đơn không tồn tại). */
   onDenied?: () => void;
+}
+
+interface NotificationListener {
+  onNotification: (notification: NotificationItem) => void;
+  /** Gọi mỗi khi (kết nối lại và) đăng ký kênh thông báo xong: tải bù hộp thư bằng REST. */
+  onResync?: () => void;
 }
 
 const MAX_BACKOFF_MS = 30_000;
@@ -69,6 +79,11 @@ class RealtimeClient {
   private readonly subscriptions = new Map<string, StompSubscription>();
   private readonly denied = new Set<string>();
   private readonly seen = new Map<string, Set<string>>();
+  private readonly notificationListeners = new Set<NotificationListener>();
+  private notificationSubscription: StompSubscription | null = null;
+  private notificationUserId: string | null = null;
+  private notificationsDenied = false;
+  private readonly seenNotifications = new Set<string>();
 
   getState(): RealtimeState {
     return this.state;
@@ -90,14 +105,92 @@ class RealtimeClient {
       this.listeners.set(orderId, set);
     }
     set.add(listener);
-    if (this.stopped) {
-      this.stopped = false;
-      this.attempt = 0;
-      void this.connect();
-    } else {
-      this.attach(orderId);
-    }
+    if (!this.start()) this.attach(orderId);
     return () => this.unsubscribeOrder(orderId, listener);
+  }
+
+  /** Bật kết nối nếu đang tắt. Trả true nếu vừa bật (kết nối xong, onConnected sẽ tự đăng ký các kênh). */
+  private start(): boolean {
+    if (!this.stopped) return false;
+    this.stopped = false;
+    this.attempt = 0;
+    void this.connect();
+    return true;
+  }
+
+  /** Theo dõi hộp thông báo của khách (kênh riêng /topic/notifications/{userId}). Trả về hàm hủy. */
+  subscribeNotifications(
+    userId: string,
+    listener: NotificationListener,
+  ): () => void {
+    if (IS_DEMO_AUTH) return () => undefined; // chế độ demo không có token thật
+    this.notificationUserId = userId;
+    this.notificationsDenied = false;
+    this.notificationListeners.add(listener);
+    if (!this.start()) this.attachNotifications();
+    return () => this.unsubscribeNotifications(listener);
+  }
+
+  private unsubscribeNotifications(listener: NotificationListener): void {
+    this.notificationListeners.delete(listener);
+    if (this.notificationListeners.size > 0) return;
+    try {
+      this.notificationSubscription?.unsubscribe();
+    } catch {
+      /* kết nối đã đóng */
+    }
+    this.notificationSubscription = null;
+    this.notificationUserId = null;
+    this.seenNotifications.clear();
+    this.stopIfIdle();
+  }
+
+  private stopIfIdle(): void {
+    if (this.listeners.size === 0 && this.notificationListeners.size === 0) {
+      this.disconnect();
+    }
+  }
+
+  private attachNotifications(): void {
+    const client = this.client;
+    if (
+      !client ||
+      !client.connected ||
+      this.notificationSubscription ||
+      this.notificationsDenied ||
+      !this.notificationUserId ||
+      this.notificationListeners.size === 0
+    ) {
+      return;
+    }
+    const receipt = "sub:notifications";
+    // Đăng ký xong thì tải bù hộp thư bằng REST (không sót thông báo đến lúc đang offline).
+    client.watchForReceipt(receipt, () =>
+      this.notificationListeners.forEach((l) => l.onResync?.()),
+    );
+    this.notificationSubscription = client.subscribe(
+      `/topic/notifications/${this.notificationUserId}`,
+      (message) => this.onNotificationMessage(message),
+      { id: "notifications", receipt },
+    );
+  }
+
+  private onNotificationMessage(message: IMessage): void {
+    let event: NotificationRealtimeEvent;
+    try {
+      event = JSON.parse(message.body) as NotificationRealtimeEvent;
+    } catch {
+      return;
+    }
+    const notification = event.notification;
+    if (!notification?.eventId) return;
+    if (this.seenNotifications.has(notification.eventId)) return; // loại trùng theo eventId
+    this.seenNotifications.add(notification.eventId);
+    if (this.seenNotifications.size > SEEN_LIMIT) {
+      const oldest = this.seenNotifications.values().next().value;
+      if (oldest !== undefined) this.seenNotifications.delete(oldest);
+    }
+    this.notificationListeners.forEach((l) => l.onNotification(notification));
   }
 
   /** Đăng xuất hoặc hết phiên: đóng kết nối và dọn sạch mọi đăng ký. */
@@ -111,6 +204,11 @@ class RealtimeClient {
     this.listeners.clear();
     this.denied.clear();
     this.seen.clear();
+    this.notificationListeners.clear();
+    this.notificationSubscription = null;
+    this.notificationUserId = null;
+    this.notificationsDenied = false;
+    this.seenNotifications.clear();
     if (client) void client.deactivate();
     this.setState("offline");
   }
@@ -129,7 +227,8 @@ class RealtimeClient {
       /* kết nối đã đóng */
     }
     this.subscriptions.delete(orderId);
-    if (this.listeners.size === 0) this.disconnect();
+
+    this.stopIfIdle();
   }
 
   private async freshToken(): Promise<string | null> {
@@ -177,6 +276,8 @@ class RealtimeClient {
     this.attempt = 0;
     this.setState("live");
     for (const orderId of this.listeners.keys()) this.attach(orderId);
+    this.attachNotifications();
+
     // Làm mới kết nối trước khi token hết hạn; jitter để nhiều tab không refresh cùng lúc.
     const renewInMs =
       (secondsLeft(token) - TOKEN_MARGIN_S - Math.random() * 10) * 1000;
@@ -235,7 +336,10 @@ class RealtimeClient {
   private onStompError(frame: IFrame): void {
     const message = frame.headers["message"] ?? "";
     const receipt = frame.headers["receipt-id"] ?? "";
-    if (message.includes("FORBIDDEN") && receipt.startsWith("sub:")) {
+
+    if (message.includes("FORBIDDEN") && receipt === "sub:notifications") {
+      this.notificationsDenied = true; // không đăng ký lại kênh này khi nối lại
+    } else if (message.includes("FORBIDDEN") && receipt.startsWith("sub:")) {
       const orderId = receipt.slice(4);
       this.denied.add(orderId); // không đăng ký lại đơn này khi nối lại
       this.listeners.get(orderId)?.forEach((l) => l.onDenied?.());
@@ -252,6 +356,7 @@ class RealtimeClient {
     if (this.client !== client) return; // kết nối cũ đã bị thay thế
     this.client = null;
     this.subscriptions.clear();
+    this.notificationSubscription = null;
     window.clearTimeout(this.renewTimer);
     if (event.reason.includes("TOKEN_EXPIRED")) this.forceRefresh = true;
     if (this.stopped) {
@@ -267,6 +372,7 @@ class RealtimeClient {
     const old = this.client;
     this.client = null;
     this.subscriptions.clear();
+    this.notificationSubscription = null;
     if (old) void old.deactivate();
     this.attempt = 0;
     void this.connect();

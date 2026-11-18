@@ -71,6 +71,9 @@ public final class RbacPolicy {
             rule(GET, "/v1/orders/{id}/summary", CUSTOMER, DISPATCHER, LOGISTICS_MANAGER),
             rule(GET, "/v1/orders/{id}/pickup-code", CUSTOMER),
 
+            rule(GET, "/v1/notifications", CUSTOMER),
+            rule(POST, "/v1/notifications/{id}/read", CUSTOMER),
+            rule(POST, "/v1/notifications/read-all", CUSTOMER),
             rule(POST, "/v1/assistant/messages", CUSTOMER),
             rule(GET, "/v1/analytics/deliveries", LOGISTICS_MANAGER),
             rule(POST, "/v1/files/upload-tickets", CUSTOMER, STATION_OPERATOR),

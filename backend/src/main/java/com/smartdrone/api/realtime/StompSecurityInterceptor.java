@@ -20,6 +20,8 @@ import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtException;
 import org.springframework.stereotype.Component;
 
+import java.util.Optional;
+import com.smartdrone.application.realtime.NotificationChannel;
 import com.smartdrone.api.security.AccountJwtAuthenticationConverter;
 import com.smartdrone.application.common.ErrorCode;
 import com.smartdrone.application.realtime.OrderChannel;
@@ -107,6 +109,17 @@ public class StompSecurityInterceptor implements ChannelInterceptor {
         if (!who.expiresAt().isAfter(clock.instant())) {
             throw reject(ErrorCode.TOKEN_EXPIRED);
         }
+
+        Optional<UUID> notificationOwner = NotificationChannel.parse(accessor.getDestination());
+        if (notificationOwner.isPresent()) {
+            // Kênh thông báo: chỉ KHÁCH HÀNG, và chỉ kênh của chính mình (userId trong đích phải trùng userId trong token).
+            if (who.role() != RoleName.CUSTOMER || !notificationOwner.get().equals(who.userId())) {
+                log.info("WS_SUBSCRIBE_DENIED user={} role={} channel=notifications", who.userId(), who.role());
+                throw reject(ErrorCode.FORBIDDEN);
+            }
+            return;
+        }
+
         UUID orderId = OrderChannel.parse(accessor.getDestination())
                 .orElseThrow(() -> reject(ErrorCode.FORBIDDEN)); // kênh khác, ký tự đại diện: cấm
         if (!channelAccess.canSubscribe(who.userId(), who.role(), orderId)) {
