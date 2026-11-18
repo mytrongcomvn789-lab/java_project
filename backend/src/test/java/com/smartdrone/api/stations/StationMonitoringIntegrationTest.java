@@ -2,6 +2,11 @@ package com.smartdrone.api.stations;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.time.Clock;
+import com.smartdrone.application.scheduling.ScheduleProperties;
+import com.smartdrone.domain.entity.DeliveryAttempt;
+import com.smartdrone.infrastructure.persistence.DeliveryAttemptRepository;
+
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -61,6 +66,9 @@ class StationMonitoringIntegrationTest {
     @Autowired StaffStationAssignmentRepository assignments;
     @Autowired StationStatusEventRepository events;
     @Autowired AccessTokenIssuer tokens;
+    @Autowired DeliveryAttemptRepository attempts;
+    @Autowired ScheduleProperties schedule;
+    @Autowired Clock clock;
 
     record Actor(String token) { }
 
@@ -74,6 +82,7 @@ class StationMonitoringIntegrationTest {
         assignments.deleteAll();
         events.deleteAll();
         stations.deleteAll();
+        attempts.deleteAll();
     }
 
     private Identity identity(RoleName role) {
@@ -133,10 +142,10 @@ class StationMonitoringIntegrationTest {
         UUID customer = identity(RoleName.CUSTOMER).user().getId();
 
         // Đơn đi từ A tới B, mỗi đơn một kiện
-        seedOrder(customer, a, b, OrderStatus.SCHEDULED);       // chờ xuất tại A
-        seedOrder(customer, a, b, OrderStatus.PREPARING);       // chờ xuất tại A
+        seedOrder(customer, a, b, OrderStatus.SCHEDULED);       // đã lên lịch, kiện chưa tới A
+        seedOrder(customer, a, b, OrderStatus.PREPARING);       // kiện đang ở A, chờ xuất
         seedOrder(customer, a, b, OrderStatus.IN_TRANSIT);      // đang tới B
-        seedOrder(customer, a, b, OrderStatus.AWAITING_PICKUP); // chờ nhận tại B
+        seedOrder(customer, a, b, OrderStatus.AWAITING_PICKUP); // kiện đang ở B, chờ khách
         seedOrder(customer, a, b, OrderStatus.DELIVERED);       // không tính
         seedOrder(customer, a, b, OrderStatus.PENDING);         // không tính
 
@@ -146,15 +155,19 @@ class StationMonitoringIntegrationTest {
         assertEquals(2, list.size());
 
         var rowA = row(list, a).get("packages");
-        assertEquals(2, rowA.get("waitingDispatch").asLong());
+        assertEquals(1, rowA.get("scheduled").asLong());
+        assertEquals(1, rowA.get("preparing").asLong());
         assertEquals(0, rowA.get("inbound").asLong());
         assertEquals(0, rowA.get("waitingPickup").asLong());
+        assertEquals(1, rowA.get("atStation").asLong());
         assertEquals(2, rowA.get("processingTotal").asLong());
 
         var rowB = row(list, b).get("packages");
-        assertEquals(0, rowB.get("waitingDispatch").asLong());
+        assertEquals(0, rowB.get("scheduled").asLong());
+        assertEquals(0, rowB.get("preparing").asLong());
         assertEquals(1, rowB.get("inbound").asLong());
         assertEquals(1, rowB.get("waitingPickup").asLong());
+        assertEquals(1, rowB.get("atStation").asLong());
         assertEquals(2, rowB.get("processingTotal").asLong());
     }
 
@@ -205,5 +218,24 @@ class StationMonitoringIntegrationTest {
         assertEquals(403, customer.statusCode(), customer.body());
         var anonymous = call("GET", "/stations/monitoring", null, null);
         assertEquals(401, anonymous.statusCode(), anonymous.body());
+    }
+        @Test
+    void slotShowsHeldCapacityFromSchedulingInCurrentWindow() throws Exception {
+        var manager = actor(RoleName.LOGISTICS_MANAGER);
+        UUID a = createStation(manager);
+        UUID b = createStation(manager);
+        UUID customer = identity(RoleName.CUSTOMER).user().getId();
+
+        long step = schedule.slotLength().toSeconds();
+        Instant start = Instant.ofEpochSecond(Math.floorDiv(Instant.now(clock).getEpochSecond(), step) * step);
+        // Một lịch ACTIVE giữ 1 chỗ ở cả trạm gửi A lẫn trạm nhận B trong khung giờ hiện tại
+        attempts.saveAndFlush(new DeliveryAttempt(UUID.randomUUID(), 1, a, b,
+                start, start.plus(schedule.slotLength()), customer, Instant.now()));
+
+        var list = json(call("GET", "/stations/monitoring", manager, null));
+        var slotA = row(list, a).get("slot");
+        assertEquals(1, slotA.get("used").asLong());
+        assertEquals(5, slotA.get("free").asLong()); // sức chứa 6
+        assertEquals(1, row(list, b).get("slot").get("used").asLong());
     }
 }
