@@ -8,3 +8,4 @@ dist/
 build/
 *.user
 .vite/
+backend.log
