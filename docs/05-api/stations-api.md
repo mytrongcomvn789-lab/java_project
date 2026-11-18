@@ -84,12 +84,10 @@ Ví dụ một phần tử trả về:
 
 ```json
 {
-  "id": "…",
-  "name": "Trạm Quận 1",
-  "status": "ACTIVE",
-  "capacity": 20,
+  "id": "…", "name": "Trạm Quận 1", "status": "ACTIVE", "capacity": 20,
   "connection": { "state": "UNKNOWN", "lastSeenAt": null, "source": "NONE" },
-  "packages": { "waitingDispatch": 2, "inbound": 1, "waitingPickup": 1, "processingTotal": 4 }
+  "slot": { "start": "2026-11-18T03:00:00Z", "end": "2026-11-18T03:30:00Z", "used": 3, "free": 17 },
+  "packages": { "scheduled": 1, "preparing": 1, "inbound": 1, "waitingPickup": 1, "atStation": 2, "processingTotal": 4 }
 }
 ```
 

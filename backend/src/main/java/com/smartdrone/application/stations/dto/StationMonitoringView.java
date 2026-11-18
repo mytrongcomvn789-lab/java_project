@@ -4,6 +4,10 @@ import java.util.UUID;
 
 import com.smartdrone.domain.enums.StationStatus;
 
-/** Một dòng giám sát trạm (thứ web sẽ hiển thị trên thẻ trạm). */
+/**
+ * Một dòng giám sát trạm. capacity = số lịch giao tối đa mỗi khung giờ (nguồn 3.2/4.2);
+ * slot = số chỗ đang giữ trong khung giờ hiện tại; packages = số kiện theo vị trí.
+ */
 public record StationMonitoringView(UUID id, String name, StationStatus status, int capacity,
-                                    StationConnection connection, StationPackageLoad packages) { }
+                                    StationConnection connection, StationSlotUsage slot,
+                                    StationPackageLoad packages) { }
