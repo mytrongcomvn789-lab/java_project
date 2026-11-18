@@ -72,3 +72,46 @@ mvn spring-boot:run "-Dspring-boot.run.profiles=h2"
 
 Web dùng menu “Danh sách trạm”. `LOGISTICS_MANAGER` có thể thêm/sửa/đổi trạng thái; các
 vai trò khác chỉ xem. Giao diện đổi trạng thái cho operator sẽ bổ sung ở phần web của 4.6.
+## Giám sát trạm (4.6)
+
+`GET /api/v1/stations/monitoring`: chỉ đọc, dùng dữ liệu trạm của 3.2 và dữ liệu đơn của giai đoạn 3.
+
+- **Quyền:** `LOGISTICS_MANAGER` xem mọi trạm; `DISPATCHER` và `STATION_OPERATOR` chỉ xem trạm được phân công (`staff_station_assignments`). Vai trò khác nhận `403`, chưa đăng nhập nhận `401`. Nhân viên chưa được giao trạm nào nhận danh sách rỗng.
+- **Tham số tùy chọn:** `status` = `ACTIVE` | `MAINTENANCE` | `INACTIVE` để lọc theo trạng thái vận hành.
+- **Sắp xếp:** theo tên trạm, rồi theo id.
+
+Ví dụ một phần tử trả về:
+
+```json
+{
+  "id": "…",
+  "name": "Trạm Quận 1",
+  "status": "ACTIVE",
+  "capacity": 20,
+  "connection": { "state": "UNKNOWN", "lastSeenAt": null, "source": "NONE" },
+  "packages": { "waitingDispatch": 2, "inbound": 1, "waitingPickup": 1, "processingTotal": 4 }
+}
+```
+
+### Quy tắc đếm số kiện đang xử lý
+
+Đếm theo kiện (`order_packages`), không đếm theo đơn. Quy tắc nằm ở `StationLoadRules`:
+
+| Trường | Điều kiện |
+|---|---|
+| `waitingDispatch` | trạm gửi là trạm này, đơn `SCHEDULED` hoặc `PREPARING` |
+| `inbound` | trạm nhận là trạm này, đơn `IN_TRANSIT` |
+| `waitingPickup` | trạm nhận là trạm này, đơn `AWAITING_PICKUP` |
+| `processingTotal` | tổng ba nhóm trên |
+
+Các trạng thái khác (`PENDING`, `APPROVED`, `DELIVERED`, ...) không được tính.
+
+### Kết nối (online/offline)
+
+Hệ thống chưa có nguồn tín hiệu kết nối của trạm, nên `connection.state` luôn là `UNKNOWN`,
+`lastSeenAt` là `null`, `source` là `NONE`. Giao diện hiển thị "chưa có dữ liệu", không giả trạng thái online.
+Trạng thái vận hành (`status`) độc lập với kết nối.
+
+### Sức chứa
+
+`capacity` lấy từ thông tin trạm (3.2). API này không tính đặt chỗ hay slot theo khung giờ, phần đó thuộc 4.2.

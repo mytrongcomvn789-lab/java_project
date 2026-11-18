@@ -48,6 +48,7 @@ public final class RbacPolicy {
             rule(DELETE, "/v1/addresses/{id}", CUSTOMER),
 
             rule(GET, "/v1/stations", RoleName.values()),
+            rule(GET, "/v1/stations/monitoring", LOGISTICS_MANAGER, DISPATCHER, STATION_OPERATOR),
             rule(POST, "/v1/stations", LOGISTICS_MANAGER),
             rule(PUT, "/v1/stations/{id}", LOGISTICS_MANAGER),
             rule(PATCH, "/v1/stations/{id}/status", STATION_OPERATOR, LOGISTICS_MANAGER),

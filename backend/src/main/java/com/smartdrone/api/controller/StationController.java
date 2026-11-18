@@ -1,5 +1,14 @@
 package com.smartdrone.api.controller;
 
+import java.util.List;
+
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.web.bind.annotation.RequestParam;
+
+import com.smartdrone.application.stations.StationMonitoringService;
+import com.smartdrone.application.stations.dto.StationMonitoringView;
+import com.smartdrone.domain.enums.StationStatus;
+
 import java.net.URI;
 import java.util.List;
 import java.util.UUID;
@@ -18,6 +27,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import com.smartdrone.application.stations.StationMonitoringService;
 import com.smartdrone.application.stations.StationService;
 import com.smartdrone.application.stations.dto.StationInput;
 import com.smartdrone.application.stations.dto.StationStatusInput;
@@ -35,10 +45,14 @@ import jakarta.validation.Valid;
 @SecurityRequirement(name = "bearerAuth")
 public class StationController {
     private final StationService service;
+    private final StationMonitoringService monitoring;   // <-- thêm dòng này
 
-    public StationController(StationService service) {
+    public StationController(StationService service, StationMonitoringService monitoring) {  // <-- thêm tham số
         this.service = service;
+        this.monitoring = monitoring;                    // <-- thêm dòng này
     }
+
+
 
     @GetMapping
     @PreAuthorize("hasAnyRole('CUSTOMER','DISPATCHER','STATION_OPERATOR','LOGISTICS_MANAGER','SYSTEM_ADMIN')")
@@ -74,5 +88,26 @@ public class StationController {
                 ? RoleName.LOGISTICS_MANAGER : RoleName.STATION_OPERATOR;
         return ResponseEntity.ok().cacheControl(CacheControl.noStore())
                 .body(service.changeStatus(UUID.fromString(auth.getName()), role, id, input));
+                
+    }
+
+    @GetMapping("/monitoring")
+    @PreAuthorize("hasAnyRole('LOGISTICS_MANAGER','DISPATCHER','STATION_OPERATOR')")
+    @Operation(summary = "Giám sát trạm: trạng thái vận hành, kết nối, số kiện đang xử lý")
+    public ResponseEntity<List<StationMonitoringView>> monitoring(JwtAuthenticationToken auth,
+            @RequestParam(required = false) StationStatus status) {
+        return ResponseEntity.ok().cacheControl(CacheControl.noStore())
+                .body(monitoring.monitor(UUID.fromString(auth.getName()), staffRole(auth), status));
+    }
+
+    /** Xác định vai trò nhân viên của người gọi từ token (đã được @PreAuthorize giới hạn ở 3 vai trò). */
+    private static RoleName staffRole(JwtAuthenticationToken auth) {
+        for (var role : List.of(RoleName.LOGISTICS_MANAGER, RoleName.DISPATCHER, RoleName.STATION_OPERATOR)) {
+            if (auth.getAuthorities().stream()
+                    .anyMatch(a -> ("ROLE_" + role.name()).equals(a.getAuthority()))) {
+                return role;
+            }
+        }
+        throw new AccessDeniedException("Không có quyền giám sát trạm");
     }
 }
