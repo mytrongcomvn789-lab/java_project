@@ -1,6 +1,6 @@
-import apiClient from './apiClient';
-import type { PackageView } from './packageService';
-import type { OrderRequestBody } from './orderForm';
+import apiClient from "./apiClient";
+import type { PackageView } from "./packageService";
+import type { OrderRequestBody } from "./orderForm";
 
 export interface OrderSummary {
   id: string;
@@ -22,6 +22,7 @@ export interface OrderPage {
   total: number;
 }
 export interface StatusHistory {
+  eventId: string;
   orderVersion: number;
   fromStatus: string | null;
   toStatus: string;
@@ -71,22 +72,24 @@ export interface OrderFilters {
 
 // Trạng thái theo backend (OrderStatus), khác danh sách cũ trong deliveryStatus.ts.
 export const ORDER_STATUS_OPTIONS: [string, string][] = [
-  ['PENDING', 'Chờ duyệt'],
-  ['APPROVED', 'Đã duyệt'],
-  ['REJECTED', 'Bị từ chối'],
-  ['CANCELLED', 'Đã hủy'],
-  ['SCHEDULED', 'Đã lên lịch'],
-  ['PREPARING', 'Đang chuẩn bị'],
-  ['IN_TRANSIT', 'Đang giao'],
-  ['AWAITING_PICKUP', 'Chờ nhận hàng'],
-  ['DELIVERED', 'Đã giao'],
-  ['FAILED', 'Giao thất bại'],
-  ['RETURNING', 'Đang hoàn hàng'],
-  ['RETURNED', 'Đã hoàn hàng'],
+  ["PENDING", "Chờ duyệt"],
+  ["APPROVED", "Đã duyệt"],
+  ["REJECTED", "Bị từ chối"],
+  ["CANCELLED", "Đã hủy"],
+  ["SCHEDULED", "Đã lên lịch"],
+  ["PREPARING", "Đang chuẩn bị"],
+  ["IN_TRANSIT", "Đang giao"],
+  ["AWAITING_PICKUP", "Chờ nhận hàng"],
+  ["DELIVERED", "Đã giao"],
+  ["FAILED", "Giao thất bại"],
+  ["RETURNING", "Đang hoàn hàng"],
+  ["RETURNED", "Đã hoàn hàng"],
 ];
 
 // If-Match: ưu tiên ETag server trả (đã có dấu nháy kép), không có thì dựng từ version.
-export function ifMatchOf(order: Pick<OrderDetail, 'etag' | 'version'>): string {
+export function ifMatchOf(
+  order: Pick<OrderDetail, "etag" | "version">,
+): string {
   return order.etag ?? `"${order.version}"`;
 }
 
@@ -96,38 +99,44 @@ export const orderService = {
     (Object.keys(f) as (keyof OrderFilters)[]).forEach((k) => {
       if (f[k]) params[k] = f[k];
     });
-    return (await apiClient.get<OrderPage>('/v1/orders', { params })).data;
+    return (await apiClient.get<OrderPage>("/v1/orders", { params })).data;
   },
   get: async (id: string): Promise<OrderDetail> => {
     const response = await apiClient.get<OrderDetail>(`/v1/orders/${id}`);
     return { ...response.data, etag: response.headers.etag };
   },
-  review: async (id: string, action: 'approve' | 'reject', etag: string, reason: string): Promise<OrderDetail> => {
+  review: async (
+    id: string,
+    action: "approve" | "reject",
+    etag: string,
+    reason: string,
+  ): Promise<OrderDetail> => {
     const response = await apiClient.post<OrderDetail>(
-      `/v1/orders/${id}/${action}`, action === 'reject' ? { reason } : undefined,
-      { headers: { 'If-Match': etag } },
+      `/v1/orders/${id}/${action}`,
+      action === "reject" ? { reason } : undefined,
+      { headers: { "If-Match": etag } },
     );
     return { ...response.data, etag: response.headers.etag };
   },
-    // Khách sửa đơn PENDING của mình (thay toàn bộ nội dung). Sai phiên bản: 412; đơn không còn PENDING: 409.
+  // Khách sửa đơn PENDING của mình (thay toàn bộ nội dung). Sai phiên bản: 412; đơn không còn PENDING: 409.
   update: async (id: string, etag: string, body: OrderRequestBody) =>
     (
       await apiClient.put<OrderCreated>(`/v1/orders/${id}`, body, {
-        headers: { 'If-Match': etag },
+        headers: { "If-Match": etag },
       })
     ).data,
   // Khách hủy đơn PENDING của mình.
   cancel: async (id: string, etag: string) =>
     (
       await apiClient.post<OrderCreated>(`/v1/orders/${id}/cancel`, undefined, {
-        headers: { 'If-Match': etag },
+        headers: { "If-Match": etag },
       })
     ).data,
   // Idempotency-Key bắt buộc: gửi lại cùng key và cùng nội dung thì không tạo đơn thứ hai.
   create: async (body: OrderRequestBody, idempotencyKey: string) =>
     (
-      await apiClient.post<OrderCreated>('/v1/orders', body, {
-        headers: { 'Idempotency-Key': idempotencyKey },
+      await apiClient.post<OrderCreated>("/v1/orders", body, {
+        headers: { "Idempotency-Key": idempotencyKey },
       })
     ).data,
 };

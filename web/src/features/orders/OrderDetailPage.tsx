@@ -1,33 +1,33 @@
-import { useEffect, useState } from 'react';
-import { Link, useLocation, useParams } from 'react-router-dom';
-import PageHeader from '../../components/ui/PageHeader';
-import PackageSummary from '../packages/PackageSummary';
-import { ApiRequestError } from '../../lib/apiClient';
-import { orderService, type OrderDetail } from '../../lib/orderService';
-import { useAuth } from '../auth/AuthContext';
-import OrderReviewActions from './OrderReviewActions';
-import OrderCustomerActions from './OrderCustomerActions';
-import OrderScheduleActions from './OrderScheduleActions';
-import OrderTrackingPanel from './OrderTrackingPanel';
+import { useEffect, useState } from "react";
+import { Link, useLocation, useParams } from "react-router-dom";
+import PageHeader from "../../components/ui/PageHeader";
+import PackageSummary from "../packages/PackageSummary";
+import { ApiRequestError } from "../../lib/apiClient";
+import { orderService, type OrderDetail } from "../../lib/orderService";
+import { useAuth } from "../auth/AuthContext";
+import OrderReviewActions from "./OrderReviewActions";
+import OrderCustomerActions from "./OrderCustomerActions";
+import OrderScheduleActions from "./OrderScheduleActions";
+import OrderTrackingPanel from "./OrderTrackingPanel";
 
-const when = (v: string) => new Date(v).toLocaleString('vi-VN');
+const when = (v: string) => new Date(v).toLocaleString("vi-VN");
 
 export default function OrderDetailPage() {
-  const { id = '' } = useParams();
+  const { id = "" } = useParams();
   const { isDemo, user } = useAuth();
   const location = useLocation();
   const [notice, setNotice] = useState(
-    () => (location.state as { notice?: string } | null)?.notice ?? '',
+    () => (location.state as { notice?: string } | null)?.notice ?? "",
   );
   const [order, setOrder] = useState<OrderDetail | null>(null);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [retry, setRetry] = useState(0);
 
   useEffect(() => {
     if (isDemo) return;
     let active = true;
     setOrder(null);
-    setError('');
+    setError("");
     orderService
       .get(id)
       .then((o) => {
@@ -37,8 +37,8 @@ export default function OrderDetailPage() {
         if (!active) return;
         setError(
           e instanceof ApiRequestError && e.status === 404
-            ? 'Không tìm thấy đơn hoặc bạn không có quyền xem đơn này.'
-            : 'Không tải được chi tiết đơn.',
+            ? "Không tìm thấy đơn hoặc bạn không có quyền xem đơn này."
+            : "Không tải được chi tiết đơn.",
         );
       });
     return () => {
@@ -50,7 +50,7 @@ export default function OrderDetailPage() {
     <>
       <PageHeader
         title="Chi tiết đơn"
-        crumbs={['Trang chủ', 'Đơn giao hàng', 'Chi tiết']}
+        crumbs={["Trang chủ", "Đơn giao hàng", "Chi tiết"]}
       />
       <div className="customer-area">
         <Link to="/deliveries">← Về danh sách đơn</Link>
@@ -60,7 +60,7 @@ export default function OrderDetailPage() {
           </div>
         ) : error ? (
           <div className="card customer-panel" role="alert">
-            {error}{' '}
+            {error}{" "}
             <button type="button" onClick={() => setRetry((n) => n + 1)}>
               Thử lại
             </button>
@@ -70,7 +70,7 @@ export default function OrderDetailPage() {
         ) : (
           <>
             {notice && <p role="status">{notice}</p>}
-            {user?.role === 'DISPATCHER' && order.status === 'PENDING' && (
+            {user?.role === "DISPATCHER" && order.status === "PENDING" && (
               <OrderReviewActions
                 key={`${order.id}:${order.version}`}
                 order={order}
@@ -81,8 +81,8 @@ export default function OrderDetailPage() {
                 onReload={() => setRetry((n) => n + 1)}
               />
             )}
-            {user?.role === 'DISPATCHER' &&
-              (order.status === 'APPROVED' || order.status === 'FAILED') && (
+            {user?.role === "DISPATCHER" &&
+              (order.status === "APPROVED" || order.status === "FAILED") && (
                 <OrderScheduleActions
                   key={`${order.id}:${order.version}`}
                   order={order}
@@ -93,7 +93,7 @@ export default function OrderDetailPage() {
                   onReload={() => setRetry((n) => n + 1)}
                 />
               )}
-            {user?.role === 'CUSTOMER' && order.status === 'PENDING' && (
+            {user?.role === "CUSTOMER" && order.status === "PENDING" && (
               <OrderCustomerActions
                 key={`${order.id}:${order.version}`}
                 order={order}
@@ -116,7 +116,7 @@ export default function OrderDetailPage() {
                 </span>
               </p>
               <p className="muted">
-                Tạo lúc {when(order.createdAt)} · Cập nhật{' '}
+                Tạo lúc {when(order.createdAt)} · Cập nhật{" "}
                 {when(order.updatedAt)}
               </p>
               <p>
@@ -128,7 +128,7 @@ export default function OrderDetailPage() {
             <section className="card customer-panel">
               <h3>Người nhận</h3>
               <p>
-                <strong>{order.recipient.name}</strong> ·{' '}
+                <strong>{order.recipient.name}</strong> ·{" "}
                 {order.recipient.phone}
               </p>
               <p>{order.recipient.addressLine}</p>
@@ -136,15 +136,15 @@ export default function OrderDetailPage() {
             {order.package && <PackageSummary value={order.package} />}
             <section
               className="card customer-panel"
-              style={{ overflowX: 'auto' }}
+              style={{ overflowX: "auto" }}
             >
               <h3>Lịch sử trạng thái</h3>
               <table
                 style={{
                   minWidth: 760,
-                  width: '100%',
-                  borderSpacing: '12px 8px',
-                  textAlign: 'left',
+                  width: "100%",
+                  borderSpacing: "12px 8px",
+                  textAlign: "left",
                 }}
               >
                 <thead>
@@ -161,11 +161,11 @@ export default function OrderDetailPage() {
                   {order.history.map((h) => (
                     <tr key={h.orderVersion}>
                       <td>{when(h.occurredAt)}</td>
-                      <td>{h.fromStatus ?? '—'}</td>
+                      <td>{h.fromStatus ?? "—"}</td>
                       <td>{h.toStatus}</td>
-                      <td>{h.action ?? 'Tạo đơn'}</td>
+                      <td>{h.action ?? "Tạo đơn"}</td>
                       <td>
-                        {h.actorRole ?? 'Hệ thống'}
+                        {h.actorRole ?? "Hệ thống"}
                         {h.actorId && (
                           <>
                             <br />
@@ -173,7 +173,7 @@ export default function OrderDetailPage() {
                           </>
                         )}
                       </td>
-                      <td>{h.reason ?? ''}</td>
+                      <td>{h.reason ?? ""}</td>
                     </tr>
                   ))}
                 </tbody>

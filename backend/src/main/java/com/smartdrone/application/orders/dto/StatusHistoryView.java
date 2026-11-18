@@ -5,11 +5,11 @@ import java.util.UUID;
 import com.smartdrone.domain.entity.OrderStatusHistory;
 import com.smartdrone.domain.enums.*;
 
-public record StatusHistoryView(long orderVersion, OrderStatus fromStatus, OrderStatus toStatus,
-                                OrderAction action, UUID actorId, RoleName actorRole, ChangeSource source,
+public record StatusHistoryView(UUID eventId, long orderVersion, OrderStatus fromStatus, OrderStatus toStatus,
+                                OrderAction action, RoleName actorRole, ChangeSource source,
                                 String reason, Instant occurredAt) {
     public static StatusHistoryView from(OrderStatusHistory h) {
-        return new StatusHistoryView(h.getOrderVersion(), h.getFromStatus(), h.getToStatus(),
-                h.getAction(), h.getActorId(), h.getActorRole(), h.getSource(), h.getReason(), h.getOccurredAt());
+        return new StatusHistoryView(h.getId(), h.getOrderVersion(), h.getFromStatus(), h.getToStatus(),
+                h.getAction(), h.getActorRole(), h.getSource(), h.getReason(), h.getOccurredAt());
     }
 }

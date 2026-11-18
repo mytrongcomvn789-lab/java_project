@@ -5,8 +5,8 @@ spring:
   datasource:
     url: jdbc:sqlserver://localhost:1433;databaseName=smartdrone;encrypt=true;trustServerCertificate=true
     driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
-    username: ${DB_USERNAME:sa}
-    password: ${DB_PASSWORD}
+    username: sa
+    password: "Smart@Drone2026"
   jpa:
     hibernate:
       ddl-auto: update

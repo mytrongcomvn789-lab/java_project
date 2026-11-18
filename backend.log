@@ -1,0 +1,341 @@
+WARNING: A restricted method in java.lang.System has been called
+WARNING: java.lang.System::load has been called by org.fusesource.jansi.internal.JansiLoader in an unnamed module (file:/C:/tools/apache-maven-3.9.9/lib/jansi-2.4.1.jar)
+WARNING: Use --enable-native-access=ALL-UNNAMED to avoid a warning for callers in this module
+WARNING: Restricted methods will be blocked in a future release unless native access is enabled
+
+WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::objectFieldOffset has been called by com.google.common.util.concurrent.AbstractFuture$UnsafeAtomicHelper (file:/C:/tools/apache-maven-3.9.9/lib/guava-33.2.1-jre.jar)
+WARNING: Please consider reporting this to the maintainers of class com.google.common.util.concurrent.AbstractFuture$UnsafeAtomicHelper
+WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
+WARNING: Final field _cipher in class org.sonatype.plexus.components.sec.dispatcher.DefaultSecDispatcher has been mutated reflectively by class org.eclipse.sisu.bean.BeanPropertyField in unnamed module @691a7f8f (file:/C:/tools/apache-maven-3.9.9/lib/org.eclipse.sisu.inject-0.9.0.M3.jar)
+WARNING: Use --enable-final-field-mutation=ALL-UNNAMED to avoid a warning
+WARNING: Mutating final fields will be blocked in a future release unless final field mutation is enabled
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] -----------------< com.smartdrone:smartdrone-backend >------------------
+[INFO] Building smartdrone-backend 0.1.0
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] >>> spring-boot:4.0.5:run (default-cli) > test-compile @ smartdrone-backend >>>
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ smartdrone-backend ---
+[INFO] Copying 3 resources from src\main\resources to target\classes
+[INFO] Copying 0 resource from src\main\resources to target\classes
+[INFO] 
+[INFO] --- compiler:3.14.1:compile (default-compile) @ smartdrone-backend ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ smartdrone-backend ---
+[INFO] Copying 2 resources from src\test\resources to target\test-classes
+[INFO] 
+[INFO] --- compiler:3.14.1:testCompile (default-testCompile) @ smartdrone-backend ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] <<< spring-boot:4.0.5:run (default-cli) < test-compile @ smartdrone-backend <<<
+[INFO] 
+[INFO] 
+[INFO] --- spring-boot:4.0.5:run (default-cli) @ smartdrone-backend ---
+[INFO] Attaching agents: []
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v4.0.5)
+
+2026-11-16T18:37:34.723+07:00  INFO 16916 --- [smartdrone-backend] [           main] com.smartdrone.SmartDroneApplication     : Starting SmartDroneApplication using Java 27.0.1.0.2 with PID 16916 (D:\SmartDroneDelivery2\backend\target\classes started by LUAT in D:\SmartDroneDelivery2\backend)
+2026-11-16T18:37:34.726+07:00  INFO 16916 --- [smartdrone-backend] [           main] com.smartdrone.SmartDroneApplication     : The following 1 profile is active: "sqlserver"
+2026-11-16T18:37:35.802+07:00  INFO 16916 --- [smartdrone-backend] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-11-16T18:37:35.914+07:00  INFO 16916 --- [smartdrone-backend] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 104 ms. Found 12 JPA repository interfaces.
+2026-11-16T18:37:36.416+07:00  INFO 16916 --- [smartdrone-backend] [           main] o.s.boot.tomcat.TomcatWebServer          : Tomcat initialized with port 5000 (http)
+2026-11-16T18:37:36.426+07:00  INFO 16916 --- [smartdrone-backend] [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-11-16T18:37:36.427+07:00  INFO 16916 --- [smartdrone-backend] [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/11.0.20]
+2026-11-16T18:37:36.502+07:00  INFO 16916 --- [smartdrone-backend] [           main] b.w.c.s.WebApplicationContextInitializer : Root WebApplicationContext: initialization completed in 1714 ms
+2026-11-16T18:37:36.693+07:00  INFO 16916 --- [smartdrone-backend] [           main] org.hibernate.orm.jpa                    : HHH008540: Processing PersistenceUnitInfo [name: default]
+2026-11-16T18:37:36.731+07:00  INFO 16916 --- [smartdrone-backend] [           main] org.hibernate.orm.core                   : HHH000001: Hibernate ORM core version 7.2.7.Final
+2026-11-16T18:37:37.165+07:00  INFO 16916 --- [smartdrone-backend] [           main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-11-16T18:37:37.187+07:00  INFO 16916 --- [smartdrone-backend] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-11-16T18:37:37.824+07:00  INFO 16916 --- [smartdrone-backend] [           main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection ConnectionID:1 ClientConnectionId: 142a21d7-d0bf-4ea3-b50d-f931fa475e58
+2026-11-16T18:37:37.826+07:00  INFO 16916 --- [smartdrone-backend] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2026-11-16T18:37:38.004+07:00  INFO 16916 --- [smartdrone-backend] [           main] org.hibernate.orm.connections.pooling    : HHH10001005: Database info:
+	Database JDBC URL [jdbc:sqlserver://localhost:1433;connectRetryInterval=10;connectRetryCount=1;maxResultBuffer=-1;sendTemporalDataTypesAsStringForBulkCopy=true;delayLoadingLobs=true;useFmtOnly=false;cacheBulkCopyMetadata=false;bulkCopyForBatchInsertAllowEncryptedValueModifications=false;bulkCopyForBatchInsertTableLock=false;bulkCopyForBatchInsertKeepNulls=false;bulkCopyForBatchInsertKeepIdentity=false;bulkCopyForBatchInsertFireTriggers=false;bulkCopyForBatchInsertCheckConstraints=false;bulkCopyForBatchInsertBatchSize=0;useBulkCopyForBatchInsert=false;cancelQueryTimeout=-1;sslProtocol=TLS;calcBigDecimalPrecision=false;useDefaultJaasConfig=false;jaasConfigurationName=SQLJDBCDriver;statementPoolingCacheSize=0;serverPreparedStatementDiscardThreshold=10;enablePrepareOnFirstPreparedStatementCall=false;fips=false;socketTimeout=0;authentication=NotSpecified;authenticationScheme=nativeAuthentication;xopenStates=false;datetimeParameterType=datetime2;sendTimeAsDatetime=true;replication=false;trustStoreType=JKS;trustServerCertificate=true;TransparentNetworkIPResolution=true;iPAddressPreference=IPv4First;serverNameAsACE=false;sendStringParametersAsUnicode=true;selectMethod=direct;responseBuffering=adaptive;queryTimeout=-1;packetSize=8000;multiSubnetFailover=false;loginTimeout=30;lockTimeout=-1;lastUpdateCount=true;useDefaultGSSCredential=false;prepareMethod=prepexec;encrypt=true;disableStatementPooling=true;databaseName=smartdrone;columnEncryptionSetting=Disabled;applicationName=Microsoft JDBC Driver for SQL Server;applicationIntent=readwrite;]
+	Database driver: Microsoft JDBC Driver 12.10 for SQL Server
+	Database dialect: SQLServerDialect
+	Database version: 17.0
+	Default catalog/schema: smartdrone/dbo
+	Autocommit mode: undefined/unknown
+	Isolation level: READ_COMMITTED [default READ_COMMITTED]
+	JDBC fetch size: 128
+	Pool: DataSourceConnectionProvider
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2026-11-16T18:37:38.927+07:00  INFO 16916 --- [smartdrone-backend] [           main] org.hibernate.orm.core                   : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-11-16T18:37:41.071+07:00  INFO 16916 --- [smartdrone-backend] [           main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-11-16T18:37:41.186+07:00  INFO 16916 --- [smartdrone-backend] [           main] o.s.d.j.r.query.QueryEnhancerFactories   : Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-11-16T18:37:43.027+07:00  INFO 16916 --- [smartdrone-backend] [           main] o.s.m.s.b.SimpleBrokerMessageHandler     : Starting...
+2026-11-16T18:37:43.028+07:00  INFO 16916 --- [smartdrone-backend] [           main] o.s.m.s.b.SimpleBrokerMessageHandler     : BrokerAvailabilityEvent[available=true, SimpleBrokerMessageHandler [org.springframework.messaging.simp.broker.DefaultSubscriptionRegistry@5a8a98c7]]
+2026-11-16T18:37:43.029+07:00  INFO 16916 --- [smartdrone-backend] [           main] o.s.m.s.b.SimpleBrokerMessageHandler     : Started.
+2026-11-16T18:37:43.045+07:00  INFO 16916 --- [smartdrone-backend] [           main] o.s.boot.tomcat.TomcatWebServer          : Tomcat started on port 5000 (http) with context path '/api'
+2026-11-16T18:37:43.054+07:00  INFO 16916 --- [smartdrone-backend] [           main] com.smartdrone.SmartDroneApplication     : Started SmartDroneApplication in 8.753 seconds (process running for 9.118)
+2026-11-16T18:37:43.059+07:00  WARN 16916 --- [smartdrone-backend] [           main] c.smartdrone.api.config.StorageConfig    : Ch╞░a cß║Ñu h├¼nh MinIO (MINIO_ACCESS_KEY/MINIO_SECRET_KEY): API tß╗çp sß║╜ trß║ú 503
+2026-11-16T18:37:43.173+07:00  WARN 16916 --- [smartdrone-backend] [           main] o.s.core.events.SpringDocAppInitializer  : SpringDoc /v3/api-docs endpoint is enabled by default. To disable it in production, set the property 'springdoc.api-docs.enabled=false'
+2026-11-16T18:37:43.173+07:00  WARN 16916 --- [smartdrone-backend] [           main] o.s.core.events.SpringDocAppInitializer  : SpringDoc /swagger-ui.html endpoint is enabled by default. To disable it in production, set the property 'springdoc.swagger-ui.enabled=false'
+2026-11-16T18:38:43.028+07:00  INFO 16916 --- [smartdrone-backend] [MessageBroker-4] o.s.w.s.c.WebSocketMessageBrokerStats    : WebSocketSession[0 current WS(0)-HttpStream(0)-HttpPoll(0), 0 total, 0 closed abnormally (0 connect failure, 0 send limit, 0 transport error)], stompSubProtocol[processed CONNECT(0)-CONNECTED(0)-DISCONNECT(0)], stompBrokerRelay[null], inboundChannel[pool size = 0, active threads = 0, queued tasks = 0, completed tasks = 0], outboundChannel[pool size = 0, active threads = 0, queued tasks = 0, completed tasks = 0], sockJsScheduler[pool size = 8, active threads = 1, queued tasks = 2, completed tasks = 5]
+2026-11-16T18:39:15.772+07:00  INFO 16916 --- [smartdrone-backend] [nio-5000-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/api]    : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-11-16T18:39:15.773+07:00  INFO 16916 --- [smartdrone-backend] [nio-5000-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2026-11-16T18:39:15.774+07:00  INFO 16916 --- [smartdrone-backend] [nio-5000-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 1 ms
+2026-11-16T18:39:16.132+07:00  INFO 16916 --- [smartdrone-backend] [nio-5000-exec-1] c.s.api.filter.RequestLoggingFilter      : POST /api/v1/auth/login -> 200 (356 ms) traceId=2e3ef1e6-48ff-4d79-b7e0-efafd1d16f96
+2026-11-16T18:39:18.904+07:00  WARN 16916 --- [smartdrone-backend] [nio-5000-exec-6] org.hibernate.orm.jdbc.error             : HHH000247: ErrorCode: 0, SQLState: 22005
+2026-11-16T18:39:18.905+07:00  WARN 16916 --- [smartdrone-backend] [nio-5000-exec-6] org.hibernate.orm.jdbc.error             : The conversion from varchar to NCHAR is unsupported.
+2026-11-16T18:39:18.919+07:00 ERROR 16916 --- [smartdrone-backend] [nio-5000-exec-6] c.s.api.error.GlobalExceptionHandler     : Lß╗ùi kh├┤ng mong ─æß╗úi, traceId=3dcad4ca-5d45-4e5f-b568-baaaabb8832d
+
+org.springframework.dao.DataIntegrityViolationException: Could not extract column [6] from JDBC ResultSet [The conversion from varchar to NCHAR is unsupported.] [n/a]; SQL [n/a]
+	at org.springframework.orm.jpa.hibernate.HibernateExceptionTranslator.convertHibernateAccessException(HibernateExceptionTranslator.java:172) ~[spring-orm-7.0.6.jar:7.0.6]
+	at org.springframework.orm.jpa.hibernate.HibernateExceptionTranslator.convertHibernateAccessException(HibernateExceptionTranslator.java:131) ~[spring-orm-7.0.6.jar:7.0.6]
+	at org.springframework.orm.jpa.hibernate.HibernateExceptionTranslator.translateExceptionIfPossible(HibernateExceptionTranslator.java:105) ~[spring-orm-7.0.6.jar:7.0.6]
+	at org.springframework.orm.jpa.vendor.HibernateJpaDialect.translateExceptionIfPossible(HibernateJpaDialect.java:223) ~[spring-orm-7.0.6.jar:7.0.6]
+	at org.springframework.orm.jpa.AbstractEntityManagerFactoryBean.translateExceptionIfPossible(AbstractEntityManagerFactoryBean.java:576) ~[spring-orm-7.0.6.jar:7.0.6]
+	at org.springframework.dao.support.ChainedPersistenceExceptionTranslator.translateExceptionIfPossible(ChainedPersistenceExceptionTranslator.java:61) ~[spring-tx-7.0.6.jar:7.0.6]
+	at org.springframework.dao.support.DataAccessUtils.translateIfNecessary(DataAccessUtils.java:346) ~[spring-tx-7.0.6.jar:7.0.6]
+	at org.springframework.dao.support.PersistenceExceptionTranslationInterceptor.invoke(PersistenceExceptionTranslationInterceptor.java:157) ~[spring-tx-7.0.6.jar:7.0.6]
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:179) ~[spring-aop-7.0.6.jar:7.0.6]
+	at org.springframework.data.jpa.repository.support.CrudMethodMetadataPostProcessor$CrudMethodMetadataPopulatingMethodInterceptor.invoke(CrudMethodMetadataPostProcessor.java:166) ~[spring-data-jpa-4.0.4.jar:4.0.4]
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:179) ~[spring-aop-7.0.6.jar:7.0.6]
+	at org.springframework.aop.framework.JdkDynamicAopProxy.invoke(JdkDynamicAopProxy.java:222) ~[spring-aop-7.0.6.jar:7.0.6]
+	at jdk.proxy2/jdk.proxy2.$Proxy175.findAll(Unknown Source) ~[na:na]
+	at com.smartdrone.application.orders.OrderQueryService.list(OrderQueryService.java:45) ~[classes/:na]
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104) ~[na:na]
+	at java.base/java.lang.reflect.Method.invoke(Method.java:583) ~[na:na]
+	at org.springframework.aop.support.AopUtils.invokeJoinpointUsingReflection(AopUtils.java:359) ~[spring-aop-7.0.6.jar:7.0.6]
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.invokeJoinpoint(ReflectiveMethodInvocation.java:190) ~[spring-aop-7.0.6.jar:7.0.6]
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:158) ~[spring-aop-7.0.6.jar:7.0.6]
+	at org.springframework.transaction.interceptor.TransactionInterceptor$1.proceedWithInvocation(TransactionInterceptor.java:133) ~[spring-tx-7.0.6.jar:7.0.6]
+	at org.springframework.transaction.interceptor.TransactionAspectSupport.invokeWithinTransaction(TransactionAspectSupport.java:371) ~[spring-tx-7.0.6.jar:7.0.6]
+	at org.springframework.transaction.interceptor.TransactionInterceptor.invoke(TransactionInterceptor.java:130) ~[spring-tx-7.0.6.jar:7.0.6]
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:179) ~[spring-aop-7.0.6.jar:7.0.6]
+	at org.springframework.security.authorization.method.AuthorizationManagerBeforeMethodInterceptor.proceed(AuthorizationManagerBeforeMethodInterceptor.java:271) ~[spring-security-core-7.0.4.jar:7.0.4]
+	at org.springframework.security.authorization.method.AuthorizationManagerBeforeMethodInterceptor.attemptAuthorization(AuthorizationManagerBeforeMethodInterceptor.java:266) ~[spring-security-core-7.0.4.jar:7.0.4]
+	at org.springframework.security.authorization.method.AuthorizationManagerBeforeMethodInterceptor.invoke(AuthorizationManagerBeforeMethodInterceptor.java:197) ~[spring-security-core-7.0.4.jar:7.0.4]
+	at org.springframework.security.config.annotation.method.configuration.DeferringMethodInterceptor.invoke(DeferringMethodInterceptor.java:44) ~[spring-security-config-7.0.4.jar:7.0.4]
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:179) ~[spring-aop-7.0.6.jar:7.0.6]
+	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:719) ~[spring-aop-7.0.6.jar:7.0.6]
+	at com.smartdrone.application.orders.OrderQueryService$$SpringCGLIB$$0.list(<generated>) ~[classes/:na]
+	at com.smartdrone.api.controller.OrderController.list(OrderController.java:89) ~[classes/:na]
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104) ~[na:na]
+	at java.base/java.lang.reflect.Method.invoke(Method.java:583) ~[na:na]
+	at org.springframework.aop.support.AopUtils.invokeJoinpointUsingReflection(AopUtils.java:359) ~[spring-aop-7.0.6.jar:7.0.6]
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.invokeJoinpoint(ReflectiveMethodInvocation.java:190) ~[spring-aop-7.0.6.jar:7.0.6]
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:158) ~[spring-aop-7.0.6.jar:7.0.6]
+	at org.springframework.security.authorization.method.AuthorizationManagerBeforeMethodInterceptor.proceed(AuthorizationManagerBeforeMethodInterceptor.java:271) ~[spring-security-core-7.0.4.jar:7.0.4]
+	at org.springframework.security.authorization.method.AuthorizationManagerBeforeMethodInterceptor.attemptAuthorization(AuthorizationManagerBeforeMethodInterceptor.java:266) ~[spring-security-core-7.0.4.jar:7.0.4]
+	at org.springframework.security.authorization.method.AuthorizationManagerBeforeMethodInterceptor.invoke(AuthorizationManagerBeforeMethodInterceptor.java:197) ~[spring-security-core-7.0.4.jar:7.0.4]
+	at org.springframework.security.config.annotation.method.configuration.DeferringMethodInterceptor.invoke(DeferringMethodInterceptor.java:44) ~[spring-security-config-7.0.4.jar:7.0.4]
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:179) ~[spring-aop-7.0.6.jar:7.0.6]
+	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:719) ~[spring-aop-7.0.6.jar:7.0.6]
+	at com.smartdrone.api.controller.OrderController$$SpringCGLIB$$0.list(<generated>) ~[classes/:na]
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104) ~[na:na]
+	at java.base/java.lang.reflect.Method.invoke(Method.java:583) ~[na:na]
+	at org.springframework.web.method.support.InvocableHandlerMethod.doInvoke(InvocableHandlerMethod.java:252) ~[spring-web-7.0.6.jar:7.0.6]
+	at org.springframework.web.method.support.InvocableHandlerMethod.invokeForRequest(InvocableHandlerMethod.java:184) ~[spring-web-7.0.6.jar:7.0.6]
+	at org.springframework.web.servlet.mvc.method.annotation.ServletInvocableHandlerMethod.invokeAndHandle(ServletInvocableHandlerMethod.java:117) ~[spring-webmvc-7.0.6.jar:7.0.6]
+	at org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter.invokeHandlerMethod(RequestMappingHandlerAdapter.java:934) ~[spring-webmvc-7.0.6.jar:7.0.6]
+	at org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter.handleInternal(RequestMappingHandlerAdapter.java:853) ~[spring-webmvc-7.0.6.jar:7.0.6]
+	at org.springframework.web.servlet.mvc.method.AbstractHandlerMethodAdapter.handle(AbstractHandlerMethodAdapter.java:86) ~[spring-webmvc-7.0.6.jar:7.0.6]
+	at org.springframework.web.servlet.DispatcherServlet.doDispatch(DispatcherServlet.java:963) ~[spring-webmvc-7.0.6.jar:7.0.6]
+	at org.springframework.web.servlet.DispatcherServlet.doService(DispatcherServlet.java:866) ~[spring-webmvc-7.0.6.jar:7.0.6]
+	at org.springframework.web.servlet.FrameworkServlet.processRequest(FrameworkServlet.java:1000) ~[spring-webmvc-7.0.6.jar:7.0.6]
+	at org.springframework.web.servlet.FrameworkServlet.doGet(FrameworkServlet.java:892) ~[spring-webmvc-7.0.6.jar:7.0.6]
+	at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:622) ~[tomcat-embed-core-11.0.20.jar:6.1]
+	at org.springframework.web.servlet.FrameworkServlet.service(FrameworkServlet.java:874) ~[spring-webmvc-7.0.6.jar:7.0.6]
+	at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:710) ~[tomcat-embed-core-11.0.20.jar:6.1]
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:128) ~[tomcat-embed-core-11.0.20.jar:11.0.20]
+	at org.apache.tomcat.websocket.server.WsFilter.doFilter(WsFilter.java:53) ~[tomcat-embed-websocket-11.0.20.jar:11.0.20]
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:107) ~[tomcat-embed-core-11.0.20.jar:11.0.20]
+	at org.springframework.web.filter.CompositeFilter$VirtualFilterChain.doFilter(CompositeFilter.java:108) ~[spring-web-7.0.6.jar:7.0.6]
+	at org.springframework.security.web.FilterChainProxy.lambda$doFilterInternal$3(FilterChainProxy.java:235) ~[spring-security-web-7.0.4.jar:7.0.4]
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:371) ~[spring-security-web-7.0.4.jar:7.0.4]
+	at org.springframework.security.web.access.intercept.AuthorizationFilter.doFilter(AuthorizationFilter.java:101) ~[spring-security-web-7.0.4.jar:7.0.4]
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:380) ~[spring-security-web-7.0.4.jar:7.0.4]
+	at org.springframework.security.web.access.ExceptionTranslationFilter.doFilter(ExceptionTranslationFilter.java:126) ~[spring-security-web-7.0.4.jar:7.0.4]
+	at org.springframework.security.web.access.ExceptionTranslationFilter.doFilter(ExceptionTranslationFilter.java:120) ~[spring-security-web-7.0.4.jar:7.0.4]
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:380) ~[spring-security-web-7.0.4.jar:7.0.4]
+	at org.springframework.security.web.session.SessionManagementFilter.doFilter(SessionManagementFilter.java:132) ~[spring-security-web-7.0.4.jar:7.0.4]
+	at org.springframework.security.web.session.SessionManagementFilter.doFilter(SessionManagementFilter.java:86) ~[spring-security-web-7.0.4.jar:7.0.4]
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:380) ~[spring-security-web-7.0.4.jar:7.0.4]
+	at org.springframework.security.web.authentication.AnonymousAuthenticationFilter.doFilter(AnonymousAuthenticationFilter.java:100) ~[spring-security-web-7.0.4.jar:7.0.4]
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:380) ~[spring-security-web-7.0.4.jar:7.0.4]
+	at org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter.doFilter(SecurityContextHolderAwareRequestFilter.java:181) ~[spring-security-web-7.0.4.jar:7.0.4]
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:380) ~[spring-security-web-7.0.4.jar:7.0.4]
+	at org.springframework.security.web.savedrequest.RequestCacheAwareFilter.doFilter(RequestCacheAwareFilter.java:63) ~[spring-security-web-7.0.4.jar:7.0.4]
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:380) ~[spring-security-web-7.0.4.jar:7.0.4]
+	at org.springframework.security.web.authentication.AuthenticationFilter.doFilterInternal(AuthenticationFilter.java:194) ~[spring-security-web-7.0.4.jar:7.0.4]
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) ~[spring-web-7.0.6.jar:7.0.6]
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:380) ~[spring-security-web-7.0.4.jar:7.0.4]
+	at org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter.doFilterInternal(BearerTokenAuthenticationFilter.java:207) ~[spring-security-oauth2-resource-server-7.0.4.jar:7.0.4]
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) ~[spring-web-7.0.6.jar:7.0.6]
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:380) ~[spring-security-web-7.0.4.jar:7.0.4]
+	at org.springframework.security.oauth2.server.resource.web.OAuth2ProtectedResourceMetadataFilter.doFilterInternal(OAuth2ProtectedResourceMetadataFilter.java:97) ~[spring-security-oauth2-resource-server-7.0.4.jar:7.0.4]
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) ~[spring-web-7.0.6.jar:7.0.6]
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:380) ~[spring-security-web-7.0.4.jar:7.0.4]
+	at org.springframework.web.filter.CorsFilter.doFilterInternal(CorsFilter.java:91) ~[spring-web-7.0.6.jar:7.0.6]
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) ~[spring-web-7.0.6.jar:7.0.6]
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:380) ~[spring-security-web-7.0.4.jar:7.0.4]
+	at org.springframework.security.web.header.HeaderWriterFilter.doHeadersAfter(HeaderWriterFilter.java:90) ~[spring-security-web-7.0.4.jar:7.0.4]
+	at org.springframework.security.web.header.HeaderWriterFilter.doFilterInternal(HeaderWriterFilter.java:75) ~[spring-security-web-7.0.4.jar:7.0.4]
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) ~[spring-web-7.0.6.jar:7.0.6]
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:380) ~[spring-security-web-7.0.4.jar:7.0.4]
+	at org.springframework.security.web.context.SecurityContextHolderFilter.doFilter(SecurityContextHolderFilter.java:82) ~[spring-security-web-7.0.4.jar:7.0.4]
+	at org.springframework.security.web.context.SecurityContextHolderFilter.doFilter(SecurityContextHolderFilter.java:69) ~[spring-security-web-7.0.4.jar:7.0.4]
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:380) ~[spring-security-web-7.0.4.jar:7.0.4]
+	at org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter.doFilterInternal(WebAsyncManagerIntegrationFilter.java:62) ~[spring-security-web-7.0.4.jar:7.0.4]
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) ~[spring-web-7.0.6.jar:7.0.6]
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:380) ~[spring-security-web-7.0.4.jar:7.0.4]
+	at org.springframework.security.web.session.DisableEncodeUrlFilter.doFilterInternal(DisableEncodeUrlFilter.java:42) ~[spring-security-web-7.0.4.jar:7.0.4]
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) ~[spring-web-7.0.6.jar:7.0.6]
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:380) ~[spring-security-web-7.0.4.jar:7.0.4]
+	at org.springframework.security.web.FilterChainProxy.doFilterInternal(FilterChainProxy.java:237) ~[spring-security-web-7.0.4.jar:7.0.4]
+	at org.springframework.security.web.FilterChainProxy.doFilter(FilterChainProxy.java:195) ~[spring-security-web-7.0.4.jar:7.0.4]
+	at org.springframework.web.filter.CompositeFilter$VirtualFilterChain.doFilter(CompositeFilter.java:113) ~[spring-web-7.0.6.jar:7.0.6]
+	at org.springframework.web.filter.ServletRequestPathFilter.doFilter(ServletRequestPathFilter.java:52) ~[spring-web-7.0.6.jar:7.0.6]
+	at org.springframework.web.filter.CompositeFilter$VirtualFilterChain.doFilter(CompositeFilter.java:113) ~[spring-web-7.0.6.jar:7.0.6]
+	at org.springframework.web.filter.CompositeFilter.doFilter(CompositeFilter.java:74) ~[spring-web-7.0.6.jar:7.0.6]
+	at org.springframework.security.config.annotation.web.configuration.WebSecurityConfiguration$CompositeFilterChainProxy.doFilter(WebSecurityConfiguration.java:317) ~[spring-security-config-7.0.4.jar:7.0.4]
+	at org.springframework.web.filter.DelegatingFilterProxy.invokeDelegate(DelegatingFilterProxy.java:355) ~[spring-web-7.0.6.jar:7.0.6]
+	at org.springframework.web.filter.DelegatingFilterProxy.doFilter(DelegatingFilterProxy.java:272) ~[spring-web-7.0.6.jar:7.0.6]
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:107) ~[tomcat-embed-core-11.0.20.jar:11.0.20]
+	at org.springframework.web.filter.RequestContextFilter.doFilterInternal(RequestContextFilter.java:100) ~[spring-web-7.0.6.jar:7.0.6]
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) ~[spring-web-7.0.6.jar:7.0.6]
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:107) ~[tomcat-embed-core-11.0.20.jar:11.0.20]
+	at org.springframework.web.filter.FormContentFilter.doFilterInternal(FormContentFilter.java:93) ~[spring-web-7.0.6.jar:7.0.6]
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) ~[spring-web-7.0.6.jar:7.0.6]
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:107) ~[tomcat-embed-core-11.0.20.jar:11.0.20]
+	at org.springframework.web.filter.CharacterEncodingFilter.doFilterInternal(CharacterEncodingFilter.java:199) ~[spring-web-7.0.6.jar:7.0.6]
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) ~[spring-web-7.0.6.jar:7.0.6]
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:107) ~[tomcat-embed-core-11.0.20.jar:11.0.20]
+	at com.smartdrone.api.filter.RequestLoggingFilter.doFilterInternal(RequestLoggingFilter.java:37) ~[classes/:na]
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) ~[spring-web-7.0.6.jar:7.0.6]
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:107) ~[tomcat-embed-core-11.0.20.jar:11.0.20]
+	at org.apache.catalina.core.StandardWrapperValve.invoke(StandardWrapperValve.java:165) ~[tomcat-embed-core-11.0.20.jar:11.0.20]
+	at org.apache.catalina.core.StandardContextValve.invoke(StandardContextValve.java:77) ~[tomcat-embed-core-11.0.20.jar:11.0.20]
+	at org.apache.catalina.authenticator.AuthenticatorBase.invoke(AuthenticatorBase.java:492) ~[tomcat-embed-core-11.0.20.jar:11.0.20]
+	at org.apache.catalina.core.StandardHostValve.invoke(StandardHostValve.java:113) ~[tomcat-embed-core-11.0.20.jar:11.0.20]
+	at org.apache.catalina.valves.ErrorReportValve.invoke(ErrorReportValve.java:83) ~[tomcat-embed-core-11.0.20.jar:11.0.20]
+	at org.apache.catalina.core.StandardEngineValve.invoke(StandardEngineValve.java:72) ~[tomcat-embed-core-11.0.20.jar:11.0.20]
+	at org.apache.catalina.connector.CoyoteAdapter.service(CoyoteAdapter.java:341) ~[tomcat-embed-core-11.0.20.jar:11.0.20]
+	at org.apache.coyote.http11.Http11Processor.service(Http11Processor.java:397) ~[tomcat-embed-core-11.0.20.jar:11.0.20]
+	at org.apache.coyote.AbstractProcessorLight.process(AbstractProcessorLight.java:63) ~[tomcat-embed-core-11.0.20.jar:11.0.20]
+	at org.apache.coyote.AbstractProtocol$ConnectionHandler.process(AbstractProtocol.java:903) ~[tomcat-embed-core-11.0.20.jar:11.0.20]
+	at org.apache.tomcat.util.net.NioEndpoint$SocketProcessor.doRun(NioEndpoint.java:1779) ~[tomcat-embed-core-11.0.20.jar:11.0.20]
+	at org.apache.tomcat.util.net.SocketProcessorBase.run(SocketProcessorBase.java:52) ~[tomcat-embed-core-11.0.20.jar:11.0.20]
+	at org.apache.tomcat.util.threads.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:946) ~[tomcat-embed-core-11.0.20.jar:11.0.20]
+	at org.apache.tomcat.util.threads.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:480) ~[tomcat-embed-core-11.0.20.jar:11.0.20]
+	at org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run(TaskThread.java:57) ~[tomcat-embed-core-11.0.20.jar:11.0.20]
+	at java.base/java.lang.Thread.run(Thread.java:1527) ~[na:na]
+Caused by: org.hibernate.exception.DataException: Could not extract column [6] from JDBC ResultSet [The conversion from varchar to NCHAR is unsupported.] [n/a]
+	at org.hibernate.exception.internal.SQLStateConversionDelegate.convert(SQLStateConversionDelegate.java:84) ~[hibernate-core-7.2.7.Final.jar:7.2.7.Final]
+	at org.hibernate.exception.internal.StandardSQLExceptionConverter.convert(StandardSQLExceptionConverter.java:34) ~[hibernate-core-7.2.7.Final.jar:7.2.7.Final]
+	at org.hibernate.engine.jdbc.spi.SqlExceptionHelper.convert(SqlExceptionHelper.java:115) ~[hibernate-core-7.2.7.Final.jar:7.2.7.Final]
+	at org.hibernate.engine.jdbc.spi.SqlExceptionHelper.convert(SqlExceptionHelper.java:101) ~[hibernate-core-7.2.7.Final.jar:7.2.7.Final]
+	at org.hibernate.sql.results.jdbc.internal.JdbcValuesResultSetImpl.getCurrentRowValue(JdbcValuesResultSetImpl.java:390) ~[hibernate-core-7.2.7.Final.jar:7.2.7.Final]
+	at org.hibernate.sql.results.internal.RowProcessingStateStandardImpl.getJdbcValue(RowProcessingStateStandardImpl.java:148) ~[hibernate-core-7.2.7.Final.jar:7.2.7.Final]
+	at org.hibernate.sql.results.graph.basic.BasicResultAssembler.extractRawValue(BasicResultAssembler.java:52) ~[hibernate-core-7.2.7.Final.jar:7.2.7.Final]
+	at org.hibernate.sql.results.graph.basic.BasicResultAssembler.assemble(BasicResultAssembler.java:58) ~[hibernate-core-7.2.7.Final.jar:7.2.7.Final]
+	at org.hibernate.sql.results.graph.embeddable.internal.EmbeddableInitializerImpl.extractRowState(EmbeddableInitializerImpl.java:492) ~[hibernate-core-7.2.7.Final.jar:7.2.7.Final]
+	at org.hibernate.sql.results.graph.embeddable.internal.EmbeddableInitializerImpl.resolveInstance(EmbeddableInitializerImpl.java:338) ~[hibernate-core-7.2.7.Final.jar:7.2.7.Final]
+	at org.hibernate.sql.results.graph.embeddable.internal.EmbeddableInitializerImpl.resolveInstance(EmbeddableInitializerImpl.java:43) ~[hibernate-core-7.2.7.Final.jar:7.2.7.Final]
+	at org.hibernate.sql.results.internal.StandardRowReader.coordinateInitializers(StandardRowReader.java:234) ~[hibernate-core-7.2.7.Final.jar:7.2.7.Final]
+	at org.hibernate.sql.results.internal.StandardRowReader.readRow(StandardRowReader.java:137) ~[hibernate-core-7.2.7.Final.jar:7.2.7.Final]
+	at org.hibernate.sql.results.spi.ListResultsConsumer.read(ListResultsConsumer.java:243) ~[hibernate-core-7.2.7.Final.jar:7.2.7.Final]
+	at org.hibernate.sql.results.spi.ListResultsConsumer.readRows(ListResultsConsumer.java:233) ~[hibernate-core-7.2.7.Final.jar:7.2.7.Final]
+	at org.hibernate.sql.results.spi.ListResultsConsumer.consume(ListResultsConsumer.java:164) ~[hibernate-core-7.2.7.Final.jar:7.2.7.Final]
+	at org.hibernate.sql.results.spi.ListResultsConsumer.consume(ListResultsConsumer.java:31) ~[hibernate-core-7.2.7.Final.jar:7.2.7.Final]
+	at org.hibernate.sql.exec.internal.JdbcSelectExecutorStandardImpl.doExecuteQuery(JdbcSelectExecutorStandardImpl.java:211) ~[hibernate-core-7.2.7.Final.jar:7.2.7.Final]
+	at org.hibernate.sql.exec.internal.JdbcSelectExecutorStandardImpl.executeQuery(JdbcSelectExecutorStandardImpl.java:100) ~[hibernate-core-7.2.7.Final.jar:7.2.7.Final]
+	at org.hibernate.sql.exec.spi.JdbcSelectExecutor.executeQuery(JdbcSelectExecutor.java:63) ~[hibernate-core-7.2.7.Final.jar:7.2.7.Final]
+	at org.hibernate.sql.exec.spi.JdbcSelectExecutor.list(JdbcSelectExecutor.java:137) ~[hibernate-core-7.2.7.Final.jar:7.2.7.Final]
+	at org.hibernate.query.sqm.internal.ConcreteSqmSelectQueryPlan.lambda$new$1(ConcreteSqmSelectQueryPlan.java:128) ~[hibernate-core-7.2.7.Final.jar:7.2.7.Final]
+	at org.hibernate.query.sqm.internal.ConcreteSqmSelectQueryPlan.withCacheableSqmInterpretation(ConcreteSqmSelectQueryPlan.java:427) ~[hibernate-core-7.2.7.Final.jar:7.2.7.Final]
+	at org.hibernate.query.sqm.internal.ConcreteSqmSelectQueryPlan.performList(ConcreteSqmSelectQueryPlan.java:355) ~[hibernate-core-7.2.7.Final.jar:7.2.7.Final]
+	at org.hibernate.query.sqm.internal.SqmQueryImpl.doList(SqmQueryImpl.java:374) ~[hibernate-core-7.2.7.Final.jar:7.2.7.Final]
+	at org.hibernate.query.spi.AbstractSelectionQuery.list(AbstractSelectionQuery.java:153) ~[hibernate-core-7.2.7.Final.jar:7.2.7.Final]
+	at org.hibernate.query.Query.getResultList(Query.java:121) ~[hibernate-core-7.2.7.Final.jar:7.2.7.Final]
+	at org.springframework.data.jpa.repository.support.SimpleJpaRepository.readPage(SimpleJpaRepository.java:745) ~[spring-data-jpa-4.0.4.jar:4.0.4]
+	at org.springframework.data.jpa.repository.support.SimpleJpaRepository.findAll(SimpleJpaRepository.java:480) ~[spring-data-jpa-4.0.4.jar:4.0.4]
+	at org.springframework.data.jpa.repository.support.SimpleJpaRepository.findAll(SimpleJpaRepository.java:469) ~[spring-data-jpa-4.0.4.jar:4.0.4]
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104) ~[na:na]
+	at java.base/java.lang.reflect.Method.invoke(Method.java:583) ~[na:na]
+	at org.springframework.aop.support.AopUtils.invokeJoinpointUsingReflection(AopUtils.java:359) ~[spring-aop-7.0.6.jar:7.0.6]
+	at org.springframework.data.repository.core.support.RepositoryMethodInvoker$RepositoryFragmentMethodInvoker.lambda$new$0(RepositoryMethodInvoker.java:278) ~[spring-data-commons-4.0.4.jar:4.0.4]
+	at org.springframework.data.repository.core.support.RepositoryMethodInvoker.doInvoke(RepositoryMethodInvoker.java:169) ~[spring-data-commons-4.0.4.jar:4.0.4]
+	at org.springframework.data.repository.core.support.RepositoryMethodInvoker.invoke(RepositoryMethodInvoker.java:158) ~[spring-data-commons-4.0.4.jar:4.0.4]
+	at org.springframework.data.repository.core.support.RepositoryComposition$RepositoryFragments.invoke(RepositoryComposition.java:545) ~[spring-data-commons-4.0.4.jar:4.0.4]
+	at org.springframework.data.repository.core.support.RepositoryComposition.invoke(RepositoryComposition.java:290) ~[spring-data-commons-4.0.4.jar:4.0.4]
+	at org.springframework.data.repository.core.support.RepositoryFactorySupport$ImplementationMethodExecutionInterceptor.invoke(RepositoryFactorySupport.java:690) ~[spring-data-commons-4.0.4.jar:4.0.4]
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:179) ~[spring-aop-7.0.6.jar:7.0.6]
+	at org.springframework.data.repository.core.support.QueryExecutorMethodInterceptor.doInvoke(QueryExecutorMethodInterceptor.java:171) ~[spring-data-commons-4.0.4.jar:4.0.4]
+	at org.springframework.data.repository.core.support.QueryExecutorMethodInterceptor.invoke(QueryExecutorMethodInterceptor.java:146) ~[spring-data-commons-4.0.4.jar:4.0.4]
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:179) ~[spring-aop-7.0.6.jar:7.0.6]
+	at org.springframework.data.projection.DefaultMethodInvokingMethodInterceptor.invoke(DefaultMethodInvokingMethodInterceptor.java:69) ~[spring-data-commons-4.0.4.jar:4.0.4]
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:179) ~[spring-aop-7.0.6.jar:7.0.6]
+	at org.springframework.transaction.interceptor.TransactionInterceptor$1.proceedWithInvocation(TransactionInterceptor.java:133) ~[spring-tx-7.0.6.jar:7.0.6]
+	at org.springframework.transaction.interceptor.TransactionAspectSupport.invokeWithinTransaction(TransactionAspectSupport.java:371) ~[spring-tx-7.0.6.jar:7.0.6]
+	at org.springframework.transaction.interceptor.TransactionInterceptor.invoke(TransactionInterceptor.java:130) ~[spring-tx-7.0.6.jar:7.0.6]
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:179) ~[spring-aop-7.0.6.jar:7.0.6]
+	at org.springframework.dao.support.PersistenceExceptionTranslationInterceptor.invoke(PersistenceExceptionTranslationInterceptor.java:135) ~[spring-tx-7.0.6.jar:7.0.6]
+	... 133 common frames omitted
+Caused by: com.microsoft.sqlserver.jdbc.SQLServerException: The conversion from varchar to NCHAR is unsupported.
+	at com.microsoft.sqlserver.jdbc.SQLServerException.makeFromDriverError(SQLServerException.java:250) ~[mssql-jdbc-12.10.1.jre11.jar:na]
+	at com.microsoft.sqlserver.jdbc.DataTypes.throwConversionError(DataTypes.java:1118) ~[mssql-jdbc-12.10.1.jre11.jar:na]
+	at com.microsoft.sqlserver.jdbc.ServerDTVImpl.getValue(dtv.java:3699) ~[mssql-jdbc-12.10.1.jre11.jar:na]
+	at com.microsoft.sqlserver.jdbc.DTV.getValue(dtv.java:254) ~[mssql-jdbc-12.10.1.jre11.jar:na]
+	at com.microsoft.sqlserver.jdbc.Column.getValue(Column.java:190) ~[mssql-jdbc-12.10.1.jre11.jar:na]
+	at com.microsoft.sqlserver.jdbc.SQLServerResultSet.getValue(SQLServerResultSet.java:2105) ~[mssql-jdbc-12.10.1.jre11.jar:na]
+	at com.microsoft.sqlserver.jdbc.SQLServerResultSet.getValue(SQLServerResultSet.java:2091) ~[mssql-jdbc-12.10.1.jre11.jar:na]
+	at com.microsoft.sqlserver.jdbc.SQLServerResultSet.getNString(SQLServerResultSet.java:2594) ~[mssql-jdbc-12.10.1.jre11.jar:na]
+	at com.zaxxer.hikari.pool.HikariProxyResultSet.getNString(HikariProxyResultSet.java) ~[HikariCP-7.0.2.jar:na]
+	at org.hibernate.type.descriptor.jdbc.NVarcharJdbcType$2.doExtract(NVarcharJdbcType.java:141) ~[hibernate-core-7.2.7.Final.jar:7.2.7.Final]
+	at org.hibernate.type.descriptor.jdbc.BasicExtractor.extract(BasicExtractor.java:42) ~[hibernate-core-7.2.7.Final.jar:7.2.7.Final]
+	at org.hibernate.sql.results.jdbc.internal.JdbcValuesResultSetImpl.getCurrentRowValue(JdbcValuesResultSetImpl.java:381) ~[hibernate-core-7.2.7.Final.jar:7.2.7.Final]
+	... 178 common frames omitted
+
+2026-11-16T18:39:18.956+07:00  INFO 16916 --- [smartdrone-backend] [nio-5000-exec-6] c.s.api.filter.RequestLoggingFilter      : GET /api/v1/orders -> 500 (152 ms) traceId=94fde5fc-b94c-4ba2-8652-a2496d51d94f
+2026-11-16T19:08:43.040+07:00  INFO 16916 --- [smartdrone-backend] [essageBroker-12] o.s.w.s.c.WebSocketMessageBrokerStats    : WebSocketSession[0 current WS(0)-HttpStream(0)-HttpPoll(0), 0 total, 0 closed abnormally (0 connect failure, 0 send limit, 0 transport error)], stompSubProtocol[processed CONNECT(0)-CONNECTED(0)-DISCONNECT(0)], stompBrokerRelay[null], inboundChannel[pool size = 0, active threads = 0, queued tasks = 0, completed tasks = 0], outboundChannel[pool size = 0, active threads = 0, queued tasks = 0, completed tasks = 0], sockJsScheduler[pool size = 12, active threads = 1, queued tasks = 2, completed tasks = 189]
+2026-11-16T19:18:19.487+07:00  INFO 16916 --- [smartdrone-backend] [nio-5000-exec-3] c.s.api.filter.RequestLoggingFilter      : POST /api/v1/auth/login -> 200 (118 ms) traceId=6bc51f4c-ea10-4e1c-9c01-5c0c00bec3fa
+2026-11-16T19:18:19.635+07:00  INFO 16916 --- [smartdrone-backend] [nio-5000-exec-2] c.s.api.filter.RequestLoggingFilter      : GET /api/v1/orders -> 200 (74 ms) traceId=95659be4-b89a-435d-a66a-8655edced6f5
+2026-11-16T19:18:36.433+07:00  INFO 16916 --- [smartdrone-backend] [nio-5000-exec-8] c.s.api.filter.RequestLoggingFilter      : OPTIONS /api/v1/stations -> 200 (27 ms) traceId=5be95535-589e-4d9b-aae3-2678fd33af05
+2026-11-16T19:18:36.433+07:00  INFO 16916 --- [smartdrone-backend] [nio-5000-exec-4] c.s.api.filter.RequestLoggingFilter      : OPTIONS /api/v1/stations -> 200 (26 ms) traceId=b00d483f-7371-4329-a004-ac4a7e27c2f2
+2026-11-16T19:18:36.456+07:00  INFO 16916 --- [smartdrone-backend] [io-5000-exec-10] c.s.api.filter.RequestLoggingFilter      : GET /api/v1/stations -> 401 (18 ms) traceId=9bd2075f-9930-4233-8f88-d011f4154051
+2026-11-16T19:18:36.462+07:00  INFO 16916 --- [smartdrone-backend] [nio-5000-exec-1] c.s.api.filter.RequestLoggingFilter      : GET /api/v1/stations -> 401 (3 ms) traceId=685c35fa-b7d6-4c4f-9657-e7760614817d
+2026-11-16T19:18:36.464+07:00  INFO 16916 --- [smartdrone-backend] [nio-5000-exec-9] c.s.api.filter.RequestLoggingFilter      : OPTIONS /api/v1/auth/refresh -> 200 (1 ms) traceId=c03ec323-c564-44ed-bf80-3f8805758474
+2026-11-16T19:18:36.527+07:00  INFO 16916 --- [smartdrone-backend] [nio-5000-exec-6] c.s.api.filter.RequestLoggingFilter      : POST /api/v1/auth/refresh -> 200 (59 ms) traceId=025477b2-a1fa-4359-acf1-b3105a76f7d3
+2026-11-16T19:18:36.557+07:00  INFO 16916 --- [smartdrone-backend] [nio-5000-exec-3] c.s.api.filter.RequestLoggingFilter      : GET /api/v1/stations -> 200 (27 ms) traceId=c89b9438-b6ad-458a-a99c-b469e4b6ed55
+2026-11-16T19:18:36.576+07:00  INFO 16916 --- [smartdrone-backend] [nio-5000-exec-5] c.s.api.filter.RequestLoggingFilter      : GET /api/v1/stations -> 200 (18 ms) traceId=849d05b2-7f7b-437b-bc19-8c5681a7dee1
+2026-11-16T19:18:45.223+07:00  INFO 16916 --- [smartdrone-backend] [nio-5000-exec-2] c.s.api.filter.RequestLoggingFilter      : OPTIONS /api/v1/stations/97641bad-3bed-4157-9487-0ab15cdfa7d8 -> 200 (0 ms) traceId=f49cd0a8-250e-4b40-ac4c-e547c852e91f
+2026-11-16T19:18:45.278+07:00  INFO 16916 --- [smartdrone-backend] [nio-5000-exec-7] c.s.api.filter.RequestLoggingFilter      : PUT /api/v1/stations/97641bad-3bed-4157-9487-0ab15cdfa7d8 -> 200 (50 ms) traceId=d6e69879-a019-49fc-ba9a-93bc0ad1d339
+2026-11-16T19:18:45.283+07:00  INFO 16916 --- [smartdrone-backend] [nio-5000-exec-8] c.s.api.filter.RequestLoggingFilter      : OPTIONS /api/v1/stations -> 200 (1 ms) traceId=2d05ba61-296c-4c55-b035-e33e8f9f4bb5
+2026-11-16T19:18:45.303+07:00  INFO 16916 --- [smartdrone-backend] [nio-5000-exec-4] c.s.api.filter.RequestLoggingFilter      : GET /api/v1/stations -> 200 (17 ms) traceId=09201185-5eae-4600-9976-f78ea3a2e6f9
+2026-11-16T19:18:49.340+07:00  INFO 16916 --- [smartdrone-backend] [nio-5000-exec-1] c.s.api.filter.RequestLoggingFilter      : OPTIONS /api/health -> 200 (0 ms) traceId=0db7ca89-2d3c-464a-a5ec-31ccca3fe4e8
+2026-11-16T19:18:49.340+07:00  INFO 16916 --- [smartdrone-backend] [io-5000-exec-10] c.s.api.filter.RequestLoggingFilter      : OPTIONS /api/health -> 200 (0 ms) traceId=9b2c3461-92cc-4e86-9f18-e85c2bc8a9f4
+2026-11-16T19:18:49.372+07:00  INFO 16916 --- [smartdrone-backend] [nio-5000-exec-9] c.s.api.filter.RequestLoggingFilter      : GET /api/health -> 200 (26 ms) traceId=bc3de17e-f019-4e75-b39a-8c4ea0039ffd
+2026-11-16T19:18:49.388+07:00  INFO 16916 --- [smartdrone-backend] [nio-5000-exec-6] c.s.api.filter.RequestLoggingFilter      : GET /api/health -> 200 (13 ms) traceId=de9718e4-2d18-45fa-b6c6-8e3c99a9452d
+2026-11-16T19:18:54.794+07:00  INFO 16916 --- [smartdrone-backend] [nio-5000-exec-5] c.s.api.filter.RequestLoggingFilter      : OPTIONS /api/v1/orders -> 200 (2 ms) traceId=744b4ab7-41bd-4459-acf6-c0b6455d60c5
+2026-11-16T19:18:54.794+07:00  INFO 16916 --- [smartdrone-backend] [nio-5000-exec-3] c.s.api.filter.RequestLoggingFilter      : OPTIONS /api/v1/orders -> 200 (2 ms) traceId=00382034-5f30-46a2-9c86-84509c788eaf
+2026-11-16T19:18:54.870+07:00  INFO 16916 --- [smartdrone-backend] [nio-5000-exec-2] c.s.api.filter.RequestLoggingFilter      : GET /api/v1/orders -> 200 (72 ms) traceId=ab421be5-2c12-45f3-9d4c-fd5ac268ad7e
+2026-11-16T19:18:54.911+07:00  INFO 16916 --- [smartdrone-backend] [nio-5000-exec-7] c.s.api.filter.RequestLoggingFilter      : GET /api/v1/orders -> 200 (40 ms) traceId=8095913b-ee0b-4fe3-a04e-f60d0a9c8a3a
+2026-11-16T19:18:58.812+07:00  INFO 16916 --- [smartdrone-backend] [nio-5000-exec-8] c.s.api.filter.RequestLoggingFilter      : GET /api/v1/orders -> 200 (46 ms) traceId=6e2bbfe8-8d8a-456a-8c4d-289cd5188dbf
+2026-11-16T19:18:58.836+07:00  INFO 16916 --- [smartdrone-backend] [nio-5000-exec-4] c.s.api.filter.RequestLoggingFilter      : GET /api/v1/orders -> 200 (22 ms) traceId=d9f13335-8268-4809-8913-a69da193ae6d
+2026-11-16T19:18:59.090+07:00  INFO 16916 --- [smartdrone-backend] [io-5000-exec-10] c.s.api.filter.RequestLoggingFilter      : GET /api/v1/orders -> 200 (31 ms) traceId=5056a2b5-9cbb-4876-b331-3ab3416bd943
+2026-11-16T19:18:59.242+07:00  INFO 16916 --- [smartdrone-backend] [nio-5000-exec-1] c.s.api.filter.RequestLoggingFilter      : GET /api/v1/orders -> 200 (24 ms) traceId=722e81ce-9786-4a3a-9ca3-d5507fa656b6
+2026-11-16T19:18:59.371+07:00  INFO 16916 --- [smartdrone-backend] [nio-5000-exec-9] c.s.api.filter.RequestLoggingFilter      : GET /api/v1/orders -> 200 (124 ms) traceId=6ed01f9d-f994-406d-9d26-e2641556cb13
+2026-11-16T19:18:59.667+07:00  INFO 16916 --- [smartdrone-backend] [nio-5000-exec-6] c.s.api.filter.RequestLoggingFilter      : GET /api/v1/orders -> 200 (43 ms) traceId=53b52fe6-1d04-4271-a796-0ed22316249e
+2026-11-16T19:18:59.819+07:00  INFO 16916 --- [smartdrone-backend] [nio-5000-exec-5] c.s.api.filter.RequestLoggingFilter      : GET /api/v1/orders -> 200 (34 ms) traceId=0c942d56-84ca-40f8-86a1-3dcbe1988d91
+2026-11-16T19:18:59.920+07:00  INFO 16916 --- [smartdrone-backend] [nio-5000-exec-3] c.s.api.filter.RequestLoggingFilter      : OPTIONS /api/v1/orders -> 200 (0 ms) traceId=829dd47a-74ad-4379-ab1e-73ca42ba3262
+2026-11-16T19:18:59.922+07:00  INFO 16916 --- [smartdrone-backend] [nio-5000-exec-2] c.s.api.filter.RequestLoggingFilter      : OPTIONS /api/v1/orders -> 200 (2 ms) traceId=3d89894f-90dc-4719-ab8b-3bbb6cdccf30
+2026-11-16T19:18:59.949+07:00  INFO 16916 --- [smartdrone-backend] [nio-5000-exec-7] c.s.api.filter.RequestLoggingFilter      : GET /api/v1/orders -> 200 (24 ms) traceId=a5778d5b-f289-46ac-bb57-2f4981f34fac
+2026-11-16T19:18:59.975+07:00  INFO 16916 --- [smartdrone-backend] [nio-5000-exec-8] c.s.api.filter.RequestLoggingFilter      : GET /api/v1/orders -> 200 (22 ms) traceId=d61a66c5-cabd-4fe4-80ea-3cf9329e41b2
+2026-11-16T19:19:00.469+07:00  INFO 16916 --- [smartdrone-backend] [nio-5000-exec-4] c.s.api.filter.RequestLoggingFilter      : GET /api/v1/orders -> 200 (21 ms) traceId=8e18083a-7f9d-433f-be57-0c0b2fa45161
+2026-11-16T19:19:00.486+07:00  INFO 16916 --- [smartdrone-backend] [io-5000-exec-10] c.s.api.filter.RequestLoggingFilter      : GET /api/v1/orders -> 200 (16 ms) traceId=048c17b6-1737-412c-bc29-5602249bfdf9
