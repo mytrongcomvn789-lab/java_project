@@ -207,7 +207,7 @@ class RbacIntegrationTest {
         String token = tokens.get(role);
         assertProblem(call("GET", "/v1/not-in-policy", token, null), 403, "FORBIDDEN");
         assertProblem(call("POST", "/v1/users", token, "{}"), 403, "FORBIDDEN");
-        assertProblem(call("POST", "/v1/integration/orders/123/events", token, "{}"), 403, "FORBIDDEN");
+        assertProblem(call("POST", "/v1/integration/orders/123/events", token, "{}"), 401, "API_KEY_UNAUTHORIZED");
         assertProblem(call("DELETE", "/v1/me/permissions", token, null), 403, "FORBIDDEN");
     }
 
