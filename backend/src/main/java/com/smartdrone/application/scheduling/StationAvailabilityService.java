@@ -9,20 +9,28 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.smartdrone.application.common.ApiException;
 import com.smartdrone.application.common.ErrorCode;
+import com.smartdrone.application.orders.scope.OrderScope;
+import com.smartdrone.application.orders.scope.OrderScopeResolver;
+import com.smartdrone.application.orders.scope.OrderSpecs;
 import com.smartdrone.domain.entity.DeliveryAttempt;
+import com.smartdrone.domain.entity.Order;
 import com.smartdrone.domain.entity.Station;
+import com.smartdrone.domain.enums.RoleName;
 import com.smartdrone.domain.enums.StationStatus;
 import com.smartdrone.infrastructure.persistence.DeliveryAttemptRepository;
+import com.smartdrone.infrastructure.persistence.OrderRepository;
 import com.smartdrone.infrastructure.persistence.StationRepository;
 
 // 4.2: cho web biết mỗi slot trong ngày còn bao nhiêu chỗ ở một trạm.
 // "date" hiểu theo giờ Việt Nam; slotStart trả về là thời điểm UTC, cùng mốc với API lên lịch.
+// Phạm vi: chỉ xem được trạm mình được phân công, hoặc trạm còn lại của một đơn nằm trong phạm vi của mình.
 @Service
 public class StationAvailabilityService {
 
@@ -30,20 +38,27 @@ public class StationAvailabilityService {
 
     private final StationRepository stations;
     private final DeliveryAttemptRepository attempts;
+    private final OrderRepository orders;
+    private final OrderScopeResolver scopes;
     private final ScheduleProperties props;
     private final Clock clock;
 
     public StationAvailabilityService(StationRepository stations, DeliveryAttemptRepository attempts,
+                                      OrderRepository orders, OrderScopeResolver scopes,
                                       ScheduleProperties props, Clock clock) {
         this.stations = stations;
         this.attempts = attempts;
+        this.orders = orders;
+        this.scopes = scopes;
         this.props = props;
         this.clock = clock;
     }
 
     @Transactional(readOnly = true)
     @PreAuthorize("hasAnyRole('DISPATCHER','STATION_OPERATOR','LOGISTICS_MANAGER')")
-    public StationAvailabilityView get(UUID stationId, LocalDate date) {
+    public StationAvailabilityView get(UUID actorId, RoleName role, UUID stationId, LocalDate date) {
+        // Kiểm tra phạm vi trước khi đọc dữ liệu; trạm không tồn tại hay ngoài phạm vi đều trả cùng 404.
+        requireVisible(actorId, role, stationId);
         Station station = stations.findById(stationId)
                 .orElseThrow(() -> new ApiException(ErrorCode.RESOURCE_NOT_FOUND, "Không tìm thấy trạm"));
 
@@ -76,6 +91,23 @@ public class StationAvailabilityService {
 
         return new StationAvailabilityView(station.getId(), station.getName(), station.getStatus(),
                 station.getCapacity(), props.slotMinutes(), day, ZONE.getId(), slots);
+    }
+
+    private void requireVisible(UUID actorId, RoleName role, UUID stationId) {
+        OrderScope scope = scopes.resolve(actorId, role);
+        boolean visible = false;
+        if (scope instanceof OrderScope.Stations s) {
+            visible = s.stationIds().contains(stationId)
+                    || orders.exists(OrderSpecs.inScope(scope).and(atStation(stationId)));
+        }
+        if (!visible) {
+            throw new ApiException(ErrorCode.RESOURCE_NOT_FOUND, "Không tìm thấy trạm");
+        }
+    }
+
+    private static Specification<Order> atStation(UUID stationId) {
+        return (root, q, cb) -> cb.or(cb.equal(root.get("pickupStationId"), stationId),
+                cb.equal(root.get("dropoffStationId"), stationId));
     }
 
     private static int countUsed(List<DeliveryAttempt> active, Instant start, Instant end) {
