@@ -255,7 +255,8 @@ export const NAV_ITEMS: NavItem[] = [
     icon: Users,
     roles: ["SYSTEM_ADMIN"],
     code: "FR-02",
-    summary: "Quản lý tài khoản người dùng trong hệ thống.",
+    summary:
+      "Tạo, cập nhật, phân vai trò và khóa / mở khóa tài khoản người dùng.",
     features: ["Xem, tạo, cập nhật tài khoản", "Khóa / mở khóa tài khoản"],
   },
   {
@@ -318,6 +319,9 @@ export const PLACEHOLDER_PATHS: string[] = Array.from(
           "/deliveries/new",
           "/dispatch/requests",
           "/station/parcels",
+          "/admin/users",
+          "/admin/roles",
+          "/admin/settings",
         ].includes(p),
     ),
   ),

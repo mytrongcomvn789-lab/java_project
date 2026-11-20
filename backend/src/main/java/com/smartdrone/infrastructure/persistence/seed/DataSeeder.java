@@ -3,6 +3,7 @@ package com.smartdrone.infrastructure.persistence.seed;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import com.smartdrone.domain.entity.Role;
@@ -11,6 +12,7 @@ import com.smartdrone.infrastructure.persistence.RoleRepository;
 
 // Chạy mỗi lần khởi động: thêm 5 vai trò nếu chưa có (chạy nhiều lần không bị trùng).
 @Component
+@Order(1)
 public class DataSeeder implements CommandLineRunner {
 
     private static final Logger log = LoggerFactory.getLogger(DataSeeder.class);
