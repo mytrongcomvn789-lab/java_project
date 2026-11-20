@@ -3,6 +3,7 @@ package com.smartdrone.application.integration;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -10,16 +11,16 @@ import com.smartdrone.application.common.ApiException;
 import com.smartdrone.application.common.ErrorCode;
 import com.smartdrone.application.integration.dto.IntegrationOrderStatus;
 import com.smartdrone.application.integration.dto.IntegrationStationView;
-import com.smartdrone.application.stations.StationService;
 import com.smartdrone.domain.entity.Order;
 import com.smartdrone.infrastructure.persistence.OrderRepository;
+import com.smartdrone.infrastructure.persistence.StationRepository;
 
 @Service
 public class IntegrationQueryService {
     private final OrderRepository orders;
-    private final StationService stations;
+    private final StationRepository stations;
 
-    public IntegrationQueryService(OrderRepository orders, StationService stations) {
+    public IntegrationQueryService(OrderRepository orders, StationRepository stations) {
         this.orders = orders;
         this.stations = stations;
     }
@@ -33,8 +34,9 @@ public class IntegrationQueryService {
 
     @Transactional(readOnly = true)
     public List<IntegrationStationView> stations() {
-        return stations.list().stream()
-                .map(s -> new IntegrationStationView(s.id(), s.name(), s.latitude(), s.longitude(), s.status()))
+        return stations.findAll(Sort.by(Sort.Order.asc("name"), Sort.Order.asc("id"))).stream()
+                .map(s -> new IntegrationStationView(
+                        s.getId(), s.getName(), s.getLatitude(), s.getLongitude(), s.getStatus()))
                 .toList();
     }
 }
