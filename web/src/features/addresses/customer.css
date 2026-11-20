@@ -114,10 +114,19 @@
 /* Keep the address/profile forms readable on phones; the desktop sidebar otherwise
    consumes half the viewport even when there is no horizontal overflow. */
 @media (max-width: 700px) {
+  .app {
+    padding-top: 60px;
+  }
   .app .header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
     padding: 16px;
     gap: 16px;
     flex-wrap: wrap;
+    height: auto;
   }
   .app .header-right {
     gap: 12px;
@@ -127,9 +136,12 @@
   .app .body {
     flex-direction: column;
     min-width: 0;
+    padding-top: 0;
   }
   .app .sidebar {
+    position: static;
     width: 100%;
+    height: auto;
     padding: 8px 12px;
     border-right: 0;
     border-bottom: 1px solid var(--border);
@@ -149,6 +161,7 @@
   .app .content {
     padding: 24px 16px;
     min-width: 0;
+    margin-left: 0;
   }
 }
 .package-thumb {
