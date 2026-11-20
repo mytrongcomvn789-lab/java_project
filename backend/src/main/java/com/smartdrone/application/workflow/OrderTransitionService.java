@@ -4,6 +4,8 @@ import java.time.Clock;
 import java.time.Instant;
 import java.util.UUID;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import com.smartdrone.application.scheduling.AttemptReleaseService;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
@@ -13,11 +15,6 @@ import com.smartdrone.domain.enums.RoleName;
 import com.smartdrone.application.common.ApiException;
 import com.smartdrone.application.common.ErrorCode;
 import com.smartdrone.application.common.TraceContext;
-<<<<<<< Updated upstream
-=======
-import com.smartdrone.application.realtime.OrderStatusChanged;
-import com.smartdrone.application.scheduling.AttemptReleaseService;
->>>>>>> Stashed changes
 import com.smartdrone.domain.entity.OrderStatusHistory;
 import com.smartdrone.domain.enums.ChangeSource;
 import com.smartdrone.domain.enums.OrderStatus;
@@ -31,34 +28,20 @@ import com.smartdrone.infrastructure.persistence.OrderStatusHistoryRepository;
 public class OrderTransitionService {
 
     private final OrderStatusHistoryRepository historyRepository;
-    private final Clock clock;
-<<<<<<< Updated upstream
-
-    public OrderTransitionService(OrderStatusHistoryRepository historyRepository, Clock clock) {
-        this.historyRepository = historyRepository;
-        this.clock = clock;
-=======
-    private final ApplicationEventPublisher events;
+        private final Clock clock;
     private final AttemptReleaseService attemptRelease; // null trong test đơn vị cũ
 
-    /** Giữ cho test đơn vị cũ: không phát sự kiện realtime, không trả chỗ. */
+    /** Giữ cho test đơn vị cũ: không trả chỗ. */
     public OrderTransitionService(OrderStatusHistoryRepository historyRepository, Clock clock) {
-        this(historyRepository, clock, event -> { });
-    }
-
-    public OrderTransitionService(OrderStatusHistoryRepository historyRepository, Clock clock,
-                                  ApplicationEventPublisher events) {
-        this(historyRepository, clock, events, null);
+        this(historyRepository, clock, null);
     }
 
     @Autowired
     public OrderTransitionService(OrderStatusHistoryRepository historyRepository, Clock clock,
-                                  ApplicationEventPublisher events, AttemptReleaseService attemptRelease) {
+                                  AttemptReleaseService attemptRelease) {
         this.historyRepository = historyRepository;
         this.clock = clock;
-        this.events = events;
         this.attemptRelease = attemptRelease;
->>>>>>> Stashed changes
     }
 
     /**
@@ -92,20 +75,12 @@ public class OrderTransitionService {
         } catch (DataIntegrityViolationException | ObjectOptimisticLockingFailureException e) {
             throw new ApiException(ErrorCode.VERSION_CONFLICT);
         }
-
-<<<<<<< Updated upstream
-=======
+        
         // 4b. Đơn thất bại hoặc bắt đầu hoàn hàng thì không dùng slot đã đặt nữa: trả chỗ ngay, cùng transaction.
         if (attemptRelease != null
                 && (rule.to() == OrderStatus.FAILED || rule.to() == OrderStatus.RETURNING)) {
             attemptRelease.releaseActive(order.getId());
         }
-
-        // 5. Báo realtime: listener chỉ chạy sau commit; rollback thì không có gì được gửi.
-        events.publishEvent(new OrderStatusChanged(entry.getId(), order.getId(), newVersion,
-                from, rule.to(), rule.event().name(), cmd.attemptId(), entry.getOccurredAt()));
-
->>>>>>> Stashed changes
         return new TransitionResult(from, rule.to(), rule.event(), newVersion);
     }
         /** Dòng lịch sử đầu tiên khi đơn vừa được tạo: from = null, to = trạng thái ban đầu (PENDING). */
