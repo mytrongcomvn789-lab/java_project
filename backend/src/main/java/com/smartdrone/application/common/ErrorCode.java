@@ -29,6 +29,8 @@ public enum ErrorCode {
     SLOT_FULL(HttpStatus.CONFLICT, "Khung giờ này đã đủ chỗ tại trạm, vui lòng chọn khung giờ khác"),
     STATION_UNAVAILABLE(HttpStatus.CONFLICT, "Trạm hiện không hoạt động nên không thể lên lịch"),
     IDEMPOTENCY_KEY_CONFLICT(HttpStatus.CONFLICT, "Idempotency-Key đã được dùng cho nội dung yêu cầu khác"),
+    API_KEY_UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "API key không hợp lệ, đã hết hạn hoặc đã bị thu hồi"),
+    API_KEY_RATE_LIMITED(HttpStatus.TOO_MANY_REQUESTS, "Vượt quá giới hạn tần suất của API key"),
     INTERNAL_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "Lỗi hệ thống, vui lòng thử lại sau");
     
     private final HttpStatus status;

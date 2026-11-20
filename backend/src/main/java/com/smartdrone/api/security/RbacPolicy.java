@@ -40,6 +40,10 @@ public final class RbacPolicy {
             rule(GET, "/v1/roles", SYSTEM_ADMIN),
             rule(GET, "/v1/users", SYSTEM_ADMIN),
             rule(PATCH, "/v1/users/{id}/access", SYSTEM_ADMIN),
+            rule(POST, "/v1/admin/api-keys", SYSTEM_ADMIN),
+            rule(GET, "/v1/admin/api-keys", SYSTEM_ADMIN),
+            rule(POST, "/v1/admin/api-keys/{id}/revoke", SYSTEM_ADMIN),
+            rule(POST, "/v1/admin/api-keys/{id}/rotate", SYSTEM_ADMIN),
             rule(GET, "/v1/audit-events", SYSTEM_ADMIN),
 
             rule(GET, "/v1/addresses", CUSTOMER),
