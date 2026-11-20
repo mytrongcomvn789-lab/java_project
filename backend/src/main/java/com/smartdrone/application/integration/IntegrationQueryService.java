@@ -10,16 +10,21 @@ import com.smartdrone.application.common.ApiException;
 import com.smartdrone.application.common.ErrorCode;
 import com.smartdrone.application.integration.dto.IntegrationOrderStatus;
 import com.smartdrone.application.integration.dto.IntegrationStationView;
-import com.smartdrone.application.stations.StationService;
 import com.smartdrone.domain.entity.Order;
 import com.smartdrone.infrastructure.persistence.OrderRepository;
+import com.smartdrone.infrastructure.persistence.StationRepository;
 
+/**
+ * Đọc THẲNG từ repository, không gọi qua OrderQueryService/StationService hiện có — hai service đó có
+ * @PreAuthorize gắn với vai trò người dùng JWT, còn API key không mang vai trò nào. Gọi qua sẽ luôn bị
+ * AccessDeniedException (403) dù scope đã đúng — đây là bug CI đã bắt được và được sửa tại đây.
+ */
 @Service
 public class IntegrationQueryService {
     private final OrderRepository orders;
-    private final StationService stations;
+    private final StationRepository stations;
 
-    public IntegrationQueryService(OrderRepository orders, StationService stations) {
+    public IntegrationQueryService(OrderRepository orders, StationRepository stations) {
         this.orders = orders;
         this.stations = stations;
     }
@@ -33,8 +38,9 @@ public class IntegrationQueryService {
 
     @Transactional(readOnly = true)
     public List<IntegrationStationView> stations() {
-        return stations.list().stream()
-                .map(s -> new IntegrationStationView(s.id(), s.name(), s.latitude(), s.longitude(), s.status()))
+        return stations.findAll().stream()
+                .map(s -> new IntegrationStationView(s.getId(), s.getName(), s.getLatitude(), s.getLongitude(),
+                        s.getStatus()))
                 .toList();
     }
 }
