@@ -5,7 +5,6 @@ import java.time.Instant;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import com.smartdrone.application.scheduling.AttemptReleaseService;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
@@ -17,6 +16,7 @@ import com.smartdrone.application.common.ApiException;
 import com.smartdrone.application.common.ErrorCode;
 import com.smartdrone.application.common.TraceContext;
 import com.smartdrone.application.realtime.OrderStatusChanged;
+import com.smartdrone.application.scheduling.AttemptReleaseService;
 import com.smartdrone.domain.entity.OrderStatusHistory;
 import com.smartdrone.domain.enums.ChangeSource;
 import com.smartdrone.domain.enums.OrderStatus;
@@ -30,30 +30,27 @@ import com.smartdrone.infrastructure.persistence.OrderStatusHistoryRepository;
 public class OrderTransitionService {
 
     private final OrderStatusHistoryRepository historyRepository;
-        private final Clock clock;
-    private final AttemptReleaseService attemptRelease; // null trong test đơn vị cũ
-
-    /** Giữ cho test đơn vị cũ: không trả chỗ. */
-    public OrderTransitionService(OrderStatusHistoryRepository historyRepository, Clock clock) {
-        this(historyRepository, clock, null);
     private final Clock clock;
     private final ApplicationEventPublisher events;
+    private final AttemptReleaseService attemptRelease; // null trong test đơn vị cũ
 
-    /** Giữ cho test đơn vị cũ: không phát sự kiện realtime. */
+    /** Giữ cho test đơn vị cũ: không phát sự kiện realtime, không trả chỗ. */
     public OrderTransitionService(OrderStatusHistoryRepository historyRepository, Clock clock) {
         this(historyRepository, clock, event -> { });
     }
 
+    public OrderTransitionService(OrderStatusHistoryRepository historyRepository, Clock clock,
+                                  ApplicationEventPublisher events) {
+        this(historyRepository, clock, events, null);
+    }
+
     @Autowired
     public OrderTransitionService(OrderStatusHistoryRepository historyRepository, Clock clock,
-                                  AttemptReleaseService attemptRelease) {
-        this.historyRepository = historyRepository;
-        this.clock = clock;
-        this.attemptRelease = attemptRelease;
-                                  ApplicationEventPublisher events) {
+                                  ApplicationEventPublisher events, AttemptReleaseService attemptRelease) {
         this.historyRepository = historyRepository;
         this.clock = clock;
         this.events = events;
+        this.attemptRelease = attemptRelease;
     }
 
     /**
@@ -88,7 +85,7 @@ public class OrderTransitionService {
         } catch (DataIntegrityViolationException | ObjectOptimisticLockingFailureException e) {
             throw new ApiException(ErrorCode.VERSION_CONFLICT);
         }
-        
+
         // 4b. Đơn thất bại hoặc bắt đầu hoàn hàng thì không dùng slot đã đặt nữa: trả chỗ ngay, cùng transaction.
         if (attemptRelease != null
                 && (rule.to() == OrderStatus.FAILED || rule.to() == OrderStatus.RETURNING)) {
