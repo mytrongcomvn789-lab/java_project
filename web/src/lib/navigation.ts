@@ -129,11 +129,27 @@ export const NAV_ITEMS: NavItem[] = [
     to: "/stations",
     label: "Danh sách trạm",
     icon: "⌂",
+    end: true,
     roles: "ALL",
     code: "FR-07",
     summary: "Xem thông tin, vị trí, sức chứa và trạng thái các trạm.",
     features: ["Xem danh sách trạm", "Quản lý thông tin trạm theo quyền"],
   },
+
+  {
+    to: "/stations/monitoring",
+    label: "Giám sát trạm",
+    icon: "◎",
+    roles: ["DISPATCHER", "STATION_OPERATOR", "LOGISTICS_MANAGER"],
+    code: "FR-07",
+    summary:
+      "Theo dõi trạng thái vận hành, kết nối, chỗ đang giữ và số kiện của từng trạm.",
+    features: [
+      "Xem trạng thái và số kiện của trạm",
+      "Đổi trạng thái vận hành theo quyền",
+    ],
+  },
+
   {
     to: "/station/availability",
     label: "Tình trạng sẵn sàng",
@@ -275,6 +291,7 @@ export const PLACEHOLDER_PATHS: string[] = Array.from(
           "/profile",
           "/addresses",
           "/stations",
+          "/stations/monitoring",
           "/deliveries",
           "/deliveries/new",
           "/dispatch/requests",

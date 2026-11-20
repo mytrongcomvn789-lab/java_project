@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -17,19 +18,24 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.AccessDeniedHandler;
+import org.springframework.security.web.access.intercept.AuthorizationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import com.smartdrone.api.error.ProblemJson;
+import com.smartdrone.api.security.ApiKeyAuthenticationFilter;
+import com.smartdrone.api.security.IntegrationPolicy;
 import com.smartdrone.application.common.ErrorCode;
 import com.smartdrone.api.security.AccountJwtAuthenticationConverter;
 import com.smartdrone.api.security.RbacPolicy;
+import com.smartdrone.domain.enums.IntegrationScope;
 import com.smartdrone.domain.enums.RoleName;
 
 import jakarta.servlet.DispatcherType;
 
 // Task 2.6: xác thực JWT + quyền trên URL + @PreAuthorize tại service.
+// Task 5.4: thêm chain RIÊNG cho /v1/integration/** (API key, không phải JWT) — không chạm chain JWT bên dưới.
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
@@ -44,6 +50,57 @@ public class SecurityConfig {
     }
 
     @Bean
+    public com.smartdrone.api.security.ApiKeyAuthenticationFilter apiKeyAuthenticationFilter(
+            com.smartdrone.application.apikeys.ApiKeyAuthenticator authenticator) {
+        return new com.smartdrone.api.security.ApiKeyAuthenticationFilter(authenticator);
+    }
+
+    // Chặn Spring Boot tự đăng ký filter trên làm filter container chạy cho MỌI request.
+    // Nó chỉ nên chạy đúng 1 chỗ: bên trong chain /v1/integration/** (đã addFilterBefore ở dưới).
+    @Bean
+    public org.springframework.boot.web.servlet.FilterRegistrationBean<com.smartdrone.api.security.ApiKeyAuthenticationFilter>
+            apiKeyAuthenticationFilterRegistration(com.smartdrone.api.security.ApiKeyAuthenticationFilter filter) {
+        var registration = new org.springframework.boot.web.servlet.FilterRegistrationBean<>(filter);
+        registration.setEnabled(false);
+        return registration;
+    }
+
+    // Chạy TRƯỚC chain JWT: khớp /v1/integration/** thì dừng ở đây, không rơi xuống chain bên dưới.
+    @Bean
+    @Order(1)
+    public SecurityFilterChain integrationSecurityFilterChain(HttpSecurity http,
+            ApiKeyAuthenticationFilter apiKeyFilter) throws Exception {
+        AuthenticationEntryPoint entryPoint = (request, response, ex) ->
+                ProblemJson.write(response, ErrorCode.API_KEY_UNAUTHORIZED);
+        AccessDeniedHandler deniedHandler = (request, response, ex) ->
+                ProblemJson.write(response, ErrorCode.FORBIDDEN);
+
+        http
+                .securityMatcher("/v1/integration/**")
+                .csrf(AbstractHttpConfigurer::disable)
+                .cors(Customizer.withDefaults())
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .httpBasic(AbstractHttpConfigurer::disable)
+                .formLogin(AbstractHttpConfigurer::disable)
+                .logout(AbstractHttpConfigurer::disable)
+                .addFilterBefore(apiKeyFilter, AuthorizationFilter.class)
+                .authorizeHttpRequests(auth -> {
+                    auth.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll();
+                    for (IntegrationPolicy.Rule rule : IntegrationPolicy.rules()) {
+                        auth.requestMatchers(rule.method(), rule.path())
+                            .hasAuthority("SCOPE_" + rule.scope().name());
+                    }
+                    // Scope mới cho route mới phải khai báo rõ ở IntegrationPolicy.
+                    auth.anyRequest().denyAll();
+                })
+                .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint(entryPoint)
+                        .accessDeniedHandler(deniedHandler));
+        return http.build();
+    }
+
+    @Bean
+    @Order(2)
     public SecurityFilterChain securityFilterChain(HttpSecurity http,
             AccountJwtAuthenticationConverter authenticationConverter) throws Exception {
         // 401: chưa gửi token / token sai / token hết hạn
@@ -69,6 +126,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/health",
                                 "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         // logout công khai: refresh token chính là bằng chứng, và access token có thể đã hết hạn
+                        // Bắt tay WebSocket (GET /ws). Trình duyệt không gắn được header Authorization khi mở
+                        // WebSocket, nên JWT được kiểm tra ở khung STOMP CONNECT (StompSecurityInterceptor).
+                        .requestMatchers(HttpMethod.GET, "/ws", "/ws/**").permitAll()
                         .requestMatchers(HttpMethod.POST,
                                 "/v1/auth/register", "/v1/auth/login",
                                 "/v1/auth/refresh", "/v1/auth/logout").permitAll();

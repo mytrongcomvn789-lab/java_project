@@ -1,4 +1,5 @@
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
+import NotificationBell from "../features/notifications/NotificationBell";
 import Brand from "../components/ui/Brand";
 import { useAuth } from "../features/auth/AuthContext";
 import { getMenuForRole } from "../lib/navigation";
@@ -48,6 +49,9 @@ export default function MainLayout() {
                 </button>
               ))}
             </div>
+          )}
+          {user.role === "CUSTOMER" && !isDemo && (
+            <NotificationBell userId={user.id} />
           )}
           <div className="user">
             <span className="avatar">{initials(user.fullName)}</span>

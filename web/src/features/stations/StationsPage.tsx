@@ -162,7 +162,7 @@ export default function StationsPage() {
           <div className="station-heading">
             <h3>{station.name}</h3>
             <span className={`station-status ${station.status.toLowerCase()}`}>
-              {station.status === "ACTIVE" ? "Đang hoạt động" : "Ngừng hoạt động"}
+              {station.status === "ACTIVE" ? "Đang hoạt động" : station.status === "MAINTENANCE" ? "Đang bảo trì" : "Ngừng hoạt động"}
             </span>
           </div>
           <p>Vĩ độ: {station.latitude} · Kinh độ: {station.longitude}</p>

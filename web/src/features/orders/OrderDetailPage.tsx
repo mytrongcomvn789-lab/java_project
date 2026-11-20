@@ -7,6 +7,8 @@ import { orderService, type OrderDetail } from "../../lib/orderService";
 import { useAuth } from "../auth/AuthContext";
 import OrderReviewActions from "./OrderReviewActions";
 import OrderCustomerActions from "./OrderCustomerActions";
+import OrderScheduleActions from "./OrderScheduleActions";
+import OrderTrackingPanel from "./OrderTrackingPanel";
 
 const when = (v: string) => new Date(v).toLocaleString("vi-VN");
 
@@ -69,11 +71,29 @@ export default function OrderDetailPage() {
           <>
             {notice && <p role="status">{notice}</p>}
             {user?.role === "DISPATCHER" && order.status === "PENDING" && (
-              <OrderReviewActions key={`${order.id}:${order.version}`} order={order}
-                onReviewed={(updated, message) => { setOrder(updated); setNotice(message); }}
-                onReload={() => setRetry((n) => n + 1)} />
+              <OrderReviewActions
+                key={`${order.id}:${order.version}`}
+                order={order}
+                onReviewed={(updated, message) => {
+                  setOrder(updated);
+                  setNotice(message);
+                }}
+                onReload={() => setRetry((n) => n + 1)}
+              />
             )}
-                        {user?.role === "CUSTOMER" && order.status === "PENDING" && (
+            {user?.role === "DISPATCHER" &&
+              (order.status === "APPROVED" || order.status === "FAILED") && (
+                <OrderScheduleActions
+                  key={`${order.id}:${order.version}`}
+                  order={order}
+                  onScheduled={(updated, message) => {
+                    setOrder(updated);
+                    setNotice(message);
+                  }}
+                  onReload={() => setRetry((n) => n + 1)}
+                />
+              )}
+            {user?.role === "CUSTOMER" && order.status === "PENDING" && (
               <OrderCustomerActions
                 key={`${order.id}:${order.version}`}
                 order={order}
@@ -84,6 +104,10 @@ export default function OrderDetailPage() {
                 onReload={() => setRetry((n) => n + 1)}
               />
             )}
+            <OrderTrackingPanel
+              orderId={order.id}
+              onVersionChange={() => setRetry((n) => n + 1)}
+            />
             <section className="card customer-panel">
               <h3>Đơn {order.id}</h3>
               <p>
@@ -115,7 +139,14 @@ export default function OrderDetailPage() {
               style={{ overflowX: "auto" }}
             >
               <h3>Lịch sử trạng thái</h3>
-              <table style={{ minWidth: 760, width: "100%", borderSpacing: "12px 8px", textAlign: "left" }}>
+              <table
+                style={{
+                  minWidth: 760,
+                  width: "100%",
+                  borderSpacing: "12px 8px",
+                  textAlign: "left",
+                }}
+              >
                 <thead>
                   <tr>
                     <th>Thời điểm</th>
@@ -133,7 +164,15 @@ export default function OrderDetailPage() {
                       <td>{h.fromStatus ?? "—"}</td>
                       <td>{h.toStatus}</td>
                       <td>{h.action ?? "Tạo đơn"}</td>
-                      <td>{h.actorRole ?? "Hệ thống"}{h.actorId && <><br /><small>{h.actorId}</small></>}</td>
+                      <td>
+                        {h.actorRole ?? "Hệ thống"}
+                        {h.actorId && (
+                          <>
+                            <br />
+                            <small>{h.actorId}</small>
+                          </>
+                        )}
+                      </td>
                       <td>{h.reason ?? ""}</td>
                     </tr>
                   ))}

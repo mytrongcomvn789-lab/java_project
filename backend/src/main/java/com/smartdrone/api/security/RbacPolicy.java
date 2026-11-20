@@ -40,6 +40,10 @@ public final class RbacPolicy {
             rule(GET, "/v1/roles", SYSTEM_ADMIN),
             rule(GET, "/v1/users", SYSTEM_ADMIN),
             rule(PATCH, "/v1/users/{id}/access", SYSTEM_ADMIN),
+            rule(POST, "/v1/admin/api-keys", SYSTEM_ADMIN),
+            rule(GET, "/v1/admin/api-keys", SYSTEM_ADMIN),
+            rule(POST, "/v1/admin/api-keys/{id}/revoke", SYSTEM_ADMIN),
+            rule(POST, "/v1/admin/api-keys/{id}/rotate", SYSTEM_ADMIN),
             rule(GET, "/v1/audit-events", SYSTEM_ADMIN),
 
             rule(GET, "/v1/addresses", CUSTOMER),
@@ -48,6 +52,7 @@ public final class RbacPolicy {
             rule(DELETE, "/v1/addresses/{id}", CUSTOMER),
 
             rule(GET, "/v1/stations", RoleName.values()),
+            rule(GET, "/v1/stations/monitoring", LOGISTICS_MANAGER, DISPATCHER, STATION_OPERATOR),
             rule(POST, "/v1/stations", LOGISTICS_MANAGER),
             rule(PUT, "/v1/stations/{id}", LOGISTICS_MANAGER),
             rule(PATCH, "/v1/stations/{id}/status", STATION_OPERATOR, LOGISTICS_MANAGER),
@@ -74,6 +79,9 @@ public final class RbacPolicy {
             rule(GET, "/v1/orders/{id}/summary", CUSTOMER, DISPATCHER, LOGISTICS_MANAGER),
             rule(GET, "/v1/orders/{id}/pickup-code", CUSTOMER),
 
+            rule(GET, "/v1/notifications", CUSTOMER),
+            rule(POST, "/v1/notifications/{id}/read", CUSTOMER),
+            rule(POST, "/v1/notifications/read-all", CUSTOMER),
             rule(POST, "/v1/assistant/messages", CUSTOMER),
             rule(GET, "/v1/analytics/deliveries", LOGISTICS_MANAGER),
             rule(POST, "/v1/files/upload-tickets", CUSTOMER, STATION_OPERATOR),

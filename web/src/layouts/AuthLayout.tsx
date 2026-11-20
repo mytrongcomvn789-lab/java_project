@@ -18,7 +18,7 @@ export default function AuthLayout() {
             ràng, mỗi hành trình đều được theo dõi.
           </p>
         </div>
-        <p className="eyebrow">ĐỒ ÁN SMARTDRONEDELIVERY · BẢN THỬ THEO FIGMA</p>
+        <p className="eyebrow">ĐỒ ÁN SMARTDRONEDELIVERY</p>
       </section>
       <section className="auth-panel">
         <Outlet />

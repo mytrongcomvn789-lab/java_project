@@ -11,7 +11,7 @@ BEGIN
         CONSTRAINT ck_stations_capacity_positive CHECK (capacity > 0),
         CONSTRAINT ck_stations_latitude CHECK (latitude BETWEEN -90 AND 90),
         CONSTRAINT ck_stations_longitude CHECK (longitude BETWEEN -180 AND 180),
-        CONSTRAINT ck_stations_status CHECK (status IN (N'ACTIVE', N'INACTIVE'))
+        CONSTRAINT ck_stations_status CHECK (status IN (N'ACTIVE', N'MAINTENANCE', N'INACTIVE'))
     );
     CREATE INDEX ix_stations_name ON dbo.stations (name, id);
 END;

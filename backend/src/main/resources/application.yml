@@ -34,6 +34,9 @@ app:
     access-token-minutes: 15
     refresh-token-days: 7
 
+  api-keys:
+    default-rate-limit-per-minute: 60 # dùng khi POST /v1/admin/api-keys không truyền rateLimitPerMinute
+
   storage:
     endpoint: ${MINIO_ENDPOINT:http://localhost:9000}
     public-endpoint: ${MINIO_PUBLIC_ENDPOINT:${MINIO_ENDPOINT:http://localhost:9000}} # host mà TRÌNH DUYỆT truy cập được
