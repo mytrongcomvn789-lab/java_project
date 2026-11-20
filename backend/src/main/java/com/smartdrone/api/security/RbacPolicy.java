@@ -45,6 +45,15 @@ public final class RbacPolicy {
             rule(POST, "/v1/admin/api-keys/{id}/revoke", SYSTEM_ADMIN),
             rule(POST, "/v1/admin/api-keys/{id}/rotate", SYSTEM_ADMIN),
             rule(GET, "/v1/audit-events", SYSTEM_ADMIN),
+            // FR-02: tài khoản, vai trò & quyền, cấu hình hệ thống (chỉ SYSTEM_ADMIN).
+            rule(GET, "/v1/admin/accounts", SYSTEM_ADMIN),
+            rule(POST, "/v1/admin/accounts", SYSTEM_ADMIN),
+            rule(PUT, "/v1/admin/accounts/{id}", SYSTEM_ADMIN),
+            rule(PATCH, "/v1/admin/accounts/{id}/status", SYSTEM_ADMIN),
+            rule(GET, "/v1/admin/roles", SYSTEM_ADMIN),
+            rule(PUT, "/v1/admin/roles/{role}/permissions", SYSTEM_ADMIN),
+            rule(GET, "/v1/admin/settings", SYSTEM_ADMIN),
+            rule(PUT, "/v1/admin/settings", SYSTEM_ADMIN),
 
             rule(GET, "/v1/addresses", CUSTOMER),
             rule(POST, "/v1/addresses", CUSTOMER),

@@ -13,6 +13,10 @@ import NotFoundPage from "./NotFoundPage";
 import LoginPage from "../features/auth/LoginPage";
 import RegisterPage from "../features/auth/RegisterPage";
 import RequireAuth from "../features/auth/RequireAuth";
+import RequireRole from "../features/auth/RequireRole";
+import AccountsPage from "../features/admin/AccountsPage";
+import RolesPage from "../features/admin/RolesPage";
+import SettingsPage from "../features/admin/SettingsPage";
 import HomePage from "../features/home/HomePage";
 import ProfilePage from "../features/profile/ProfilePage";
 import PlaceholderPage from "../components/ui/PlaceholderPage";
@@ -48,6 +52,12 @@ export default function AppRouter() {
             path="/stations/monitoring"
             element={<StationMonitoringPage />}
           />
+          {/* FR-02: chỉ SYSTEM_ADMIN. Backend vẫn kiểm tra quyền ở mọi API. */}
+          <Route element={<RequireRole roles={["SYSTEM_ADMIN"]} />}>
+            <Route path="/admin/users" element={<AccountsPage />} />
+            <Route path="/admin/roles" element={<RolesPage />} />
+            <Route path="/admin/settings" element={<SettingsPage />} />
+          </Route>
           {import.meta.env.DEV && (
             <Route
               path="/dev/package-form"
