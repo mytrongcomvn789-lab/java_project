@@ -106,3 +106,85 @@
     padding: 18px;
   }
 }
+
+/* 4.6: trang giám sát trạm */
+.station-toolbar {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.station-filter {
+  display: grid;
+  gap: 6px;
+}
+.station-filter select {
+  min-width: 200px;
+  border: 1px solid #a9b39f;
+  border-radius: 8px;
+  padding: 10px 12px;
+  color: var(--text);
+  background: white;
+  font: inherit;
+}
+.station-reload {
+  border: 1px solid var(--border);
+  background: white;
+  color: var(--text);
+  border-radius: 8px;
+  padding: 10px 16px;
+  cursor: pointer;
+  font: inherit;
+}
+.station-reload:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.station-status.maintenance {
+  color: #7a4a12;
+  background: #fbe9d0;
+}
+.station-metric-title {
+  margin: 0 0 4px;
+  font-weight: 600;
+}
+.station-connection {
+  margin: 0;
+}
+.station-metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin: 0 0 8px;
+}
+.station-metric {
+  display: grid;
+  gap: 2px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+.station-metric dt {
+  color: var(--muted);
+  font-size: 13px;
+}
+.station-metric dd {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 600;
+}
+.station-metric small {
+  color: var(--muted);
+}
+.stations-page select:focus-visible,
+.station-reload:focus-visible {
+  outline: 3px solid #698543;
+  outline-offset: 3px;
+}
+@media (max-width: 700px) {
+  .station-filter,
+  .station-filter select,
+  .station-reload {
+    width: 100%;
+  }
+}
