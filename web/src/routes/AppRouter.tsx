@@ -11,6 +11,7 @@ import CreateOrderPage from "../features/orders/CreateOrderPage";
 import EditOrderPage from "../features/orders/EditOrderPage";
 import NotFoundPage from "./NotFoundPage";
 import LoginPage from "../features/auth/LoginPage";
+import RegisterPage from "../features/auth/RegisterPage";
 import RequireAuth from "../features/auth/RequireAuth";
 import HomePage from "../features/home/HomePage";
 import ProfilePage from "../features/profile/ProfilePage";
@@ -26,6 +27,7 @@ export default function AppRouter() {
     <Routes>
       <Route element={<AuthLayout />}>
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
       </Route>
 
       <Route element={<RequireAuth />}>

@@ -217,7 +217,7 @@ class RbacIntegrationTest {
         assertEquals(200, call("GET", "/v3/api-docs", null, null).statusCode());
         String email = UUID.randomUUID() + "@example.test";
         var registered = call("POST", "/v1/auth/register", null, JSON.writeValueAsString(Map.of(
-                "email", email, "password", PASSWORD, "fullName", "RBAC HTTP test",
+                "email", email, "password", PASSWORD, "fullName", "RBAC HTTP test", "phone", "0901234567",
                 "role", "SYSTEM_ADMIN", "enabled", true)));
         assertEquals(201, registered.statusCode(), registered.body());
         assertEquals("CUSTOMER", json(registered).get("role").asString());
