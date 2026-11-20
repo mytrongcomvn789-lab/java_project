@@ -3,7 +3,6 @@ package com.smartdrone.application.integration;
 import java.util.List;
 import java.util.UUID;
 
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -39,9 +38,6 @@ public class IntegrationQueryService {
 
     @Transactional(readOnly = true)
     public List<IntegrationStationView> stations() {
-        return stations.findAll(Sort.by(Sort.Order.asc("name"), Sort.Order.asc("id"))).stream()
-                .map(s -> new IntegrationStationView(
-                        s.getId(), s.getName(), s.getLatitude(), s.getLongitude(), s.getStatus()))
         return stations.findAll().stream()
                 .map(s -> new IntegrationStationView(s.getId(), s.getName(), s.getLatitude(), s.getLongitude(),
                         s.getStatus()))
