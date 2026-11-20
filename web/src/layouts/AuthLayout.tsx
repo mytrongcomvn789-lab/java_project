@@ -18,6 +18,7 @@ export default function AuthLayout() {
             ràng, mỗi hành trình đều được theo dõi.
           </p>
         </div>
+        <img className="auth-img" src="/images/hero-drone.svg" alt="" />
         <p className="eyebrow">ĐỒ ÁN SMARTDRONEDELIVERY</p>
       </section>
       <section className="auth-panel">

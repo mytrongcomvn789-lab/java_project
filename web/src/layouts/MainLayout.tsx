@@ -1,4 +1,5 @@
-import { NavLink, Outlet, useNavigate } from "react-router-dom";
+import { LogOut } from "lucide-react";
+import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import NotificationBell from "../features/notifications/NotificationBell";
 import Brand from "../components/ui/Brand";
 import { useAuth } from "../features/auth/AuthContext";
@@ -17,10 +18,19 @@ const initials = (name: string) =>
 export default function MainLayout() {
   const { user, isDemo, demoLogin, logout } = useAuth();
   const navigate = useNavigate();
+  const { pathname } = useLocation();
 
   if (!user) return null; // RequireAuth đã chặn, chỉ để thỏa kiểu TypeScript
 
   const menu = getMenuForRole(user.role);
+
+  // Chỉ MỘT mục được sáng: mục khớp đường dẫn dài nhất (chính xác hoặc là trang con).
+  // Vd /deliveries/new chỉ sáng "Tạo yêu cầu", còn /deliveries/123 sáng "Đơn giao hàng".
+  const matches = (to: string) =>
+    to === "/" ? pathname === "/" : pathname === to || pathname.startsWith(`${to}/`);
+  const activeTo = menu
+    .filter((i) => matches(i.to))
+    .sort((a, b) => b.to.length - a.to.length)[0]?.to;
 
   const handleLogout = () => {
     logout();
@@ -64,7 +74,7 @@ export default function MainLayout() {
             aria-label="Đăng xuất"
             onClick={handleLogout}
           >
-            ⎋
+            <LogOut size={20} />
           </button>
         </div>
       </header>
@@ -77,10 +87,12 @@ export default function MainLayout() {
               <NavLink
                 key={`${i.to}-${i.label}`}
                 to={i.to}
-                end={i.end}
-                className={({ isActive }) => (isActive ? "active" : "")}
+                end
+                className={i.to === activeTo ? "active" : ""}
               >
-                <span className="nav-icon">{i.icon}</span>
+                <span className="nav-icon">
+                  <i.icon size={19} strokeWidth={1.8} />
+                </span>
                 {i.label}
               </NavLink>
             ))}

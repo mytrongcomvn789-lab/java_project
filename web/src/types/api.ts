@@ -34,7 +34,7 @@ export interface RegisterRequest {
   email: string;
   password: string;
   fullName: string;
-  phone?: string;
+  phone: string;
 }
 
 export interface LoginRequest {

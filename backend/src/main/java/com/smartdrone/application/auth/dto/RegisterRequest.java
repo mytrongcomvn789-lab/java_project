@@ -22,6 +22,7 @@ public record RegisterRequest(
         @Size(max = 150, message = "Họ tên tối đa 150 ký tự")
         String fullName,
 
+        @NotBlank(message = "Số điện thoại không được để trống")
         @Pattern(regexp = "^\\+?[0-9]{9,15}$", message = "Số điện thoại không hợp lệ")
         String phone) {
 }
