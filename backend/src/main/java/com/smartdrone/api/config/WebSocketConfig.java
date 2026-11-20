@@ -13,6 +13,7 @@ import org.springframework.web.socket.handler.WebSocketHandlerDecorator;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.WebSocketSession;
 
+import com.smartdrone.api.realtime.StompReceiptInterceptor;
 import com.smartdrone.api.realtime.StompSecurityInterceptor;
 import com.smartdrone.api.realtime.StompSessionRegistry;
 
@@ -30,11 +31,15 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     private String[] allowedOrigins;
 
     private final StompSecurityInterceptor securityInterceptor;
+    private final StompReceiptInterceptor receiptInterceptor;
     private final StompSessionRegistry sessions;
     private ThreadPoolTaskScheduler heartbeatScheduler;
 
-    public WebSocketConfig(StompSecurityInterceptor securityInterceptor, StompSessionRegistry sessions) {
+    public WebSocketConfig(StompSecurityInterceptor securityInterceptor,
+                           StompReceiptInterceptor receiptInterceptor,
+                           StompSessionRegistry sessions) {
         this.securityInterceptor = securityInterceptor;
+        this.receiptInterceptor = receiptInterceptor;
         this.sessions = sessions;
     }
 
@@ -61,7 +66,8 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void configureClientInboundChannel(ChannelRegistration registration) {
-        registration.interceptors(securityInterceptor);
+        // Thứ tự quan trọng: kiểm tra quyền trước, trả RECEIPT sau.
+        registration.interceptors(securityInterceptor, receiptInterceptor);
     }
 
     @Override
