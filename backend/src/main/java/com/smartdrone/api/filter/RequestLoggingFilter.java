@@ -38,8 +38,9 @@ public class RequestLoggingFilter extends OncePerRequestFilter {
         } finally {
             // finally: dù controller thành công hay lỗi vẫn ghi log
             long ms = System.currentTimeMillis() - start;
-            log.info("{} {} -> {} ({} ms) traceId={}",
-                request.getMethod(), request.getRequestURI(), response.getStatus(), ms, traceId);
+            // traceId đã được in ở đầu dòng nhờ logging.pattern.correlation
+            log.info("{} {} -> {} ({} ms)",
+                request.getMethod(), request.getRequestURI(), response.getStatus(), ms);
             MDC.remove(TraceContext.KEY);
         }
     }

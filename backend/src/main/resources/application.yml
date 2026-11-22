@@ -66,3 +66,14 @@ app:
 logging:
   level:
     root: INFO
+  pattern:
+    # In traceId (RequestLoggingFilter đặt vào MDC) vào MỌI dòng log của request,
+    # để từ traceId trong JSON lỗi / header X-Trace-Id tra ra toàn bộ log liên quan.
+    correlation: "[%X{traceId:-}] "
+  file:
+    name: ${LOG_FILE:logs/smartdrone-backend.log} # ngoài console còn ghi ra file
+  logback:
+    rollingpolicy: # xoay vòng file: mỗi ngày hoặc khi quá 10MB, giữ 14 ngày, tối đa 1GB
+      max-file-size: 10MB
+      max-history: 14
+      total-size-cap: 1GB
