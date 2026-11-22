@@ -4,6 +4,7 @@ import java.time.Instant;
 import java.util.UUID;
 
 import com.smartdrone.domain.enums.ChangeSource;
+import com.smartdrone.domain.enums.FailureReason;
 import com.smartdrone.domain.enums.OrderAction;
 import com.smartdrone.domain.enums.OrderStatus;
 import com.smartdrone.domain.enums.RoleName;
@@ -69,6 +70,11 @@ public class OrderStatusHistory {
     @Column(length = 500, updatable = false)
     private String reason;
 
+    // 4.8: mã lý do thất bại (chỉ có ở hành động FAIL), để thống kê.
+    @Enumerated(EnumType.STRING)
+    @Column(name = "reason_code", length = 30, updatable = false)
+    private FailureReason reasonCode;
+
     // Lần thử giao hàng liên quan (nếu có). Tạm là UUID thường, chưa có bảng attempts.
     @Column(name = "attempt_id", updatable = false)
     private UUID attemptId;
@@ -80,6 +86,15 @@ public class OrderStatusHistory {
     private Instant occurredAt;
 
     protected OrderStatusHistory() { }
+
+    public OrderStatusHistory(UUID orderId, long orderVersion, OrderStatus fromStatus,
+                              OrderStatus toStatus, OrderAction action, UUID actorId,
+                              RoleName actorRole, ChangeSource source, String reason,
+                              FailureReason reasonCode, UUID attemptId, String traceId, Instant occurredAt) {
+        this(orderId, orderVersion, fromStatus, toStatus, action, actorId, actorRole, source,
+                reason, attemptId, traceId, occurredAt);
+        this.reasonCode = reasonCode;
+    }
 
     public OrderStatusHistory(UUID orderId, long orderVersion, OrderStatus fromStatus,
                               OrderStatus toStatus, OrderAction action, UUID actorId,
@@ -109,6 +124,7 @@ public class OrderStatusHistory {
     public RoleName getActorRole() { return actorRole; }
     public ChangeSource getSource() { return source; }
     public String getReason() { return reason; }
+    public FailureReason getReasonCode() { return reasonCode; }
     public UUID getAttemptId() { return attemptId; }
     public String getTraceId() { return traceId; }
     public Instant getOccurredAt() { return occurredAt; }
