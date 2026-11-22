@@ -121,6 +121,9 @@ export default function OrderScheduleActions({ order, onScheduled, onReload }: P
         );
         setSelected('');
         setRefreshKey((n) => n + 1);
+      } else if (code === 'RETRY_LIMIT_REACHED') {
+        setError('Đơn đã hết số lần giao lại cho phép. Hãy tải lại và chọn hoàn hàng về trạm gửi.');
+        setMustReload(true);
       } else if (status === 409 || status === 412 || status === 428) {
         setError('Đơn đã thay đổi hoặc không còn ở trạng thái cho phép lên lịch. Hãy tải lại để xem kết quả mới nhất.');
         setMustReload(true);

@@ -17,9 +17,19 @@ export interface TimelineEntry {
   actorRole: string | null;
   source: string;
   reason: string | null;
+  reasonCode?: string | null;
   attemptId: string | null;
   attemptNo: number | null;
   occurredAt: string;
+}
+export interface AttemptView {
+  id: string;
+  attemptNo: number;
+  status: "ACTIVE" | "RELEASED";
+  slotStart: string;
+  slotEnd: string;
+  createdAt: string;
+  releasedAt: string | null;
 }
 export interface Tracking {
   etag?: string;
@@ -43,6 +53,8 @@ export interface Tracking {
   };
   timeline: TimelineEntry[];
   allowedActions: string[];
+  attempts: AttemptView[];
+  maxAttempts: number;
   generatedAt: string;
 }
 

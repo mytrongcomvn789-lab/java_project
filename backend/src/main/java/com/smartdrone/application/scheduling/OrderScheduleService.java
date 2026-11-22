@@ -21,6 +21,7 @@ import com.smartdrone.application.workflow.TransitionCommand;
 import com.smartdrone.domain.entity.DeliveryAttempt;
 import com.smartdrone.domain.enums.AttemptStatus;
 import com.smartdrone.domain.enums.OrderAction;
+import com.smartdrone.domain.enums.OrderStatus;
 import com.smartdrone.domain.enums.RoleName;
 import com.smartdrone.domain.workflow.TransitionRules;
 import com.smartdrone.infrastructure.persistence.DeliveryAttemptRepository;
@@ -42,13 +43,16 @@ public class OrderScheduleService {
     private final PackageService packages;
     private final DeliveryAttemptRepository attempts;
     private final ScheduleSlotPolicy slotPolicy;
+    private final ScheduleProperties props;
     private final SlotCapacityService slotCapacity;
     private final Clock clock;
 
     public OrderScheduleService(OrderRepository orders, OrderScopeResolver scopes,
             OrderTransitionService transitions, OrderStatusHistoryRepository history,
             PackageService packages, DeliveryAttemptRepository attempts,
-            ScheduleSlotPolicy slotPolicy, SlotCapacityService slotCapacity, Clock clock) {
+            ScheduleSlotPolicy slotPolicy, SlotCapacityService slotCapacity, Clock clock,
+            ScheduleProperties props) {
+        this.props = props;
         this.orders = orders;
         this.scopes = scopes;
         this.transitions = transitions;
@@ -76,6 +80,10 @@ public class OrderScheduleService {
         if (TransitionRules.find(order.getStatus(), OrderAction.SCHEDULE).isEmpty()) {
             throw new ApiException(ErrorCode.INVALID_STATE_TRANSITION,
                     "Không thể lên lịch khi đơn đang ở trạng thái " + order.getStatus());
+        }
+        // 4.8: giao lại có giới hạn; đủ số lần thì chỉ còn hoàn hàng (không tạo lần thử mới).
+        if (order.getStatus() == OrderStatus.FAILED && attempts.findMaxAttemptNo(orderId) >= props.maxAttempts()) {
+            throw new ApiException(ErrorCode.RETRY_LIMIT_REACHED);
         }
         Instant slotEnd = slotPolicy.slotEnd(slotStart);
 

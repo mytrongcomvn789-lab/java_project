@@ -79,7 +79,7 @@ public class OrderTransitionService {
         OrderStatusHistory entry = new OrderStatusHistory(
                 order.getId(), newVersion, from, rule.to(), cmd.action(),
                 cmd.actorId(), cmd.actorRole(), ChangeSource.API,
-                cmd.reason(), cmd.attemptId(), TraceContext.current(), Instant.now(clock));
+                cmd.reason(), cmd.reasonCode(), cmd.attemptId(), TraceContext.current(), Instant.now(clock));
         try {
             historyRepository.saveAndFlush(entry);
         } catch (DataIntegrityViolationException | ObjectOptimisticLockingFailureException e) {

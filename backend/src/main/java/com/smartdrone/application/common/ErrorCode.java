@@ -30,6 +30,7 @@ public enum ErrorCode {
     PRECONDITION_REQUIRED(HttpStatus.PRECONDITION_REQUIRED, "Thiếu header If-Match"),
     SLOT_FULL(HttpStatus.CONFLICT, "Khung giờ này đã đủ chỗ tại trạm, vui lòng chọn khung giờ khác"),
     STATION_UNAVAILABLE(HttpStatus.CONFLICT, "Trạm hiện không hoạt động nên không thể lên lịch"),
+    RETRY_LIMIT_REACHED(HttpStatus.CONFLICT, "Đơn đã hết số lần giao lại cho phép, hãy chuyển sang hoàn hàng"),
     IDEMPOTENCY_KEY_CONFLICT(HttpStatus.CONFLICT, "Idempotency-Key đã được dùng cho nội dung yêu cầu khác"),
     API_KEY_UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "API key không hợp lệ, đã hết hạn hoặc đã bị thu hồi"),
     API_KEY_RATE_LIMITED(HttpStatus.TOO_MANY_REQUESTS, "Vượt quá giới hạn tần suất của API key"),
