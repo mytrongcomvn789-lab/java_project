@@ -29,6 +29,6 @@ export const ROLE_DESCRIPTIONS: Record<RoleName, string> = {
   CUSTOMER: "Tạo yêu cầu, theo dõi và xác nhận nhận hàng",
   DISPATCHER: "Phê duyệt, lên lịch và xử lý giao hàng thất bại",
   STATION_OPERATOR: "Kiểm tra và tiếp nhận kiện hàng tại trạm",
-  LOGISTICS_MANAGER: "Dashboard, báo cáo và hiệu suất vận hành",
+  LOGISTICS_MANAGER: "Dashboard, báo cáo, hiệu suất vận hành và audit log",
   SYSTEM_ADMIN: "Tài khoản, vai trò, cấu hình và audit log",
 };
