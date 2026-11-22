@@ -33,6 +33,10 @@ public enum ErrorCode {
     IDEMPOTENCY_KEY_CONFLICT(HttpStatus.CONFLICT, "Idempotency-Key đã được dùng cho nội dung yêu cầu khác"),
     API_KEY_UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "API key không hợp lệ, đã hết hạn hoặc đã bị thu hồi"),
     API_KEY_RATE_LIMITED(HttpStatus.TOO_MANY_REQUESTS, "Vượt quá giới hạn tần suất của API key"),
+    PICKUP_CODE_INVALID(HttpStatus.UNPROCESSABLE_ENTITY, "Mã nhận hàng không đúng hoặc không còn hiệu lực"),
+    PICKUP_CODE_EXPIRED(HttpStatus.GONE, "Mã nhận hàng đã hết hạn, khách cần mở lại mã"),
+    PICKUP_CODE_LOCKED(HttpStatus.TOO_MANY_REQUESTS, "Mã nhận hàng đã bị khóa do nhập sai quá số lần cho phép"),
+    PICKUP_CODE_USED(HttpStatus.CONFLICT, "Mã nhận hàng đã được sử dụng"),
     INTERNAL_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "Lỗi hệ thống, vui lòng thử lại sau");
     
     private final HttpStatus status;

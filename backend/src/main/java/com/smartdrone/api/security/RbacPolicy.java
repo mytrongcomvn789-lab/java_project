@@ -87,7 +87,7 @@ public final class RbacPolicy {
             rule(GET, "/v1/orders/{id}/eta", CUSTOMER, DISPATCHER, STATION_OPERATOR, LOGISTICS_MANAGER),
             rule(GET, "/v1/orders/{id}/summary", CUSTOMER, DISPATCHER, LOGISTICS_MANAGER),
             rule(GET, "/v1/orders/{id}/pickup-code", CUSTOMER),
-
+            rule(GET, "/v1/orders/{id}/confirmation", CUSTOMER, DISPATCHER, STATION_OPERATOR, LOGISTICS_MANAGER),
             rule(GET, "/v1/notifications", CUSTOMER),
             rule(POST, "/v1/notifications/{id}/read", CUSTOMER),
             rule(POST, "/v1/notifications/read-all", CUSTOMER),
