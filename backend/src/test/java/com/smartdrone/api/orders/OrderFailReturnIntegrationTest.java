@@ -486,6 +486,76 @@ class OrderFailReturnIntegrationTest {
         assertUnchanged(returning, OrderStatus.RETURNED, 5, 6);
     }
 
+    // ---------- gioi han giao lai + API doc cho web ----------
+
+    @Test void retryStopsAtMaxAttemptsAndOnlyReturnRemains() throws Exception {
+        int max = props.maxAttempts();
+        Instant slot = slotAfter(Duration.ofHours(2));
+        UUID id = scheduledOrder(pickup, dropoff, slot);          // lan 1, phien ban 2
+        long version = 2;
+        for (int n = 1; n < max; n++) {
+            assertEquals(200, fail(dispatcher, id, version++, failBody("WEATHER", null)).statusCode());
+            slot = slot.plusSeconds(step());
+            var retry = schedule(dispatcher, id, version++, slot);
+            assertEquals(200, retry.statusCode(), retry.body());
+        }
+        assertEquals(200, fail(dispatcher, id, version++, failBody("WEATHER", null)).statusCode());
+        assertEquals(max, attempts.findByOrderIdOrderByAttemptNoAsc(id).size());
+
+        var blocked = schedule(dispatcher, id, version, slot.plusSeconds(step()));
+        assertEquals(409, blocked.statusCode(), blocked.body());
+        assertEquals("RETRY_LIMIT_REACHED", json(blocked).get("code").asString());
+        assertEquals(max, attempts.findByOrderIdOrderByAttemptNoAsc(id).size()); // khong tao lan thu moi
+        assertEquals(0, active(id));
+        assertEquals("[\"START_RETURN\"]", json(tracking(dispatcher, id)).get("allowedActions").toString());
+
+        assertEquals(200, startReturn(dispatcher, id, version, Map.of("reason", "Het so lan giao")).statusCode());
+    }
+
+    @Test void trackingShowsAttemptsReasonCodeAndValidActions() throws Exception {
+        Instant slot = slotAfter(Duration.ofHours(2));
+        UUID id = scheduledOrder(pickup, dropoff, slot);
+        assertEquals("[\"FAIL\"]",
+                json(tracking(dispatcher, id)).get("allowedActions").toString());          // chi FAIL
+        assertEquals(200, fail(dispatcher, id, 2, failBody("RECIPIENT_ABSENT", "Khong lien lac duoc")).statusCode());
+
+        var view = json(tracking(dispatcher, id));
+        assertEquals("[\"SCHEDULE\",\"START_RETURN\"]", view.get("allowedActions").toString());
+        assertEquals(props.maxAttempts(), view.get("maxAttempts").asInt());
+        assertEquals(1, view.get("attempts").size());
+        assertEquals("RELEASED", view.get("attempts").get(0).get("status").asString());
+        var last = view.get("timeline").get(view.get("timeline").size() - 1);
+        assertEquals("FAIL", last.get("action").asString());
+        assertEquals("RECIPIENT_ABSENT", last.get("reasonCode").asString());
+        assertEquals(1, last.get("attemptNo").asInt());
+
+        // khach thay ly do that bai nhung khong co hanh dong nao
+        var asCustomer = json(tracking(customer, id));
+        assertEquals("[]", asCustomer.get("allowedActions").toString());
+        assertEquals("RECIPIENT_ABSENT", asCustomer.get("timeline").get(asCustomer.get("timeline").size() - 1)
+                .get("reasonCode").asString());
+        assertEquals(404, call("GET", "/orders/" + id + "/tracking", otherDispatcher.token(), null).statusCode());
+
+        assertEquals(200, schedule(dispatcher, id, 3, slot.plusSeconds(step())).statusCode());
+        var retried = json(tracking(dispatcher, id));
+        assertEquals(2, retried.get("attempts").size());
+        assertEquals("RELEASED", retried.get("attempts").get(0).get("status").asString()); // lan cu con nguyen
+        assertEquals("ACTIVE", retried.get("attempts").get(1).get("status").asString());
+    }
+
+    @Test void trackingOffersCompleteReturnOnlyToPickupOperator() throws Exception {
+        UUID id = returningOrder(pickup, dropoff, slotAfter(Duration.ofHours(2)));
+        assertEquals("[\"COMPLETE_RETURN\"]", json(tracking(pickupOp, id)).get("allowedActions").toString());
+        assertEquals("[]", json(tracking(dropoffOp, id)).get("allowedActions").toString());
+        assertEquals("[]", json(tracking(dispatcher, id)).get("allowedActions").toString());
+    }
+
+    private HttpResponse<String> tracking(Actor a, UUID id) throws Exception {
+        var r = call("GET", "/orders/" + id + "/tracking", a.token(), null);
+        assertEquals(200, r.statusCode(), r.body());
+        return r;
+    }
+
     @Test void fullFailureFlowLeavesNoLeakedSeats() throws Exception {
         Instant slot = slotAfter(Duration.ofHours(2));
         UUID id = scheduledOrder(tight, dropoff, slot);

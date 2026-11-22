@@ -11,9 +11,11 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public record ScheduleProperties(
         Integer slotMinutes,
         Integer minLeadMinutes,
-        Integer maxDaysAhead) {
+        Integer maxDaysAhead,
+        Integer maxAttempts) { // 4.8: tối đa số lần giao một đơn; bỏ trống = 3
 
     private static final int MINUTES_PER_DAY = 24 * 60;
+    private static final int DEFAULT_MAX_ATTEMPTS = 3;
 
     public ScheduleProperties {
         if (slotMinutes == null || slotMinutes <= 0 || MINUTES_PER_DAY % slotMinutes != 0) {
@@ -25,6 +27,11 @@ public record ScheduleProperties(
         }
         if (maxDaysAhead == null || maxDaysAhead < 1) {
             throw new IllegalStateException("app.schedule.max-days-ahead chưa cấu hình (phải >= 1)");
+        }
+        if (maxAttempts == null) {
+            maxAttempts = DEFAULT_MAX_ATTEMPTS;
+        } else if (maxAttempts < 1) {
+            throw new IllegalStateException("app.schedule.max-attempts phải >= 1");
         }
     }
 

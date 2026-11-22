@@ -16,6 +16,8 @@ import com.smartdrone.application.orders.dto.TrackingView;
 import com.smartdrone.application.orders.scope.OrderScopeResolver;
 import com.smartdrone.application.orders.scope.OrderSpecs;
 import com.smartdrone.application.stations.StaffStationScope;
+import com.smartdrone.application.scheduling.ScheduleProperties;
+import com.smartdrone.domain.workflow.TransitionRules;
 import com.smartdrone.domain.entity.DeliveryAttempt;
 import com.smartdrone.domain.entity.Order;
 import com.smartdrone.domain.entity.OrderStatusHistory;
@@ -43,10 +45,12 @@ public class OrderTrackingService {
     private final OrderScopeResolver scopes;
     private final StaffStationScope staffScope;
     private final Clock clock;
+    private final ScheduleProperties props;
 
     public OrderTrackingService(OrderRepository orders, OrderStatusHistoryRepository history,
             DeliveryAttemptRepository attempts, StationRepository stations, OrderScopeResolver scopes,
-            StaffStationScope staffScope, Clock clock) {
+            StaffStationScope staffScope, Clock clock, ScheduleProperties props) {
+        this.props = props;
         this.orders = orders; this.history = history; this.attempts = attempts; this.stations = stations;
         this.scopes = scopes; this.staffScope = staffScope; this.clock = clock;
     }
@@ -78,7 +82,10 @@ public class OrderTrackingService {
                 point(order.getDropoffStationId(), byId.get(order.getDropoffStationId())),
                 new TrackingView.MapInfo("STATIONS_ONLY", false,
                         "Chưa có GPS drone thật: bản đồ chỉ hiển thị vị trí hai trạm."),
-                TrackingView.Position.of(order.getStatus()), timeline, allowedActions(actorId, role, order), Instant.now(clock));
+                TrackingView.Position.of(order.getStatus()), timeline, allowedActions(actorId, role, order, all.size()),
+                all.stream().map(a -> new TrackingView.AttemptView(a.getId(), a.getAttemptNo(), a.getStatus(),
+                        a.getSlotStart(), a.getSlotEnd(), a.getCreatedAt(), a.getReleasedAt())).toList(),
+                props.maxAttempts(), Instant.now(clock));
     }
 
     private static TrackingView.TimelineEntry entry(OrderStatusHistory h, Map<UUID, Integer> attemptNos, RoleName role) {
@@ -86,7 +93,8 @@ public class OrderTrackingService {
         boolean showReason = role != RoleName.CUSTOMER || h.getAction() == OrderAction.REJECT || h.getAction() == OrderAction.FAIL;
         return new TrackingView.TimelineEntry(h.getId(), h.getOrderVersion(), h.getFromStatus(),
                 h.getToStatus(), h.getToStatus().label(), h.getAction(), h.getActorRole(), h.getSource(),
-                showReason ? h.getReason() : null, h.getAttemptId(), h.getAttemptId() == null ? null : attemptNos.get(h.getAttemptId()),
+                showReason ? h.getReason() : null, showReason ? h.getReasonCode() : null,
+                h.getAttemptId(), h.getAttemptId() == null ? null : attemptNos.get(h.getAttemptId()),
                 h.getOccurredAt());
     }
 
@@ -100,10 +108,23 @@ public class OrderTrackingService {
                 valid ? s.getLongitude() : null, s.getStatus());
     }
 
-    /** Gợi ý cho UI (server vẫn kiểm lại khi ghi): chỉ gồm DISPATCH/ARRIVE của 4.4, đúng đầu trạm. */
-    private List<OrderAction> allowedActions(UUID actorId, RoleName role, Order order) {
+    /**
+     * Gợi ý cho UI (server vẫn kiểm lại khi ghi).
+     * Điều phối viên (đơn đã nằm trong phạm vi vì được nạp qua OrderSpecs.inScope): lấy từ bảng luật,
+     * trừ giao lại khi đã hết số lần (4.8). Operator: DISPATCH/ARRIVE (4.4) và COMPLETE_RETURN ở trạm gửi (4.8).
+     */
+    private List<OrderAction> allowedActions(UUID actorId, RoleName role, Order order, int attemptCount) {
+        if (role == RoleName.DISPATCHER) {
+            return TransitionRules.allowedActions(order.getStatus(), RoleName.DISPATCHER).stream()
+                    .filter(a -> !(a == OrderAction.SCHEDULE && order.getStatus() == OrderStatus.FAILED
+                            && attemptCount >= props.maxAttempts()))
+                    .toList();
+        }
         if (role != RoleName.STATION_OPERATOR) return List.of();
         var mine = staffScope.stationIdsFor(actorId, RoleName.STATION_OPERATOR);
+        if (order.getStatus() == OrderStatus.RETURNING && mine.contains(order.getPickupStationId())) {
+            return List.of(OrderAction.COMPLETE_RETURN);
+        }
         if (order.getStatus() == OrderStatus.PREPARING && mine.contains(order.getPickupStationId())) {
             return List.of(OrderAction.DISPATCH);
         }
