@@ -93,6 +93,10 @@ public final class RbacPolicy {
             rule(POST, "/v1/notifications/read-all", CUSTOMER),
             rule(POST, "/v1/assistant/messages", CUSTOMER),
             rule(GET, "/v1/analytics/deliveries", LOGISTICS_MANAGER),
+            // 5.1: thống kê đơn, tỷ lệ giao, tải trạm (service còn @PreAuthorize và lọc theo trạm được phân công).
+            rule(GET, "/v1/statistics/orders/summary", LOGISTICS_MANAGER),
+            rule(GET, "/v1/statistics/orders/daily", LOGISTICS_MANAGER),
+            rule(GET, "/v1/statistics/stations/load", LOGISTICS_MANAGER),
             rule(POST, "/v1/files/upload-tickets", CUSTOMER, STATION_OPERATOR),
             rule(POST, "/v1/files/upload-tickets", CUSTOMER, STATION_OPERATOR),
             rule(POST, "/v1/files/{id}/complete", CUSTOMER, STATION_OPERATOR),
