@@ -13,6 +13,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.smartdrone.application.admin.AuditService;
 import com.smartdrone.application.auth.TokenHasher;
 import com.smartdrone.application.common.ApiException;
 import com.smartdrone.application.common.ErrorCode;
@@ -35,12 +36,15 @@ public class ApiKeyService {
     private final ApiKeyRepository repository;
     private final Clock clock;
     private final int defaultRateLimitPerMinute;
+    private final AuditService audit;
 
     public ApiKeyService(ApiKeyRepository repository, Clock clock,
-            @Value("${app.api-keys.default-rate-limit-per-minute:60}") int defaultRateLimitPerMinute) {
+            @Value("${app.api-keys.default-rate-limit-per-minute:60}") int defaultRateLimitPerMinute,
+            AuditService audit) {
         this.repository = repository;
         this.clock = clock;
         this.defaultRateLimitPerMinute = defaultRateLimitPerMinute;
+        this.audit = audit;
     }
 
     @Transactional
@@ -53,6 +57,10 @@ public class ApiKeyService {
         key = repository.save(key);
         log.info("API_KEY_ISSUED id={} client={} scopes={} by={}", key.getId(), key.getClientName(),
                 key.getScopes(), actorId);
+        // Task 2.4: ghi vào audit log chung. Không bao giờ ghi secret/rawKey.
+        audit.record(actorId, "API_KEY_ISSUED", "API_KEY", key.getId().toString(),
+                "client=" + key.getClientName() + ", scopes=" + key.getScopes() + ", rateLimitPerMinute=" + rateLimit
+                        + ", expiresAt=" + key.getExpiresAt());
         // rawKey: "{id}.{secret}". Client phải lưu lại ngay; server không giữ bản gốc.
         return new ApiKeyIssued(ApiKeyView.from(key, now), key.getId() + "." + secret);
     }
@@ -74,6 +82,7 @@ public class ApiKeyService {
         ApiKey key = repository.findById(id).orElseThrow(() -> new ApiException(ErrorCode.RESOURCE_NOT_FOUND));
         key.revoke(clock.instant());
         log.info("API_KEY_REVOKED id={} by={}", id, actorId);
+        audit.record(actorId, "API_KEY_REVOKED", "API_KEY", id.toString(), "client=" + key.getClientName());
     }
 
     @Transactional
@@ -85,6 +94,7 @@ public class ApiKeyService {
         String secret = TokenHasher.newOpaqueToken();
         key.rotateSecret(TokenHasher.sha256Hex(secret));
         log.info("API_KEY_ROTATED id={} by={}", id, actorId);
+        audit.record(actorId, "API_KEY_ROTATED", "API_KEY", id.toString(), "client=" + key.getClientName());
         return new ApiKeyIssued(ApiKeyView.from(key, clock.instant()), key.getId() + "." + secret);
     }
 }

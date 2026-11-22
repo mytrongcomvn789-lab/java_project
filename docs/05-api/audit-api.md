@@ -12,7 +12,7 @@
 | `pageSize` | int | 20 | 1 đến 100 |
 | `action` | string | | vd `LOGIN_FAILED` |
 | `actorId` | UUID | | người thực hiện |
-| `targetType` | string | | `USER`, `STATION`, `ROLE`, `SETTINGS` |
+| `targetType` | string | | `USER`, `STATION`, `ROLE`, `SETTINGS`, `API_KEY` |
 | `targetId` | string | | id đối tượng |
 | `from`, `to` | ISO-8601 | | khoảng `[from, to)`, vd `2026-11-22T00:00:00Z`; `from` phải trước `to` |
 
@@ -47,6 +47,7 @@ Kết quả sắp xếp mới nhất trước, header `Cache-Control: no-store`:
 | `ROLE_PERMISSIONS_UPDATED` | đổi quyền của vai trò (FR-02) | ROLE |
 | `SETTINGS_UPDATED` | đổi cấu hình hệ thống (FR-02) | SETTINGS |
 | `STATION_CREATED`, `STATION_UPDATED`, `STATION_STATUS_CHANGED` | quản lý trạm | STATION |
+| `API_KEY_ISSUED`, `API_KEY_REVOKED`, `API_KEY_ROTATED` | cấp / thu hồi / xoay vòng API key (5.4); không ghi secret | API_KEY |
 
 Đổi trạng thái đơn hàng đã có lịch sử riêng đầy đủ trong `order_status_history` (người làm, lý do, traceId), nên không ghi trùng vào audit log.
 

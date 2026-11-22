@@ -175,4 +175,27 @@ class AuditIntegrationTest {
         // khoảng thời gian trong tương lai: không có gì
         assertEquals(0, audit(admin, "from=" + q(now.plusSeconds(3600))).size());
     }
+
+    @Test
+    void apiKeyLifecycleIsRecordedWithoutTheSecret() throws Exception {
+        User adminUser = user(RoleName.SYSTEM_ADMIN);
+        String admin = tokens.issue(adminUser);
+
+        var issued = call("POST", "/admin/api-keys", admin,
+                Map.of("clientName", "Đối tác audit", "scopes", java.util.List.of("ORDERS_READ")));
+        assertEquals(201, issued.statusCode(), issued.body());
+        JsonNode body = JSON.readTree(issued.body());
+        String rawKey = body.get("secret").asString(); // dạng "{id}.{secret}"
+        String keyId = rawKey.substring(0, rawKey.indexOf('.'));
+        String secret = rawKey.substring(rawKey.indexOf('.') + 1);
+        assertTrue(call("POST", "/admin/api-keys/" + keyId + "/revoke", admin, null).statusCode() < 300);
+
+        JsonNode items = audit(admin, "targetType=API_KEY&targetId=" + q(keyId));
+        assertEquals(2, items.size(), items.toString());
+        assertEquals("API_KEY_REVOKED", items.get(0).get("action").asString());
+        assertEquals("API_KEY_ISSUED", items.get(1).get("action").asString());
+        assertEquals(adminUser.getId().toString(), items.get(1).get("actorId").asString());
+        assertTrue(items.get(1).get("detail").asString().contains("ORDERS_READ"));
+        assertFalse(items.toString().contains(secret), "không được lưu secret của API key");
+    }
 }
