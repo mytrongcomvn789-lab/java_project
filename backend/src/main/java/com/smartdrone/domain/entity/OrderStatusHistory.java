@@ -26,7 +26,10 @@ import jakarta.persistence.UniqueConstraint;
         uniqueConstraints = @UniqueConstraint(
                 name = "uq_order_status_history_version",
                 columnNames = {"order_id", "order_version"}),
-        indexes = @Index(name = "idx_order_status_history_order", columnList = "order_id"))
+        indexes = {
+                @Index(name = "idx_order_status_history_order", columnList = "order_id"),
+                // 5.1: thống kê theo ngày hoàn tất lọc theo (trạng thái đích, thời điểm).
+                @Index(name = "ix_order_status_history_to_status_time", columnList = "to_status, occurred_at")})
 public class OrderStatusHistory {
 
     @Id

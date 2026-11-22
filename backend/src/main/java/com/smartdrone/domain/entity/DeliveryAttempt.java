@@ -25,7 +25,9 @@ import jakarta.persistence.UniqueConstraint;
                 columnNames = {"order_id", "attempt_no"}),
         indexes = {
                 @Index(name = "idx_delivery_attempt_pickup_slot", columnList = "pickup_station_id, slot_start"),
-                @Index(name = "idx_delivery_attempt_dropoff_slot", columnList = "dropoff_station_id, slot_start")
+                @Index(name = "idx_delivery_attempt_dropoff_slot", columnList = "dropoff_station_id, slot_start"),
+                // 5.1: thống kê số lần giao theo khoảng ngày tạo.
+                @Index(name = "ix_delivery_attempt_created", columnList = "created_at")
         })
 public class DeliveryAttempt {
 
