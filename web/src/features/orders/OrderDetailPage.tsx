@@ -9,6 +9,9 @@ import OrderReviewActions from "./OrderReviewActions";
 import OrderCustomerActions from "./OrderCustomerActions";
 import OrderScheduleActions from "./OrderScheduleActions";
 import OrderTrackingPanel from "./OrderTrackingPanel";
+import PickupCodePanel from "./PickupCodePanel";
+import ConfirmDeliveryPanel from "./ConfirmDeliveryPanel";
+import DeliveryEvidencePanel from "./DeliveryEvidencePanel";
 
 const when = (v: string) => new Date(v).toLocaleString("vi-VN");
 
@@ -103,6 +106,24 @@ export default function OrderDetailPage() {
                 }}
                 onReload={() => setRetry((n) => n + 1)}
               />
+            )}
+                        {user?.role === "CUSTOMER" && order.status === "AWAITING_PICKUP" && (
+              <PickupCodePanel orderId={order.id} />
+            )}
+            {user?.role === "STATION_OPERATOR" &&
+              order.status === "AWAITING_PICKUP" && (
+                <ConfirmDeliveryPanel
+                  key={`${order.id}:${order.version}`}
+                  order={order}
+                  onConfirmed={(message) => {
+                    setNotice(message);
+                    setRetry((n) => n + 1);
+                  }}
+                  onReload={() => setRetry((n) => n + 1)}
+                />
+              )}
+            {order.status === "DELIVERED" && (
+              <DeliveryEvidencePanel orderId={order.id} />
             )}
             <OrderTrackingPanel
               orderId={order.id}
