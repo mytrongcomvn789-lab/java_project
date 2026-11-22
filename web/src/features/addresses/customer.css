@@ -171,3 +171,9 @@
   border-radius: 8px;
   display: block;
 }
+.delivery-evidence-photo {
+  max-width: 280px;
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+}
