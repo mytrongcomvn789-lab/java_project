@@ -48,7 +48,8 @@ Giữ mô hình **một tài khoản — một vai trò** của Java hiện tạ
 | Trợ lý khách hàng | ✓ | — | — | — | — |
 | Xin upload ảnh | ✓ | — | ✓ | — | — |
 | Xin link tải ảnh theo phạm vi | ✓ | ✓ | ✓ | — | — |
-| Xem user/role, cấp quyền, khóa/mở khóa, audit | — | — | — | — | ✓ |
+| Xem user/role, cấp quyền, khóa/mở khóa | — | — | — | — | ✓ |
+| Xem audit log (`GET /v1/audit-events`) | — | — | — | ✓ | ✓ |
 
 Danh sách chính xác từng method/path: `RbacPolicy.java`. Ma trận kiểm thử độc lập: `backend/src/test/resources/rbac-matrix.csv`.
 
@@ -191,7 +192,7 @@ Ví dụ request để dùng với REST Client/Postman: `rbac-demo.http`. Kiểm
 - **2.8:** gọi `/me/permissions` hoặc dùng `user.role` từ login để hiển thị menu. Xử lý 403 là thiếu quyền, 401 là phiên không hợp lệ. UI ẩn menu không thay thế phân quyền API.
 - **Giai đoạn 3–5:** sau khi role được phép, lọc query theo chủ sở hữu/tổ chức/trạm. Customer không đọc đơn người khác; operator không thao tác ở trạm khác. Theo APDDMP-9, tài nguyên ngoài phạm vi trả 404. Các kiểm thử scope này chưa thể thực hiện khi entity/controller nghiệp vụ chưa tồn tại.
 - Endpoint mới phải thêm rule method/path và test độc lập; nên bổ sung `@PreAuthorize` ở service. `/integration/**` bị chặn cho 5 actor cho đến khi có cơ chế xác thực service riêng.
-- Hiện log thay đổi quyền là application log, không phải kho audit DB bất biến. API audit, chính sách lưu log, TLS, secret production, rate limiting và hiệu năng toàn hệ thống thuộc bước triển khai/kiểm thử sau.
+- Hiện log thay đổi quyền là application log, không phải kho audit DB bất biến. API audit đã có ở task 2.4 (`GET /v1/audit-events`, xem audit-api.md); chính sách lưu log, TLS, secret production, rate limiting và hiệu năng toàn hệ thống thuộc bước triển khai/kiểm thử sau.
 
 ## 9. Sửa lỗi tích hợp tối thiểu
 

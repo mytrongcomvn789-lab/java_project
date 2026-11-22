@@ -4,7 +4,7 @@
 
 ## Tra cứu audit log
 
-`GET /api/v1/audit-events`, chỉ `SYSTEM_ADMIN` (vai trò khác: 403, chưa đăng nhập: 401).
+`GET /api/v1/audit-events`, chỉ đọc, cho `SYSTEM_ADMIN` và `LOGISTICS_MANAGER` (APDDMP-3: quản lý hậu cần theo dõi nhật ký hoạt động). Vai trò khác: 403, chưa đăng nhập: 401.
 
 | Tham số | Kiểu | Mặc định | Ghi chú |
 |---|---|---|---|

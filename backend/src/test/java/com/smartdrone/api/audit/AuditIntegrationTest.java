@@ -159,10 +159,12 @@ class AuditIntegrationTest {
     }
 
     @Test
-    void onlyAdminCanSearchAndFiltersAreValidated() throws Exception {
+    void onlyAdminAndLogisticsManagerCanSearchAndFiltersAreValidated() throws Exception {
         String admin = tokens.issue(user(RoleName.SYSTEM_ADMIN));
 
-        assertEquals(403, call("GET", "/audit-events", tokens.issue(user(RoleName.LOGISTICS_MANAGER)), null)
+        assertEquals(200, call("GET", "/audit-events", tokens.issue(user(RoleName.LOGISTICS_MANAGER)), null)
+                .statusCode());
+        assertEquals(403, call("GET", "/audit-events", tokens.issue(user(RoleName.DISPATCHER)), null)
                 .statusCode());
         assertEquals(401, call("GET", "/audit-events", null, null).statusCode());
         assertEquals(400, call("GET", "/audit-events?pageSize=101", admin, null).statusCode());

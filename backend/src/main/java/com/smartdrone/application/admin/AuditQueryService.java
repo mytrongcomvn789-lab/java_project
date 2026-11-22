@@ -20,9 +20,10 @@ import com.smartdrone.infrastructure.persistence.AuditLogRepository;
 
 import jakarta.persistence.criteria.Predicate;
 
-// Task 2.4: admin tra cứu audit log (GET /v1/audit-events), mới nhất trước.
+// Task 2.4: tra cứu audit log (GET /v1/audit-events), mới nhất trước.
+// Admin và quản lý hậu cần (APDDMP-3: "theo dõi nhật ký hoạt động") được xem; chỉ đọc.
 @Service
-@PreAuthorize("hasRole('SYSTEM_ADMIN')")
+@PreAuthorize("hasAnyRole('SYSTEM_ADMIN','LOGISTICS_MANAGER')")
 public class AuditQueryService {
     private final AuditLogRepository logs;
 
