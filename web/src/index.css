@@ -131,6 +131,8 @@ h3 {
   display: grid;
   place-items: center;
   font-size: 12px;
+  font-weight: 700;
+  flex-shrink: 0;
 }
 .icon-btn {
   border: 0;
