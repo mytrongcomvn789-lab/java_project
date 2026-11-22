@@ -42,6 +42,39 @@ export interface UpdateAccountInput {
   role: RoleName;
 }
 
+// ---- Task 2.4: audit log (SYSTEM_ADMIN, LOGISTICS_MANAGER chỉ xem). Khớp AuditController. ----
+
+export interface AuditEvent {
+  id: string;
+  action: string;
+  actorId: string | null;
+  actorEmail: string | null;
+  actorRole: RoleName | null;
+  targetType: string;
+  targetId: string | null;
+  detail: string | null;
+  ipAddress: string | null;
+  traceId: string | null;
+  occurredAt: string;
+}
+
+export interface AuditEventPage {
+  items: AuditEvent[];
+  page: number;
+  pageSize: number;
+  total: number;
+}
+
+export interface AuditQuery {
+  action?: string;
+  actorId?: string;
+  targetType?: string;
+  from?: string; // ISO-8601, bao gồm
+  to?: string; // ISO-8601, không bao gồm
+  page: number;
+  pageSize: number;
+}
+
 export interface PermissionInfo {
   code: string;
   group: string;
@@ -78,6 +111,20 @@ export interface SettingInfo {
 }
 
 export const adminService = {
+  listAuditEvents: async (q: AuditQuery) =>
+    (
+      await apiClient.get<AuditEventPage>("/v1/audit-events", {
+        params: {
+          action: q.action || undefined,
+          actorId: q.actorId || undefined,
+          targetType: q.targetType || undefined,
+          from: q.from || undefined,
+          to: q.to || undefined,
+          page: q.page,
+          pageSize: q.pageSize,
+        },
+      })
+    ).data,
   listAccounts: async (q: AccountQuery) =>
     (
       await apiClient.get<AccountPage>("/v1/admin/accounts", {

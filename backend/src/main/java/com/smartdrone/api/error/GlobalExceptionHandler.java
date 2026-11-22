@@ -5,6 +5,9 @@ import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.ConcurrencyFailureException;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
@@ -53,6 +56,28 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler(AuthenticationException.class)
     public ResponseEntity<Object> handleAuthentication(AuthenticationException ex) {
         return build(ErrorCode.AUTH_REQUIRED, ErrorCode.AUTH_REQUIRED.getDefaultMessage(), null);
+    }
+
+    // Lưới an toàn cho lỗi database mà service chưa tự bắt (task 2.4): trả 409/412 thay vì 500.
+    // Service nào cần thông báo riêng (vd: EMAIL_ALREADY_EXISTS) vẫn tự bắt và ném ApiException như cũ.
+    @ExceptionHandler(OptimisticLockingFailureException.class)
+    public ResponseEntity<Object> handleOptimisticLock(OptimisticLockingFailureException ex) {
+        log.warn("Xung đột phiên bản dữ liệu: {}", ex.getMessage());
+        return build(ErrorCode.VERSION_CONFLICT, ErrorCode.VERSION_CONFLICT.getDefaultMessage(), null);
+    }
+
+    // Deadlock, hết thời gian chờ khóa... (lớp cha của lỗi optimistic lock ở trên).
+    @ExceptionHandler(ConcurrencyFailureException.class)
+    public ResponseEntity<Object> handleConcurrency(ConcurrencyFailureException ex) {
+        log.warn("Xung đột truy cập đồng thời: {}", ex.getMessage());
+        return build(ErrorCode.DATA_CONFLICT, ErrorCode.DATA_CONFLICT.getDefaultMessage(), null);
+    }
+
+    // Trùng unique, vi phạm khóa ngoại/ràng buộc. Không trả chi tiết SQL ra ngoài.
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<Object> handleDataIntegrity(DataIntegrityViolationException ex) {
+        log.warn("Vi phạm ràng buộc dữ liệu: {}", ex.getMostSpecificCause().getMessage());
+        return build(ErrorCode.DATA_CONFLICT, ErrorCode.DATA_CONFLICT.getDefaultMessage(), null);
     }
 
     @ExceptionHandler(Exception.class)

@@ -44,7 +44,7 @@ public final class RbacPolicy {
             rule(GET, "/v1/admin/api-keys", SYSTEM_ADMIN),
             rule(POST, "/v1/admin/api-keys/{id}/revoke", SYSTEM_ADMIN),
             rule(POST, "/v1/admin/api-keys/{id}/rotate", SYSTEM_ADMIN),
-            rule(GET, "/v1/audit-events", SYSTEM_ADMIN),
+            rule(GET, "/v1/audit-events", SYSTEM_ADMIN, LOGISTICS_MANAGER), // APDDMP-3: quản lý hậu cần theo dõi nhật ký
             // FR-02: tài khoản, vai trò & quyền, cấu hình hệ thống (chỉ SYSTEM_ADMIN).
             rule(GET, "/v1/admin/accounts", SYSTEM_ADMIN),
             rule(POST, "/v1/admin/accounts", SYSTEM_ADMIN),

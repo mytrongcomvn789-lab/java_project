@@ -25,7 +25,7 @@ const STATS = [
 // Ghi chú cho vai trò không trực tiếp xử lý bước nào trong quy trình giao hàng
 const FLOW_NOTES: Partial<Record<RoleName, string>> = {
   LOGISTICS_MANAGER:
-    "Bạn không xử lý từng đơn mà giám sát toàn bộ quy trình qua dashboard, báo cáo và hiệu suất các trạm.",
+    "Bạn không xử lý từng đơn mà giám sát toàn bộ quy trình qua dashboard, báo cáo, hiệu suất các trạm và Audit Log.",
   SYSTEM_ADMIN:
     "Bạn không xử lý đơn giao hàng mà quản trị tài khoản, vai trò, cấu hình hệ thống và theo dõi Audit Log.",
 };

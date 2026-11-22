@@ -292,3 +292,51 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Task 2.4: trang Audit Log */
+.audit-date {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--muted);
+}
+.audit-chip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  margin: -8px 0 16px;
+  font-size: 14px;
+}
+.audit-link {
+  border: 0;
+  background: none;
+  padding: 0;
+  font: inherit;
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+  text-decoration: underline dotted;
+}
+.audit-link:hover {
+  color: var(--green);
+}
+.audit-link:focus-visible {
+  outline: 2px solid var(--green);
+}
+.audit-sub {
+  font-size: 12px;
+  margin-top: 2px;
+}
+.audit-mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+.audit-nowrap {
+  white-space: nowrap;
+}
+.audit-detail {
+  max-width: 360px;
+  overflow-wrap: anywhere;
+  font-size: 13px;
+}

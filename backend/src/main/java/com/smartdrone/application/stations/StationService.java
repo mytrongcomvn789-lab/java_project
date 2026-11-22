@@ -9,6 +9,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.smartdrone.application.admin.AuditService;
 import com.smartdrone.application.common.ApiException;
 import com.smartdrone.application.common.ErrorCode;
 import com.smartdrone.application.stations.dto.StationInput;
@@ -26,12 +27,14 @@ public class StationService implements StationDirectory {
     private final StationRepository stations;
     private final StaffStationScope scope;
     private final StationStatusEventRepository events;
+    private final AuditService audit;
 
     public StationService(StationRepository stations, StaffStationScope scope,
-            StationStatusEventRepository events) {
+            StationStatusEventRepository events, AuditService audit) {
         this.stations = stations;
         this.scope = scope;
         this.events = events;
+        this.audit = audit;
     }
 
     @Transactional(readOnly = true)
@@ -44,8 +47,10 @@ public class StationService implements StationDirectory {
     @Transactional
     @PreAuthorize("hasRole('LOGISTICS_MANAGER')")
     public StationView create(StationInput input) {
-        var station = new Station(input.name(), input.latitude(), input.longitude(), input.capacity());
-        return StationView.from(stations.saveAndFlush(station));
+        var station = stations.saveAndFlush(
+                new Station(input.name(), input.latitude(), input.longitude(), input.capacity()));
+        audit.recordForCurrentUser("STATION_CREATED", "STATION", station.getId().toString(), describe(input));
+        return StationView.from(station);
     }
 
     @Transactional
@@ -53,7 +58,9 @@ public class StationService implements StationDirectory {
     public StationView update(UUID id, StationInput input) {
         var station = stations.findById(id).orElseThrow(StationService::notFound);
         station.update(input.name(), input.latitude(), input.longitude(), input.capacity());
-        return StationView.from(stations.saveAndFlush(station));
+        var saved = stations.saveAndFlush(station);
+        audit.recordForCurrentUser("STATION_UPDATED", "STATION", id.toString(), describe(input));
+        return StationView.from(saved);
     }
 
     @Transactional
@@ -72,6 +79,8 @@ public class StationService implements StationDirectory {
         station.changeStatus(input.status());
         var saved = stations.saveAndFlush(station);
         events.save(new StationStatusEvent(id, from, input.status(), actorId, actorRole, Instant.now()));
+        audit.record(actorId, "STATION_STATUS_CHANGED", "STATION", id.toString(),
+                "status=" + from + "->" + input.status());
         return StationView.from(saved);
     }
 
@@ -79,6 +88,11 @@ public class StationService implements StationDirectory {
     @Transactional(readOnly = true)
     public boolean isActive(UUID stationId) {
         return stations.existsByIdAndStatus(stationId, StationStatus.ACTIVE);
+    }
+
+    private static String describe(StationInput input) {
+        return "name=" + input.name() + ", lat=" + input.latitude() + ", lng=" + input.longitude()
+                + ", capacity=" + input.capacity();
     }
 
     private static ApiException notFound() {

@@ -281,7 +281,8 @@ export const NAV_ITEMS: NavItem[] = [
     to: "/admin/audit-log",
     label: "Audit Log",
     icon: ScrollText,
-    roles: ["SYSTEM_ADMIN"],
+    // Quản lý hậu cần chỉ xem (APDDMP-3); backend: GET /v1/audit-events
+    roles: ["SYSTEM_ADMIN", "LOGISTICS_MANAGER"],
     code: "NFR-07",
     summary: "Truy vết các thao tác quan trọng của người dùng và hệ thống.",
     features: ["Xem nhật ký hoạt động (Audit Log)"],
@@ -322,6 +323,7 @@ export const PLACEHOLDER_PATHS: string[] = Array.from(
           "/admin/users",
           "/admin/roles",
           "/admin/settings",
+          "/admin/audit-log",
         ].includes(p),
     ),
   ),

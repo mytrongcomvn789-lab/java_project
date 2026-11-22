@@ -11,6 +11,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.smartdrone.application.admin.AuditService;
 import com.smartdrone.application.auth.dto.LoginRequest;
 import com.smartdrone.application.auth.dto.RefreshRequest;
 import com.smartdrone.application.auth.dto.RegisterRequest;
@@ -40,6 +41,7 @@ public class AuthService {
     private final AccessTokenIssuer accessTokenIssuer;
     private final JwtProperties jwtProperties;
     private final Clock clock;
+    private final AuditService audit;
 
     // Hash giả để đăng nhập email không tồn tại vẫn tốn thời gian như email có thật
     // (tránh dò email nào đã đăng ký bằng cách đo thời gian phản hồi).
@@ -51,7 +53,8 @@ public class AuthService {
                        PasswordEncoder passwordEncoder,
                        AccessTokenIssuer accessTokenIssuer,
                        JwtProperties jwtProperties,
-                       Clock clock) {
+                       Clock clock,
+                       AuditService audit) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.refreshTokenRepository = refreshTokenRepository;
@@ -59,6 +62,7 @@ public class AuthService {
         this.accessTokenIssuer = accessTokenIssuer;
         this.jwtProperties = jwtProperties;
         this.clock = clock;
+        this.audit = audit;
         this.dummyHash = passwordEncoder.encode("dummy-password-for-timing-only");
     }
 
@@ -88,6 +92,7 @@ public class AuthService {
             // Hai request đăng ký cùng email chạy song song: unique index chặn request thứ hai.
             throw new ApiException(ErrorCode.EMAIL_ALREADY_EXISTS);
         }
+        audit.record(user.getId(), "USER_REGISTERED", "USER", idOf(user), null);
         return toProfile(user);
     }
 
@@ -98,13 +103,19 @@ public class AuthService {
 
         boolean passwordOk = passwordMatches(request.password(), user == null ? dummyHash : user.getPasswordHash());
         if (user == null || !passwordOk) {
+            // Transaction riêng: lần thử sai vẫn được ghi dù request kết thúc bằng lỗi.
+            audit.recordIndependently(user == null ? null : user.getId(), "LOGIN_FAILED", "USER",
+                    idOf(user), "reason=INVALID_CREDENTIALS, email=" + email);
             // Cùng một thông báo cho "sai email" và "sai mật khẩu".
             throw new ApiException(ErrorCode.INVALID_CREDENTIALS);
         }
         if (!user.isEnabled()) {
+            audit.recordIndependently(user.getId(), "LOGIN_FAILED", "USER", idOf(user),
+                    "reason=ACCOUNT_LOCKED");
             // Chỉ báo "bị khóa" sau khi mật khẩu đã đúng.
             throw new ApiException(ErrorCode.ACCOUNT_LOCKED);
         }
+        audit.record(user.getId(), "LOGIN_SUCCEEDED", "USER", idOf(user), null);
         return issueTokens(user);
     }
 
@@ -121,7 +132,10 @@ public class AuthService {
 
         if (stored.isRevoked()) {
             // Token đã dùng rồi mà vẫn bị gửi lại => nghi bị đánh cắp: đăng xuất mọi thiết bị.
-            refreshTokenRepository.revokeAllByUserId(user.getId(), now);
+            int revoked = refreshTokenRepository.revokeAllByUserId(user.getId(), now);
+            // noRollbackFor ở trên giữ lại cả việc thu hồi lẫn dòng audit này.
+            audit.record(user.getId(), "REFRESH_TOKEN_REUSED", "USER", idOf(user),
+                    "revokedSessions=" + revoked);
             throw new ApiException(ErrorCode.INVALID_REFRESH_TOKEN);
         }
         if (stored.isExpired(now)) {
@@ -141,7 +155,16 @@ public class AuthService {
     @Transactional
     public void logout(RefreshRequest request) {
         refreshTokenRepository.findByTokenHash(TokenHasher.sha256Hex(request.refreshToken()))
-                .ifPresent(token -> token.revoke(clock.instant()));
+                .filter(token -> !token.isRevoked()) // gửi lại token đã thu hồi thì không ghi audit lần nữa
+                .ifPresent(token -> {
+                    token.revoke(clock.instant());
+                    User user = token.getUser();
+                    audit.record(user.getId(), "LOGOUT", "USER", idOf(user), null);
+                });
+    }
+
+    private static String idOf(User user) {
+        return user == null || user.getId() == null ? null : user.getId().toString();
     }
 
     private TokenResponse issueTokens(User user) {

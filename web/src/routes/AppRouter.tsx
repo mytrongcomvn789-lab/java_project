@@ -17,6 +17,7 @@ import RequireRole from "../features/auth/RequireRole";
 import AccountsPage from "../features/admin/AccountsPage";
 import RolesPage from "../features/admin/RolesPage";
 import SettingsPage from "../features/admin/SettingsPage";
+import AuditLogPage from "../features/admin/AuditLogPage";
 import HomePage from "../features/home/HomePage";
 import ProfilePage from "../features/profile/ProfilePage";
 import PlaceholderPage from "../components/ui/PlaceholderPage";
@@ -57,6 +58,10 @@ export default function AppRouter() {
             <Route path="/admin/users" element={<AccountsPage />} />
             <Route path="/admin/roles" element={<RolesPage />} />
             <Route path="/admin/settings" element={<SettingsPage />} />
+          </Route>
+          {/* NFR-07 (task 2.4): admin và quản lý hậu cần chỉ xem. */}
+          <Route element={<RequireRole roles={["SYSTEM_ADMIN", "LOGISTICS_MANAGER"]} />}>
+            <Route path="/admin/audit-log" element={<AuditLogPage />} />
           </Route>
           {import.meta.env.DEV && (
             <Route

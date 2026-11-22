@@ -10,6 +10,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.smartdrone.application.admin.AuditService;
 import com.smartdrone.application.auth.dto.UserProfile;
 import com.smartdrone.application.common.ApiException;
 import com.smartdrone.application.common.ErrorCode;
@@ -28,13 +29,15 @@ public class UserProfileService {
     private final RefreshTokenRepository refreshTokens;
     private final PasswordEncoder passwordEncoder;
     private final Clock clock;
+    private final AuditService audit;
 
     public UserProfileService(UserRepository users, RefreshTokenRepository refreshTokens,
-                              PasswordEncoder passwordEncoder, Clock clock) {
+                              PasswordEncoder passwordEncoder, Clock clock, AuditService audit) {
         this.users = users;
         this.refreshTokens = refreshTokens;
         this.passwordEncoder = passwordEncoder;
         this.clock = clock;
+        this.audit = audit;
     }
 
     // 1. Xem hồ sơ
@@ -86,6 +89,7 @@ public class UserProfileService {
         users.saveAndFlush(user);
         int revoked = refreshTokens.revokeAllByUserId(userId, clock.instant());
         log.info("PASSWORD_CHANGED userId={} revokedSessions={}", userId, revoked);
+        audit.record(userId, "PASSWORD_CHANGED", "USER", userId.toString(), "revokedSessions=" + revoked);
     }
 
     private User load(UUID id) {

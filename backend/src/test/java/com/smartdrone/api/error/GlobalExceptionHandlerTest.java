@@ -4,7 +4,11 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.UUID;
 
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.springframework.dao.CannotAcquireLockException;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -45,5 +49,24 @@ class GlobalExceptionHandlerTest {
         assertEquals("Requested action failed", body.getDetail());
         assertEquals(body.getDetail(), body.getProperties().get("message"));
         assertDoesNotThrow(() -> UUID.fromString((String) body.getProperties().get("traceId")));
+    }
+
+    // 2.4: lỗi database chưa được service bắt không được ra 500 hay lộ câu SQL.
+    @Test
+    void databaseConflictsAreMappedInsteadOfInternalError() {
+        var duplicate = handler.handleDataIntegrity(new DataIntegrityViolationException(
+                "could not execute statement", new RuntimeException("Violation of UNIQUE KEY constraint 'uk_secret'")));
+        var body = assertInstanceOf(ProblemDetail.class, duplicate.getBody());
+        assertEquals(409, duplicate.getStatusCode().value());
+        assertEquals("DATA_CONFLICT", body.getProperties().get("code"));
+        assertFalse(body.getDetail().contains("uk_secret"));
+
+        var stale = handler.handleOptimisticLock(new ObjectOptimisticLockingFailureException("Order", UUID.randomUUID()));
+        assertEquals(412, stale.getStatusCode().value());
+        assertEquals("VERSION_CONFLICT", assertInstanceOf(ProblemDetail.class, stale.getBody()).getProperties().get("code"));
+
+        var deadlock = handler.handleConcurrency(new CannotAcquireLockException("deadlock victim"));
+        assertEquals(409, deadlock.getStatusCode().value());
+        assertEquals("DATA_CONFLICT", assertInstanceOf(ProblemDetail.class, deadlock.getBody()).getProperties().get("code"));
     }
 }
