@@ -11,10 +11,15 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 
-// Nhật ký thao tác quản trị (NFR-07). Chỉ thêm mới. Trang Audit Log sẽ đọc bảng này ở task sau.
+// Nhật ký thao tác quan trọng (NFR-07): thao tác quản trị, đăng nhập/đăng xuất, đổi quyền, quản lý trạm...
+// Chỉ thêm mới. Admin tra cứu qua GET /v1/audit-events (task 2.4).
 // Không bao giờ ghi mật khẩu/token vào detail.
 @Entity
-@Table(name = "audit_logs", indexes = @Index(name = "ix_audit_logs_time", columnList = "occurred_at"))
+@Table(name = "audit_logs", indexes = {
+        @Index(name = "ix_audit_logs_time", columnList = "occurred_at"),
+        @Index(name = "ix_audit_logs_actor", columnList = "actor_id, occurred_at"),
+        @Index(name = "ix_audit_logs_target", columnList = "target_type, target_id, occurred_at")
+})
 public class AuditLog {
 
     @Id
@@ -42,13 +47,21 @@ public class AuditLog {
     @Column(length = 1000, updatable = false)
     private String detail;
 
+    // 2.4: IP kết nối và traceId của request, để từ dòng audit tra ra log ứng dụng.
+    @Column(name = "ip_address", length = 45, updatable = false)
+    private String ipAddress;
+
+    @Column(name = "trace_id", length = 36, updatable = false)
+    private String traceId;
+
     @Column(name = "occurred_at", nullable = false, updatable = false)
     private Instant occurredAt;
 
     protected AuditLog() { }
 
     public AuditLog(UUID actorId, String actorEmail, String actorRole, String action,
-            String targetType, String targetId, String detail, Instant occurredAt) {
+            String targetType, String targetId, String detail, String ipAddress, String traceId,
+            Instant occurredAt) {
         this.actorId = actorId;
         this.actorEmail = actorEmail;
         this.actorRole = actorRole;
@@ -56,6 +69,8 @@ public class AuditLog {
         this.targetType = targetType;
         this.targetId = targetId;
         this.detail = detail == null || detail.length() <= 1000 ? detail : detail.substring(0, 1000);
+        this.ipAddress = ipAddress;
+        this.traceId = traceId;
         this.occurredAt = occurredAt;
     }
 
@@ -67,5 +82,7 @@ public class AuditLog {
     public String getTargetType() { return targetType; }
     public String getTargetId() { return targetId; }
     public String getDetail() { return detail; }
+    public String getIpAddress() { return ipAddress; }
+    public String getTraceId() { return traceId; }
     public Instant getOccurredAt() { return occurredAt; }
 }

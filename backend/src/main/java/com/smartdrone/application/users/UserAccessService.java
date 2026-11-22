@@ -11,6 +11,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.smartdrone.application.admin.AuditService;
 import com.smartdrone.application.common.ApiException;
 import com.smartdrone.application.common.ErrorCode;
 import com.smartdrone.application.users.dto.UpdateUserAccessRequest;
@@ -30,13 +31,15 @@ public class UserAccessService {
     private final RoleRepository roles;
     private final RefreshTokenRepository refreshTokens;
     private final Clock clock;
+    private final AuditService audit;
 
     public UserAccessService(UserRepository users, RoleRepository roles,
-            RefreshTokenRepository refreshTokens, Clock clock) {
+            RefreshTokenRepository refreshTokens, Clock clock, AuditService audit) {
         this.users = users;
         this.roles = roles;
         this.refreshTokens = refreshTokens;
         this.clock = clock;
+        this.audit = audit;
     }
 
     @Transactional(readOnly = true)
@@ -86,6 +89,9 @@ public class UserAccessService {
         int revokedSessions = refreshTokens.revokeAllByUserId(userId, clock.instant());
         log.info("USER_ACCESS_CHANGED actorId={} targetId={} role={}->{} enabled={}->{} revokedSessions={}",
                 actorId, userId, oldRole, newRole, oldEnabled, newEnabled, revokedSessions);
+        audit.record(actorId, "USER_ACCESS_CHANGED", "USER", userId.toString(),
+                "role=" + oldRole + "->" + newRole + ", enabled=" + oldEnabled + "->" + newEnabled
+                        + ", revokedSessions=" + revokedSessions);
         return response;
     }
 }

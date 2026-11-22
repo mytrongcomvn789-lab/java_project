@@ -31,6 +31,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import com.smartdrone.application.admin.AuditService;
 import com.smartdrone.application.auth.dto.LoginRequest;
 import com.smartdrone.application.auth.dto.RefreshRequest;
 import com.smartdrone.application.auth.dto.RegisterRequest;
@@ -54,6 +55,7 @@ class AuthServiceTest {
 
     @Mock UserRepository userRepository;
     @Mock RoleRepository roleRepository;
+    @Mock AuditService audit;
     @Mock RefreshTokenRepository refreshTokenRepository;
     @Mock AccessTokenIssuer accessTokenIssuer;
 
@@ -68,7 +70,7 @@ class AuthServiceTest {
     @BeforeEach
     void setUp() {
         service = new AuthService(userRepository, roleRepository, refreshTokenRepository,
-                passwordEncoder, accessTokenIssuer, properties, clock);
+                passwordEncoder, accessTokenIssuer, properties, clock, audit);
         when(accessTokenIssuer.issue(any())).thenReturn("access.jwt.value");
         when(accessTokenIssuer.ttlSeconds()).thenReturn(900L);
         when(userRepository.saveAndFlush(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
