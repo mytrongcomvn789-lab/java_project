@@ -2,7 +2,6 @@ package com.smartdrone.api.error;
 
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,6 +21,7 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 
 import com.smartdrone.application.common.ApiException;
 import com.smartdrone.application.common.ErrorCode;
+import com.smartdrone.application.common.TraceContext;
 
 // Đổi mọi lỗi thành JSON chuẩn (ProblemDetail + code + message + traceId).
 // "message" được giữ để web hiện tại (apiClient.ts) đọc được lỗi như trước.
@@ -40,7 +40,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         problem.setTitle(ex.getStatus().getReasonPhrase());
         problem.setProperty("code", ex.getStatus().name());
         problem.setProperty("message", ex.getMessage());
-        problem.setProperty("traceId", UUID.randomUUID().toString());
+        problem.setProperty("traceId", TraceContext.current());
         return respond(problem);
     }
 
@@ -57,7 +57,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Object> handleUnexpected(Exception ex) {
-        String traceId = UUID.randomUUID().toString();
+        String traceId = TraceContext.current();
         log.error("Lỗi không mong đợi, traceId={}", traceId, ex);
         // Không trả chi tiết lỗi nội bộ ra ngoài.
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(
@@ -96,7 +96,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
                 problem.setProperty("code", "REQUEST_ERROR");
             }
             problem.setProperty("message", problem.getDetail());
-            problem.setProperty("traceId", UUID.randomUUID().toString());
+            problem.setProperty("traceId", TraceContext.current());
         }
         return super.handleExceptionInternal(ex, body, headers, statusCode, request);
     }
@@ -106,7 +106,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         problem.setTitle(code.getDefaultMessage());
         problem.setProperty("code", code.name());
         problem.setProperty("message", detail);
-        problem.setProperty("traceId", UUID.randomUUID().toString());
+        problem.setProperty("traceId", TraceContext.current());
         if (errors != null) {
             problem.setProperty("errors", errors);
         }
