@@ -15,7 +15,7 @@ import com.smartdrone.application.common.ErrorCode;
 class ScheduleSlotPolicyTest {
 
     // slot 30 phút, đặt sớm nhất sau 30 phút, xa nhất 7 ngày
-    private final ScheduleSlotPolicy policy = new ScheduleSlotPolicy(new ScheduleProperties(30, 30, 7));
+    private final ScheduleSlotPolicy policy = new ScheduleSlotPolicy(new ScheduleProperties(30, 30, 7, null));
     private final Instant now = Instant.parse("2026-11-16T03:00:00Z");
 
     @Test
@@ -67,7 +67,7 @@ class ScheduleSlotPolicyTest {
 
     @Test
     void cauHinhSlotKhongChiaHetMotNgayThiBiTuChoi() {
-        assertThatThrownBy(() -> new ScheduleProperties(7, 30, 7)).isInstanceOf(IllegalStateException.class);
+        assertThatThrownBy(() -> new ScheduleProperties(7, 30, 7, null)).isInstanceOf(IllegalStateException.class);
     }
 
     private void assertValidationError(Instant slotStart) {

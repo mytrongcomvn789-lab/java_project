@@ -15,6 +15,8 @@ public enum ErrorCode {
     RESOURCE_NOT_FOUND(HttpStatus.NOT_FOUND, "Không tìm thấy tài nguyên"),
     REQUEST_ERROR(HttpStatus.BAD_REQUEST, "Yêu cầu không hợp lệ"),
     SELF_ACCESS_CHANGE(HttpStatus.CONFLICT, "Không được tự thay đổi vai trò hoặc khóa tài khoản của mình"),
+    LAST_ADMIN_PROTECTED(HttpStatus.CONFLICT, "Không thể khóa hoặc hạ quyền quản trị viên cuối cùng"),
+    ROLE_LOCKED(HttpStatus.CONFLICT, "Quyền của vai trò quản trị viên được khóa, không thể thay đổi"),
     EMAIL_ALREADY_EXISTS(HttpStatus.CONFLICT, "Email đã được đăng ký"),
     INVALID_CURRENT_PASSWORD(HttpStatus.BAD_REQUEST, "Mật khẩu hiện tại không đúng"),
     FILE_TOO_LARGE(HttpStatus.PAYLOAD_TOO_LARGE, "Tệp vượt quá dung lượng cho phép"),
@@ -28,7 +30,14 @@ public enum ErrorCode {
     PRECONDITION_REQUIRED(HttpStatus.PRECONDITION_REQUIRED, "Thiếu header If-Match"),
     SLOT_FULL(HttpStatus.CONFLICT, "Khung giờ này đã đủ chỗ tại trạm, vui lòng chọn khung giờ khác"),
     STATION_UNAVAILABLE(HttpStatus.CONFLICT, "Trạm hiện không hoạt động nên không thể lên lịch"),
+    RETRY_LIMIT_REACHED(HttpStatus.CONFLICT, "Đơn đã hết số lần giao lại cho phép, hãy chuyển sang hoàn hàng"),
     IDEMPOTENCY_KEY_CONFLICT(HttpStatus.CONFLICT, "Idempotency-Key đã được dùng cho nội dung yêu cầu khác"),
+    API_KEY_UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "API key không hợp lệ, đã hết hạn hoặc đã bị thu hồi"),
+    API_KEY_RATE_LIMITED(HttpStatus.TOO_MANY_REQUESTS, "Vượt quá giới hạn tần suất của API key"),
+    PICKUP_CODE_INVALID(HttpStatus.UNPROCESSABLE_ENTITY, "Mã nhận hàng không đúng hoặc không còn hiệu lực"),
+    PICKUP_CODE_EXPIRED(HttpStatus.GONE, "Mã nhận hàng đã hết hạn, khách cần mở lại mã"),
+    PICKUP_CODE_LOCKED(HttpStatus.TOO_MANY_REQUESTS, "Mã nhận hàng đã bị khóa do nhập sai quá số lần cho phép"),
+    PICKUP_CODE_USED(HttpStatus.CONFLICT, "Mã nhận hàng đã được sử dụng"),
     INTERNAL_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "Lỗi hệ thống, vui lòng thử lại sau");
     
     private final HttpStatus status;

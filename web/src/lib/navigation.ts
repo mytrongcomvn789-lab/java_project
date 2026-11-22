@@ -1,9 +1,31 @@
+import {
+  Activity,
+  BarChart3,
+  CalendarClock,
+  ClipboardCheck,
+  LayoutDashboard,
+  MapPin,
+  PackageCheck,
+  PackagePlus,
+  PackageSearch,
+  Radar,
+  ScrollText,
+  Settings,
+  ShieldCheck,
+  Sparkles,
+  TrendingUp,
+  TriangleAlert,
+  UserCircle,
+  Users,
+  Warehouse,
+  type LucideIcon,
+} from "lucide-react";
 import type { RoleName } from "../types/api";
 
 export interface NavItem {
   to: string;
   label: string;
-  icon: string;
+  icon: LucideIcon;
   end?: boolean;
   roles: RoleName[] | "ALL";
   code?: string; // mã yêu cầu trong SRS (FR-xx / NFR-xx)
@@ -14,13 +36,13 @@ export interface NavItem {
 // Menu theo vai trò, bám sát SRS (FR-01 → FR-10) và sơ đồ use case.
 // Các trang ngoài "/" và "/profile" hiện là trang tạm, sẽ được làm ở các task sau.
 export const NAV_ITEMS: NavItem[] = [
-  { to: "/", label: "Trang chủ", icon: "▦", end: true, roles: "ALL" },
+  { to: "/", label: "Trang chủ", icon: LayoutDashboard, end: true, roles: "ALL" },
 
   // ===== Khách hàng =====
   {
     to: "/deliveries/new",
     label: "Tạo yêu cầu giao hàng",
-    icon: "✚",
+    icon: PackagePlus,
     roles: ["CUSTOMER"],
     code: "FR-04",
     summary: "Gửi yêu cầu giao hàng mới bằng drone.",
@@ -34,7 +56,7 @@ export const NAV_ITEMS: NavItem[] = [
   {
     to: "/deliveries",
     label: "Đơn giao hàng của tôi",
-    icon: "☷",
+    icon: PackageSearch,
     roles: ["CUSTOMER"],
     code: "FR-04",
     summary: "Xem, theo dõi và quản lý các đơn giao hàng của bạn.",
@@ -48,7 +70,7 @@ export const NAV_ITEMS: NavItem[] = [
   {
     to: "/addresses",
     label: "Địa chỉ giao hàng",
-    icon: "⌖",
+    icon: MapPin,
     roles: ["CUSTOMER"],
     code: "FR-03",
     summary: "Quản lý các địa chỉ giao hàng của bạn.",
@@ -60,7 +82,7 @@ export const NAV_ITEMS: NavItem[] = [
   {
     to: "/assistant",
     label: "Trợ lý AI",
-    icon: "✦",
+    icon: Sparkles,
     roles: ["CUSTOMER"],
     code: "FR-10",
     summary: "Được AI hỗ trợ về đơn hàng và quá trình giao hàng.",
@@ -71,7 +93,7 @@ export const NAV_ITEMS: NavItem[] = [
   {
     to: "/dispatch/requests",
     label: "Yêu cầu chờ duyệt",
-    icon: "✓",
+    icon: ClipboardCheck,
     roles: ["DISPATCHER"],
     code: "FR-04",
     summary: "Kiểm tra và quyết định các yêu cầu giao hàng mới.",
@@ -84,7 +106,7 @@ export const NAV_ITEMS: NavItem[] = [
   {
     to: "/dispatch/schedule",
     label: "Lịch giao hàng",
-    icon: "◷",
+    icon: CalendarClock,
     roles: ["DISPATCHER"],
     code: "FR-04",
     summary: "Lên lịch giao cho các yêu cầu đã phê duyệt.",
@@ -93,7 +115,7 @@ export const NAV_ITEMS: NavItem[] = [
   {
     to: "/dispatch/failures",
     label: "Giao hàng thất bại",
-    icon: "⚠",
+    icon: TriangleAlert,
     roles: ["DISPATCHER"],
     code: "FR-06",
     summary: "Theo dõi và xử lý các đơn giao thất bại.",
@@ -105,7 +127,7 @@ export const NAV_ITEMS: NavItem[] = [
   {
     to: "/deliveries",
     label: "Theo dõi giao hàng",
-    icon: "☷",
+    icon: PackageSearch,
     roles: ["DISPATCHER"],
     code: "FR-08",
     summary: "Theo dõi trạng thái của tất cả đơn giao hàng.",
@@ -117,7 +139,7 @@ export const NAV_ITEMS: NavItem[] = [
   {
     to: "/customers",
     label: "Khách hàng",
-    icon: "☺",
+    icon: Users,
     roles: ["DISPATCHER"],
     code: "FR-03",
     summary: "Quản lý thông tin khách hàng.",
@@ -128,16 +150,32 @@ export const NAV_ITEMS: NavItem[] = [
   {
     to: "/stations",
     label: "Danh sách trạm",
-    icon: "⌂",
+    icon: Warehouse,
+    end: true,
     roles: "ALL",
     code: "FR-07",
     summary: "Xem thông tin, vị trí, sức chứa và trạng thái các trạm.",
     features: ["Xem danh sách trạm", "Quản lý thông tin trạm theo quyền"],
   },
+
+  {
+    to: "/stations/monitoring",
+    label: "Giám sát trạm",
+    icon: Radar,
+    roles: ["DISPATCHER", "STATION_OPERATOR", "LOGISTICS_MANAGER"],
+    code: "FR-07",
+    summary:
+      "Theo dõi trạng thái vận hành, kết nối, chỗ đang giữ và số kiện của từng trạm.",
+    features: [
+      "Xem trạng thái và số kiện của trạm",
+      "Đổi trạng thái vận hành theo quyền",
+    ],
+  },
+
   {
     to: "/station/availability",
     label: "Tình trạng sẵn sàng",
-    icon: "◉",
+    icon: Activity,
     roles: ["STATION_OPERATOR"],
     code: "FR-07",
     summary: "Theo dõi trạng thái và khả năng sẵn sàng của trạm.",
@@ -146,7 +184,7 @@ export const NAV_ITEMS: NavItem[] = [
   {
     to: "/station/parcels",
     label: "Tiếp nhận kiện hàng",
-    icon: "▣",
+    icon: PackageCheck,
     roles: ["STATION_OPERATOR"],
     code: "FR-07",
     summary: "Kiểm tra và tiếp nhận kiện hàng tại trạm.",
@@ -158,7 +196,7 @@ export const NAV_ITEMS: NavItem[] = [
   {
     to: "/deliveries",
     label: "Theo dõi giao hàng",
-    icon: "☷",
+    icon: PackageSearch,
     roles: ["STATION_OPERATOR"],
     code: "FR-08",
     summary: "Theo dõi và cập nhật trạng thái giao hàng liên quan đến trạm.",
@@ -172,7 +210,7 @@ export const NAV_ITEMS: NavItem[] = [
   {
     to: "/reports",
     label: "Thống kê & báo cáo",
-    icon: "▤",
+    icon: BarChart3,
     roles: ["LOGISTICS_MANAGER"],
     code: "FR-09",
     summary: "Báo cáo và thống kê hoạt động giao hàng.",
@@ -185,7 +223,7 @@ export const NAV_ITEMS: NavItem[] = [
   {
     to: "/performance",
     label: "Hiệu suất hoạt động",
-    icon: "↗",
+    icon: TrendingUp,
     roles: ["LOGISTICS_MANAGER"],
     code: "FR-09",
     summary: "Theo dõi hiệu suất hoạt động của các trạm.",
@@ -194,7 +232,7 @@ export const NAV_ITEMS: NavItem[] = [
   {
     to: "/ai-analytics",
     label: "Phân tích vận hành (AI)",
-    icon: "✦",
+    icon: Sparkles,
     roles: ["LOGISTICS_MANAGER"],
     code: "FR-10",
     summary: "Phân tích dữ liệu vận hành với sự hỗ trợ của AI.",
@@ -203,7 +241,7 @@ export const NAV_ITEMS: NavItem[] = [
   {
     to: "/deliveries",
     label: "Theo dõi giao hàng",
-    icon: "☷",
+    icon: PackageSearch,
     roles: ["LOGISTICS_MANAGER"],
     code: "FR-08",
     summary: "Theo dõi trạng thái giao hàng trên toàn hệ thống.",
@@ -214,16 +252,17 @@ export const NAV_ITEMS: NavItem[] = [
   {
     to: "/admin/users",
     label: "Quản lý tài khoản",
-    icon: "☺",
+    icon: Users,
     roles: ["SYSTEM_ADMIN"],
     code: "FR-02",
-    summary: "Quản lý tài khoản người dùng trong hệ thống.",
+    summary:
+      "Tạo, cập nhật, phân vai trò và khóa / mở khóa tài khoản người dùng.",
     features: ["Xem, tạo, cập nhật tài khoản", "Khóa / mở khóa tài khoản"],
   },
   {
     to: "/admin/roles",
     label: "Vai trò & quyền",
-    icon: "⚿",
+    icon: ShieldCheck,
     roles: ["SYSTEM_ADMIN"],
     code: "FR-02",
     summary: "Quản lý vai trò và quyền truy cập.",
@@ -232,7 +271,7 @@ export const NAV_ITEMS: NavItem[] = [
   {
     to: "/admin/settings",
     label: "Cấu hình hệ thống",
-    icon: "⚙",
+    icon: Settings,
     roles: ["SYSTEM_ADMIN"],
     code: "FR-02",
     summary: "Cấu hình các thông số của hệ thống.",
@@ -241,7 +280,7 @@ export const NAV_ITEMS: NavItem[] = [
   {
     to: "/admin/audit-log",
     label: "Audit Log",
-    icon: "☰",
+    icon: ScrollText,
     roles: ["SYSTEM_ADMIN"],
     code: "NFR-07",
     summary: "Truy vết các thao tác quan trọng của người dùng và hệ thống.",
@@ -252,7 +291,7 @@ export const NAV_ITEMS: NavItem[] = [
   {
     to: "/profile",
     label: "Hồ sơ",
-    icon: "◔",
+    icon: UserCircle,
     roles: "ALL",
     code: "FR-02",
     summary: "Xem và cập nhật thông tin cá nhân.",
@@ -275,10 +314,14 @@ export const PLACEHOLDER_PATHS: string[] = Array.from(
           "/profile",
           "/addresses",
           "/stations",
+          "/stations/monitoring",
           "/deliveries",
           "/deliveries/new",
           "/dispatch/requests",
           "/station/parcels",
+          "/admin/users",
+          "/admin/roles",
+          "/admin/settings",
         ].includes(p),
     ),
   ),

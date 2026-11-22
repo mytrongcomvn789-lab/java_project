@@ -1,7 +1,8 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
-import { Navigate, useLocation, useNavigate } from "react-router-dom";
+import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "./AuthContext";
+import PasswordInput from "../../components/ui/PasswordInput";
 import { ROLES, ROLE_DESCRIPTIONS, ROLE_LABELS } from "../../lib/roles";
 import type { RoleName } from "../../types/api";
 
@@ -9,7 +10,12 @@ export default function LoginPage() {
   const { user, isDemo, login, demoLogin } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const from = (location.state as { from?: string } | null)?.from ?? "/";
+  const navState = location.state as {
+    from?: string;
+    notice?: string;
+  } | null;
+  const from = navState?.from ?? "/";
+  const notice = navState?.notice;
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -49,7 +55,7 @@ export default function LoginPage() {
       <p className="muted">
         {isDemo
           ? "Chọn một vai trò để xem giao diện tương ứng."
-          : "Đăng nhập bằng tài khoản được cấp để vào hệ thống."}
+          : "Đăng nhập để gửi và theo dõi đơn giao hàng của bạn."}
       </p>
 
       {isDemo ? (
@@ -86,14 +92,19 @@ export default function LoginPage() {
           </div>
           <div className="field">
             <label htmlFor="password">Mật khẩu</label>
-            <input
+            <PasswordInput
               id="password"
-              type="password"
               autoComplete="current-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
           </div>
+        </div>
+      )}
+
+      {notice && !error && (
+        <div className="alert success" role="status">
+          {notice}
         </div>
       )}
 
@@ -110,6 +121,12 @@ export default function LoginPage() {
             ? "Vào hệ thống"
             : "Đăng nhập"}
       </button>
+
+      {!isDemo && (
+        <p className="auth-switch">
+          Chưa có tài khoản? <Link to="/register">Đăng ký</Link>
+        </p>
+      )}
 
       {isDemo && (
         <p className="note">

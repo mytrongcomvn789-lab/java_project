@@ -1,0 +1,27 @@
+### Demo 5.1: điền token của tài khoản LOGISTICS_MANAGER (đã được phân công trạm). Dữ liệu demo phải ghi rõ là dữ liệu mẫu.
+@baseUrl = http://localhost:5000/api
+@managerToken = PASTE_LOGISTICS_MANAGER_ACCESS_TOKEN
+
+### 1. Tổng hợp đơn, tỷ lệ, attempt, thời gian giao (theo ngày tạo đơn): 200
+GET {{baseUrl}}/v1/statistics/orders/summary?from=2026-11-01&to=2026-11-30
+Authorization: Bearer {{managerToken}}
+
+### 2. Theo ngày hoàn tất: 200
+GET {{baseUrl}}/v1/statistics/orders/summary?from=2026-11-01&to=2026-11-30&dateBasis=COMPLETED
+Authorization: Bearer {{managerToken}}
+
+### 3. Chuỗi theo ngày: 200
+GET {{baseUrl}}/v1/statistics/orders/daily?from=2026-11-01&to=2026-11-30
+Authorization: Bearer {{managerToken}}
+
+### 4. Tải trạm khung giờ hiện tại: 200
+GET {{baseUrl}}/v1/statistics/stations/load
+Authorization: Bearer {{managerToken}}
+
+### 5. Khoảng quá 366 ngày: 400 VALIDATION_ERROR
+GET {{baseUrl}}/v1/statistics/orders/summary?from=2025-01-01&to=2026-11-30
+Authorization: Bearer {{managerToken}}
+
+### 6. Vai trò khác (dùng token CUSTOMER/DISPATCHER/STATION_OPERATOR/SYSTEM_ADMIN): 403 FORBIDDEN
+GET {{baseUrl}}/v1/statistics/orders/summary
+Authorization: Bearer PASTE_OTHER_ROLE_TOKEN

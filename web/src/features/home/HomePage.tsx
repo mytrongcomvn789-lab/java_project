@@ -1,3 +1,4 @@
+import { Check, Package, TriangleAlert, Truck } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import PageHeader from "../../components/ui/PageHeader";
@@ -14,7 +15,12 @@ type Status = { state: "loading" | "ok" | "error"; message: string };
 // Vai trò xem số liệu tổng quan (FR-09): khách hàng xem đơn của mình, điều phối & hậu cần xem toàn hệ thống.
 const STAT_ROLES: RoleName[] = ["CUSTOMER", "DISPATCHER", "LOGISTICS_MANAGER"];
 
-const STATS = ["Tổng số đơn", "Đang xử lý", "Đã giao", "Giao thất bại"];
+const STATS = [
+  { label: "Tổng số đơn", icon: Package },
+  { label: "Đang xử lý", icon: Truck },
+  { label: "Đã giao", icon: Check },
+  { label: "Giao thất bại", icon: TriangleAlert },
+];
 
 // Ghi chú cho vai trò không trực tiếp xử lý bước nào trong quy trình giao hàng
 const FLOW_NOTES: Partial<Record<RoleName, string>> = {
@@ -53,18 +59,26 @@ export default function HomePage() {
       />
 
       <div className="hero">
-        <span className="eyebrow">{ROLE_LABELS[user.role].toUpperCase()}</span>
-        <h3>Xin chào, {user.fullName}</h3>
-        <p className="muted" style={{ margin: 0 }}>
-          {ROLE_DESCRIPTIONS[user.role]}
-        </p>
+        <div className="hero-text">
+          <span className="eyebrow">
+            {ROLE_LABELS[user.role].toUpperCase()}
+          </span>
+          <h3>Xin chào, {user.fullName}</h3>
+          <p className="muted" style={{ margin: 0 }}>
+            {ROLE_DESCRIPTIONS[user.role]}
+          </p>
+        </div>
+        <img className="hero-img" src="/images/hero-drone.svg" alt="" />
       </div>
 
       {showStats && (
         <>
           <div className="stats">
-            {STATS.map((label) => (
+            {STATS.map(({ label, icon: Icon }) => (
               <div className="card stat" key={label}>
+                <span className="stat-icon">
+                  <Icon size={20} strokeWidth={2} />
+                </span>
                 <span className="muted">{label}</span>
                 <strong>—</strong>
               </div>
@@ -86,8 +100,11 @@ export default function HomePage() {
             to={i.to}
             key={`${i.to}-${i.label}`}
           >
+            <span className="feature-icon">
+              <i.icon size={22} strokeWidth={1.8} />
+            </span>
             <span className="muted" style={{ fontSize: 11 }}>
-              {i.icon} {i.code}
+              {i.code}
             </span>
             <h4>{i.label}</h4>
             <p className="muted">{i.summary}</p>

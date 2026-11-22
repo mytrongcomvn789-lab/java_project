@@ -1,30 +1,37 @@
-import { Routes, Route } from 'react-router-dom';
-import AuthLayout from '../layouts/AuthLayout';
-import MainLayout from '../layouts/MainLayout';
-import StationParcelsPage from '../features/orders/StationParcelsPage';
-import StationReceiptPage from '../features/orders/StationReceiptPage';
-import OrdersPage from '../features/orders/OrdersPage';
-import DispatchRequestsPage from '../features/orders/DispatchRequestsPage';
-import OrderDetailPage from '../features/orders/OrderDetailPage';
-import CreateOrderPage from '../features/orders/CreateOrderPage';
-import EditOrderPage from '../features/orders/EditOrderPage';
-import NotFoundPage from './NotFoundPage';
-import LoginPage from '../features/auth/LoginPage';
-import RequireAuth from '../features/auth/RequireAuth';
-import HomePage from '../features/home/HomePage';
-import ProfilePage from '../features/profile/ProfilePage';
-import PlaceholderPage from '../components/ui/PlaceholderPage';
-import { PLACEHOLDER_PATHS } from '../lib/navigation';
-import AddressesPage from '../features/addresses/AddressesPage';
-import '../features/addresses/customer.css';
-import PackageFormPreviewPage from '../features/packages/PackageFormPreviewPage';
-import StationsPage from '../features/stations/StationsPage';
+import { Routes, Route } from "react-router-dom";
+import AuthLayout from "../layouts/AuthLayout";
+import StationMonitoringPage from "../features/stations/StationMonitoringPage";
+import MainLayout from "../layouts/MainLayout";
+import StationParcelsPage from "../features/orders/StationParcelsPage";
+import StationReceiptPage from "../features/orders/StationReceiptPage";
+import OrdersPage from "../features/orders/OrdersPage";
+import DispatchRequestsPage from "../features/orders/DispatchRequestsPage";
+import OrderDetailPage from "../features/orders/OrderDetailPage";
+import CreateOrderPage from "../features/orders/CreateOrderPage";
+import EditOrderPage from "../features/orders/EditOrderPage";
+import NotFoundPage from "./NotFoundPage";
+import LoginPage from "../features/auth/LoginPage";
+import RegisterPage from "../features/auth/RegisterPage";
+import RequireAuth from "../features/auth/RequireAuth";
+import RequireRole from "../features/auth/RequireRole";
+import AccountsPage from "../features/admin/AccountsPage";
+import RolesPage from "../features/admin/RolesPage";
+import SettingsPage from "../features/admin/SettingsPage";
+import HomePage from "../features/home/HomePage";
+import ProfilePage from "../features/profile/ProfilePage";
+import PlaceholderPage from "../components/ui/PlaceholderPage";
+import { PLACEHOLDER_PATHS } from "../lib/navigation";
+import AddressesPage from "../features/addresses/AddressesPage";
+import "../features/addresses/customer.css";
+import PackageFormPreviewPage from "../features/packages/PackageFormPreviewPage";
+import StationsPage from "../features/stations/StationsPage";
 // Task 2.6 sẽ bọc thêm RoleRoute (chặn theo vai trò) bên trong nhóm RequireAuth.
 export default function AppRouter() {
   return (
     <Routes>
       <Route element={<AuthLayout />}>
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
       </Route>
 
       <Route element={<RequireAuth />}>
@@ -40,13 +47,24 @@ export default function AppRouter() {
           <Route path="/stations" element={<StationsPage />} />
           <Route path="/station/parcels" element={<StationParcelsPage />} />
           <Route path="/station/parcels/:id" element={<StationReceiptPage />} />
+          <Route path="/stations" element={<StationsPage />} />
+          <Route
+            path="/stations/monitoring"
+            element={<StationMonitoringPage />}
+          />
+          {/* FR-02: chỉ SYSTEM_ADMIN. Backend vẫn kiểm tra quyền ở mọi API. */}
+          <Route element={<RequireRole roles={["SYSTEM_ADMIN"]} />}>
+            <Route path="/admin/users" element={<AccountsPage />} />
+            <Route path="/admin/roles" element={<RolesPage />} />
+            <Route path="/admin/settings" element={<SettingsPage />} />
+          </Route>
           {import.meta.env.DEV && (
             <Route
               path="/dev/package-form"
               element={<PackageFormPreviewPage />}
             />
           )}
-          {PLACEHOLDER_PATHS.filter((p) => p !== '/deliveries/new').map((p) => (
+          {PLACEHOLDER_PATHS.filter((p) => p !== "/deliveries/new").map((p) => (
             <Route key={p} path={p} element={<PlaceholderPage />} />
           ))}
         </Route>

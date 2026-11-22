@@ -1,3 +1,4 @@
+import { Bell } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { realtime, type RealtimeState } from "../../lib/realtime";
@@ -39,7 +40,7 @@ export default function NotificationBell({ userId }: { userId: string }) {
         aria-label={`Thông báo${unreadCount ? `, ${unreadCount} chưa đọc` : ""}`}
         onClick={() => setOpen((v) => !v)}
       >
-        🔔
+        <Bell size={21} strokeWidth={1.8} />
         {unreadCount > 0 && (
           <span className="notif-badge">
             {unreadCount > 99 ? "99+" : unreadCount}

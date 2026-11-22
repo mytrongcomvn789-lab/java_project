@@ -34,6 +34,9 @@ app:
     access-token-minutes: 15
     refresh-token-days: 7
 
+  api-keys:
+    default-rate-limit-per-minute: 60 # dùng khi POST /v1/admin/api-keys không truyền rateLimitPerMinute
+
   storage:
     endpoint: ${MINIO_ENDPOINT:http://localhost:9000}
     public-endpoint: ${MINIO_PUBLIC_ENDPOINT:${MINIO_ENDPOINT:http://localhost:9000}} # host mà TRÌNH DUYỆT truy cập được
@@ -62,6 +65,13 @@ app:
     slot-minutes: 30 # độ dài một slot; hoạt động 24/24 nên phải chia hết 1440 phút
     min-lead-minutes: 30 # lịch phải bắt đầu sau hiện tại ít nhất ngần này phút
     max-days-ahead: 7 # đặt xa nhất bao nhiêu ngày
+    max-attempts: 3 # 4.8: tối đa số lần giao một đơn (kể cả lần đầu); quá số này chỉ còn hoàn hàng
+    
+  pickup: # 4.7: mã nhận hàng OTP/QR
+    secret: ${APP_PICKUP_SECRET:CHANGE_ME_PICKUP_SECRET_AT_LEAST_32_CHARS} # chạy thật: đặt biến APP_PICKUP_SECRET
+    challenge-ttl: PT30M
+    max-failed-attempts: 5
+    otp-digits: 6
 
 logging:
   level:

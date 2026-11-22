@@ -207,7 +207,7 @@ class RbacIntegrationTest {
         String token = tokens.get(role);
         assertProblem(call("GET", "/v1/not-in-policy", token, null), 403, "FORBIDDEN");
         assertProblem(call("POST", "/v1/users", token, "{}"), 403, "FORBIDDEN");
-        assertProblem(call("POST", "/v1/integration/orders/123/events", token, "{}"), 403, "FORBIDDEN");
+        assertProblem(call("POST", "/v1/integration/orders/123/events", token, "{}"), 401, "API_KEY_UNAUTHORIZED");
         assertProblem(call("DELETE", "/v1/me/permissions", token, null), 403, "FORBIDDEN");
     }
 
@@ -217,7 +217,7 @@ class RbacIntegrationTest {
         assertEquals(200, call("GET", "/v3/api-docs", null, null).statusCode());
         String email = UUID.randomUUID() + "@example.test";
         var registered = call("POST", "/v1/auth/register", null, JSON.writeValueAsString(Map.of(
-                "email", email, "password", PASSWORD, "fullName", "RBAC HTTP test",
+                "email", email, "password", PASSWORD, "fullName", "RBAC HTTP test", "phone", "0901234567",
                 "role", "SYSTEM_ADMIN", "enabled", true)));
         assertEquals(201, registered.statusCode(), registered.body());
         assertEquals("CUSTOMER", json(registered).get("role").asString());

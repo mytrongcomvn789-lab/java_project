@@ -1,4 +1,5 @@
-import { NavLink, Outlet, useNavigate } from "react-router-dom";
+import { LogOut } from "lucide-react";
+import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import NotificationBell from "../features/notifications/NotificationBell";
 import Brand from "../components/ui/Brand";
 import { useAuth } from "../features/auth/AuthContext";
@@ -13,14 +14,40 @@ const initials = (name: string) =>
     .map((w) => w[0]?.toUpperCase())
     .join("");
 
+// Màu avatar "ngẫu nhiên" nhưng ổn định: cùng một người luôn ra cùng một màu.
+const AVATAR_COLORS: [string, string][] = [
+  ["#dfe5d3", "#42582f"],
+  ["#d6e4f0", "#1f4f8a"],
+  ["#f3dfd3", "#9a5200"],
+  ["#e6e0f5", "#4b3a8a"],
+  ["#d6f0ec", "#0f6b6b"],
+  ["#f5dce4", "#9a2f55"],
+  ["#f2ecc8", "#7a6200"],
+];
+const avatarColor = (seed: string) => {
+  let h = 0;
+  for (const ch of seed) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+  const [bg, fg] = AVATAR_COLORS[h % AVATAR_COLORS.length];
+  return { background: bg, color: fg };
+};
+
 // Task 2.8: layout theo vai trò - menu lọc theo role, header hiển thị người dùng + đăng xuất.
 export default function MainLayout() {
   const { user, isDemo, demoLogin, logout } = useAuth();
   const navigate = useNavigate();
+  const { pathname } = useLocation();
 
   if (!user) return null; // RequireAuth đã chặn, chỉ để thỏa kiểu TypeScript
 
   const menu = getMenuForRole(user.role);
+
+  // Chỉ MỘT mục được sáng: mục khớp đường dẫn dài nhất (chính xác hoặc là trang con).
+  // Vd /deliveries/new chỉ sáng "Tạo yêu cầu", còn /deliveries/123 sáng "Đơn giao hàng".
+  const matches = (to: string) =>
+    to === "/" ? pathname === "/" : pathname === to || pathname.startsWith(`${to}/`);
+  const activeTo = menu
+    .filter((i) => matches(i.to))
+    .sort((a, b) => b.to.length - a.to.length)[0]?.to;
 
   const handleLogout = () => {
     logout();
@@ -54,7 +81,9 @@ export default function MainLayout() {
             <NotificationBell userId={user.id} />
           )}
           <div className="user">
-            <span className="avatar">{initials(user.fullName)}</span>
+            <span className="avatar" style={avatarColor(user.id)}>
+              {initials(user.fullName)}
+            </span>
             <span>{user.fullName}</span>
           </div>
           <button
@@ -64,7 +93,7 @@ export default function MainLayout() {
             aria-label="Đăng xuất"
             onClick={handleLogout}
           >
-            ⎋
+            <LogOut size={20} />
           </button>
         </div>
       </header>
@@ -77,10 +106,12 @@ export default function MainLayout() {
               <NavLink
                 key={`${i.to}-${i.label}`}
                 to={i.to}
-                end={i.end}
-                className={({ isActive }) => (isActive ? "active" : "")}
+                end
+                className={i.to === activeTo ? "active" : ""}
               >
-                <span className="nav-icon">{i.icon}</span>
+                <span className="nav-icon">
+                  <i.icon size={19} strokeWidth={1.8} />
+                </span>
                 {i.label}
               </NavLink>
             ))}

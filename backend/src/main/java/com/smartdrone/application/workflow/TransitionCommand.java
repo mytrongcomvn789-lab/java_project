@@ -4,6 +4,7 @@ import java.util.EnumSet;
 import java.util.Set;
 import java.util.UUID;
 
+import com.smartdrone.domain.enums.FailureReason;
 import com.smartdrone.domain.enums.OrderAction;
 import com.smartdrone.domain.enums.RoleName;
 import com.smartdrone.domain.workflow.RequiredField;
@@ -16,8 +17,14 @@ public record TransitionCommand(
         long expectedVersion,
         String reason,            // có thể null
         UUID attemptId,           // có thể null
-        UUID confirmationFileId   // có thể null (ảnh xác nhận giao hàng)
+        UUID confirmationFileId,  // có thể null (ảnh xác nhận giao hàng)
+        FailureReason reasonCode  // có thể null (chỉ dùng cho FAIL, 4.8)
 ) {
+    public TransitionCommand(OrderAction action, UUID actorId, RoleName actorRole, long expectedVersion,
+                             String reason, UUID attemptId, UUID confirmationFileId) {
+        this(action, actorId, actorRole, expectedVersion, reason, attemptId, confirmationFileId, null);
+    }
+
     /** Những dữ liệu bắt buộc mà request này thực sự có. */
     public Set<RequiredField> providedFields() {
         Set<RequiredField> provided = EnumSet.noneOf(RequiredField.class);

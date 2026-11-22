@@ -189,6 +189,15 @@ class OrderScheduleIntegrationTest {
         });
     }
 
+    /** Dua don sang trang thai tiep theo bang cong chuyen trang thai (khong co API tuong ung). */
+    private void moveAs(UUID id, OrderAction action, RoleName role) {
+        new TransactionTemplate(transactionManager).executeWithoutResult(tx -> {
+            var o = orders.findById(id).orElseThrow();
+            transitions.transition(o, new TransitionCommand(action, dispatcher.user().getId(),
+                    role, o.getVersion(), null, null, null));
+        });
+    }
+
     // ---------- cac ca kiem thu ----------
 
     @Test void schedulesApprovedOrderAndHoldsSeat() throws Exception {
@@ -327,23 +336,12 @@ class OrderScheduleIntegrationTest {
         assertStillApproved(id);
     }
 
-    @Test void availabilityIsRestrictedByRoleAndStation() throws Exception {
-        String path = "/stations/" + pickup.getId() + "/availability";
-        assertEquals(403, call("GET", path, customer.token(), null).statusCode());
-        assertEquals(403, call("GET", path, actor(RoleName.SYSTEM_ADMIN).token(), null).statusCode());
-        assertEquals(401, call("GET", path, null, null).statusCode());
-        assertEquals(200, call("GET", path, actor(RoleName.STATION_OPERATOR).token(), null).statusCode());
-        assertEquals(200, call("GET", path, actor(RoleName.LOGISTICS_MANAGER).token(), null).statusCode());
-        assertEquals(200, call("GET", path, dispatcher.token(), null).statusCode());
-        assertEquals(404, call("GET", "/stations/" + UUID.randomUUID() + "/availability",
-                dispatcher.token(), null).statusCode());
-    }
-
     @Test void reschedulingAfterFailureReleasesPreviousSeat() throws Exception {
         Instant slot = slotAfter(Duration.ofHours(2));
         UUID id = approvedOrder(tight, dropoff);
         assertEquals(200, schedule(dispatcher, id, 1, slot).statusCode()); // phien ban 2
-        failOrder(id);                                                      // phien ban 3, lan thu 1 van ACTIVE
+        failOrder(id);                                                      // phien ban 3, lan thu 1 da RELEASED
+        assertEquals(0, active(id));
 
         var r = schedule(dispatcher, id, 3, slot);                          // cung slot, tram chi con 1 cho
         assertEquals(200, r.statusCode(), r.body());
@@ -402,5 +400,114 @@ class OrderScheduleIntegrationTest {
             assertEquals("SLOT_FULL", json(loser).get("code").asString());
         }
         assertEquals(1, active(a) + active(b));
+    }
+
+    @Test void failedOrderReleasesSeatImmediately() throws Exception {
+        Instant slot = slotAfter(Duration.ofHours(2));
+        UUID a = approvedOrder(tight, dropoff);                 // tight chi co 1 cho
+        assertEquals(200, schedule(dispatcher, a, 1, slot).statusCode());
+        assertEquals(1, slotView(tight.getId(), slot).get("used").asInt());
+
+        failOrder(a);
+
+        var list = attempts.findByOrderIdOrderByAttemptNoAsc(a);
+        assertEquals(AttemptStatus.RELEASED, list.get(0).getStatus());
+        assertNotNull(list.get(0).getReleasedAt());
+        assertEquals(0, active(a));
+        var view = slotView(tight.getId(), slot);
+        assertEquals(0, view.get("used").asInt());
+        assertEquals(1, view.get("free").asInt());
+
+        // Don khac dat duoc dung slot vua tra
+        UUID b = approvedOrder(tight, dropoff);
+        assertEquals(200, schedule(dispatcher, b, 1, slot).statusCode());
+    }
+
+    @Test void rollbackOfFailKeepsSeatActive() throws Exception {
+        Instant slot = slotAfter(Duration.ofHours(2));
+        UUID id = approvedOrder(tight, dropoff);
+        assertEquals(200, schedule(dispatcher, id, 1, slot).statusCode());
+
+        new TransactionTemplate(transactionManager).executeWithoutResult(tx -> {
+            var o = orders.findById(id).orElseThrow();
+            transitions.transition(o, new TransitionCommand(OrderAction.FAIL, dispatcher.user().getId(),
+                    RoleName.DISPATCHER, o.getVersion(), "Thu nghiem rollback", null, null));
+            assertEquals(0, active(id));      // trong transaction: da tra cho
+            tx.setRollbackOnly();             // huy toan bo
+        });
+
+        assertEquals(1, active(id));          // sau rollback: cho van duoc giu
+        assertEquals(OrderStatus.SCHEDULED, orders.findById(id).orElseThrow().getStatus());
+    }
+
+    @Test void failFromInTransitReleasesSeat() throws Exception {
+        Instant slot = slotAfter(Duration.ofHours(2));
+        UUID id = approvedOrder(tight, dropoff);
+        assertEquals(200, schedule(dispatcher, id, 1, slot).statusCode());
+        moveAs(id, OrderAction.RECEIVE, RoleName.STATION_OPERATOR);   // SCHEDULED -> PREPARING
+        moveAs(id, OrderAction.DISPATCH, RoleName.STATION_OPERATOR);  // PREPARING -> IN_TRANSIT
+        assertEquals(1, active(id));                                  // dang di giao van giu cho
+
+        failOrder(id);                                                // IN_TRANSIT -> FAILED
+
+        assertEquals(0, active(id));
+        assertEquals(1, slotView(tight.getId(), slot).get("free").asInt());
+    }
+
+    @Test void historyRecordsAttemptIdAndRetryUsesNewAttempt() throws Exception {
+        Instant slot = slotAfter(Duration.ofHours(2));
+        UUID id = approvedOrder(tight, dropoff);
+        assertEquals(200, schedule(dispatcher, id, 1, slot).statusCode());  // phien ban 2
+        failOrder(id);                                                      // phien ban 3
+        assertEquals(200, schedule(dispatcher, id, 3, slot).statusCode());  // phien ban 4
+
+        var list = attempts.findByOrderIdOrderByAttemptNoAsc(id);
+        assertEquals(2, list.size());
+        assertNotEquals(list.get(0).getId(), list.get(1).getId());
+
+        var scheduled = history.findByOrderIdOrderByOrderVersionAsc(id).stream()
+                .filter(h -> h.getAction() == OrderAction.SCHEDULE).toList();
+        assertEquals(2, scheduled.size());
+        assertEquals(list.get(0).getId(), scheduled.get(0).getAttemptId());
+        assertEquals(list.get(1).getId(), scheduled.get(1).getAttemptId());
+    }
+    
+    @Test void availabilityIsRestrictedByRole() throws Exception {
+        String path = "/stations/" + pickup.getId() + "/availability";
+        assertEquals(403, call("GET", path, customer.token(), null).statusCode());
+        assertEquals(403, call("GET", path, actor(RoleName.SYSTEM_ADMIN).token(), null).statusCode());
+        assertEquals(401, call("GET", path, null, null).statusCode());
+        assertEquals(200, call("GET", path, dispatcher.token(), null).statusCode());
+        assertEquals(404, call("GET", "/stations/" + UUID.randomUUID() + "/availability",
+                dispatcher.token(), null).statusCode());
+    }
+
+    @Test void availabilityIsLimitedToAssignedStations() throws Exception {
+        String pickupPath = "/stations/" + pickup.getId() + "/availability";
+        String tightPath = "/stations/" + tight.getId() + "/availability";
+
+        // Khong duoc phan cong tram nao thi khong thay tram nao
+        assertEquals(404, call("GET", pickupPath, other.token(), null).statusCode());
+        assertEquals(404, call("GET", pickupPath, actor(RoleName.STATION_OPERATOR).token(), null).statusCode());
+        assertEquals(404, call("GET", pickupPath, actor(RoleName.LOGISTICS_MANAGER).token(), null).statusCode());
+
+        // Duoc phan cong thi xem dung tram do
+        var operator = actor(RoleName.STATION_OPERATOR);
+        assign(operator, pickup);
+        assertEquals(200, call("GET", pickupPath, operator.token(), null).statusCode());
+        assertEquals(404, call("GET", tightPath, operator.token(), null).statusCode());
+    }
+
+    @Test void availabilityShowsPartnerStationOfOrderInScope() throws Exception {
+        // Dieu phoi vien chi duoc gan tram gui; tram nhan cua don la tram khac
+        var d = actor(RoleName.DISPATCHER);
+        assign(d, pickup);
+        String partnerPath = "/stations/" + dropoff.getId() + "/availability";
+        assertEquals(404, call("GET", partnerPath, d.token(), null).statusCode()); // chua co don noi hai tram
+
+        seedOrder(pickup, dropoff);                                                // don trong pham vi cua d
+        assertEquals(200, call("GET", partnerPath, d.token(), null).statusCode()); // gio xem duoc tram nhan
+        assertEquals(404, call("GET", "/stations/" + tight.getId() + "/availability",
+                d.token(), null).statusCode());                                    // tram khong lien quan van bi chan
     }
 }

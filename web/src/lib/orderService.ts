@@ -31,6 +31,7 @@ export interface StatusHistory {
   actorRole: string | null;
   source: string;
   reason: string | null;
+  reasonCode?: string | null;
   occurredAt: string;
 }
 export interface OrderDetail {
