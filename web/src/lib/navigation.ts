@@ -323,6 +323,7 @@ export const PLACEHOLDER_PATHS: string[] = Array.from(
           "/admin/users",
           "/admin/roles",
           "/admin/settings",
+          "/admin/audit-log",
         ].includes(p),
     ),
   ),
