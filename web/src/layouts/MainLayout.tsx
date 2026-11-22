@@ -14,6 +14,23 @@ const initials = (name: string) =>
     .map((w) => w[0]?.toUpperCase())
     .join("");
 
+// Màu avatar "ngẫu nhiên" nhưng ổn định: cùng một người luôn ra cùng một màu.
+const AVATAR_COLORS: [string, string][] = [
+  ["#dfe5d3", "#42582f"],
+  ["#d6e4f0", "#1f4f8a"],
+  ["#f3dfd3", "#9a5200"],
+  ["#e6e0f5", "#4b3a8a"],
+  ["#d6f0ec", "#0f6b6b"],
+  ["#f5dce4", "#9a2f55"],
+  ["#f2ecc8", "#7a6200"],
+];
+const avatarColor = (seed: string) => {
+  let h = 0;
+  for (const ch of seed) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+  const [bg, fg] = AVATAR_COLORS[h % AVATAR_COLORS.length];
+  return { background: bg, color: fg };
+};
+
 // Task 2.8: layout theo vai trò - menu lọc theo role, header hiển thị người dùng + đăng xuất.
 export default function MainLayout() {
   const { user, isDemo, demoLogin, logout } = useAuth();
@@ -64,7 +81,9 @@ export default function MainLayout() {
             <NotificationBell userId={user.id} />
           )}
           <div className="user">
-            <span className="avatar">{initials(user.fullName)}</span>
+            <span className="avatar" style={avatarColor(user.id)}>
+              {initials(user.fullName)}
+            </span>
             <span>{user.fullName}</span>
           </div>
           <button

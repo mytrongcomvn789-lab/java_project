@@ -3,6 +3,8 @@ package com.smartdrone.domain.entity;
 import java.time.Instant;
 import java.util.UUID;
 
+import org.hibernate.annotations.Nationalized;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -29,6 +31,8 @@ public class User {
     @Column(name = "password_hash", nullable = false)
     private String passwordHash;
 
+    // @Nationalized => nvarchar: lưu được tiếng Việt có dấu (varchar làm "Nhật" thành "Nh?t").
+    @Nationalized
     @Column(name = "full_name", nullable = false, length = 150)
     private String fullName;
 
