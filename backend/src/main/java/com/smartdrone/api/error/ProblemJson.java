@@ -2,9 +2,9 @@ package com.smartdrone.api.error;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.UUID;
 
 import com.smartdrone.application.common.ErrorCode;
+import com.smartdrone.application.common.TraceContext;
 
 import jakarta.servlet.http.HttpServletResponse;
 
@@ -25,7 +25,7 @@ public final class ProblemJson {
                 + ",\"detail\":\"" + escape(detail) + "\""
                 + ",\"code\":\"" + code.name() + "\""
                 + ",\"message\":\"" + escape(detail) + "\""
-                + ",\"traceId\":\"" + UUID.randomUUID() + "\"}";
+                + ",\"traceId\":\"" + TraceContext.current() + "\"}";
 
         response.setStatus(code.getStatus().value());
         response.setContentType("application/problem+json");
