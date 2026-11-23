@@ -7,6 +7,7 @@ import java.util.UUID;
 
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.CacheControl;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
@@ -16,9 +17,11 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.smartdrone.application.statistics.DateBasis;
+import com.smartdrone.application.statistics.ReportExportService;
 import com.smartdrone.application.statistics.StatisticsService;
 import com.smartdrone.application.statistics.dto.DailyOrderStats;
 import com.smartdrone.application.statistics.dto.OrderStatsSummary;
+import com.smartdrone.application.statistics.dto.ReportFile;
 import com.smartdrone.application.statistics.dto.StationLoadStat;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -36,8 +39,12 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @SecurityRequirement(name = "bearerAuth")
 public class StatisticsController {
     private final StatisticsService service;
+    private final ReportExportService exportService;
 
-    public StatisticsController(StatisticsService service) { this.service = service; }
+    public StatisticsController(StatisticsService service, ReportExportService exportService) {
+        this.service = service;
+        this.exportService = exportService;
+    }
 
     @GetMapping("/orders/summary")
     @Operation(summary = "Số đơn theo nhóm/trạng thái, tỷ lệ giao-hoàn-hủy, số attempt và thời gian giao. "
@@ -70,11 +77,44 @@ public class StatisticsController {
         return noStore(service.stationLoad(actor(auth), stationId, at));
     }
 
+    @GetMapping("/orders/export.xlsx")
+    @Operation(summary = "Tải báo cáo Excel thống kê theo cùng bộ lọc của summary/daily và dữ liệu tải trạm")
+    public ResponseEntity<byte[]> exportExcel(JwtAuthenticationToken auth,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
+            @RequestParam(required = false) DateBasis dateBasis,
+            @RequestParam(required = false) UUID stationId,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant at) {
+        var period = service.period(from, to, dateBasis, stationId);
+        return download(exportService.excel(actor(auth), period, at));
+    }
+
+    @GetMapping("/orders/export.pdf")
+    @Operation(summary = "Tải báo cáo PDF thống kê theo cùng bộ lọc của summary/daily và dữ liệu tải trạm")
+    public ResponseEntity<byte[]> exportPdf(JwtAuthenticationToken auth,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
+            @RequestParam(required = false) DateBasis dateBasis,
+            @RequestParam(required = false) UUID stationId,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant at) {
+        var period = service.period(from, to, dateBasis, stationId);
+        return download(exportService.pdf(actor(auth), period, at));
+    }
+
     private static UUID actor(JwtAuthenticationToken auth) {
         return UUID.fromString(auth.getName());
     }
 
     private static <T> ResponseEntity<T> noStore(T body) {
         return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(body);
+    }
+
+    private static ResponseEntity<byte[]> download(ReportFile file) {
+        return ResponseEntity.ok()
+                .cacheControl(CacheControl.noStore())
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + file.filename() + "\"")
+                .contentType(file.mediaType())
+                .contentLength(file.content().length)
+                .body(file.content());
     }
 }

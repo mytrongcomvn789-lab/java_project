@@ -25,6 +25,7 @@ import AddressesPage from "../features/addresses/AddressesPage";
 import "../features/addresses/customer.css";
 import PackageFormPreviewPage from "../features/packages/PackageFormPreviewPage";
 import StationsPage from "../features/stations/StationsPage";
+import ReportsPage from "../features/reports/ReportsPage";
 // Task 2.6 sẽ bọc thêm RoleRoute (chặn theo vai trò) bên trong nhóm RequireAuth.
 export default function AppRouter() {
   return (
@@ -52,6 +53,9 @@ export default function AppRouter() {
             path="/stations/monitoring"
             element={<StationMonitoringPage />}
           />
+          <Route element={<RequireRole roles={["LOGISTICS_MANAGER"]} />}>
+            <Route path="/reports" element={<ReportsPage />} />
+          </Route>
           {/* FR-02: chỉ SYSTEM_ADMIN. Backend vẫn kiểm tra quyền ở mọi API. */}
           <Route element={<RequireRole roles={["SYSTEM_ADMIN"]} />}>
             <Route path="/admin/users" element={<AccountsPage />} />
