@@ -106,6 +106,8 @@ Cả ba: `GET`, chỉ `LOGISTICS_MANAGER`, header `Authorization: Bearer <access
 |---|---|---|
 | `/v1/statistics/orders/summary` | `from`, `to`, `dateBasis`, `stationId` | Số đơn theo nhóm/trạng thái, tỷ lệ, attempt, thời gian giao |
 | `/v1/statistics/orders/daily` | như trên | Chuỗi theo ngày (đủ mọi ngày trong khoảng, ngày không có đơn = 0) |
+| `/v1/statistics/orders/export.xlsx` | `from`, `to`, `dateBasis`, `stationId`, `at` | Tải file `.xlsx`, gồm sheet thông tin, tổng hợp, theo ngày và tải trạm |
+| `/v1/statistics/orders/export.pdf` | như trên | Tải file `.pdf` Unicode, nhiều trang, gồm tổng hợp, theo ngày và tải trạm |
 | `/v1/statistics/stations/load` | `stationId`, `at` (Instant ISO-8601, tùy chọn) | Tải trạm theo mục 7; `at` được làm tròn xuống đầu khung giờ chứa nó |
 
 ### `GET /v1/statistics/orders/summary?from=2026-11-10&to=2026-11-10`

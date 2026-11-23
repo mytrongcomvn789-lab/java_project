@@ -121,6 +121,13 @@ class StatisticsIntegrationTest {
         return JSON.readTree(r.body());
     }
 
+    private HttpResponse<byte[]> getBytes(String path, String token) throws Exception {
+        var request = HttpRequest.newBuilder(URI.create("http://localhost:" + port + "/api/v1" + path))
+                .timeout(Duration.ofSeconds(30)).GET();
+        if (token != null) request.header("Authorization", "Bearer " + token);
+        return http.send(request.build(), HttpResponse.BodyHandlers.ofByteArray());
+    }
+
     private Station station(String name, int capacity) {
         return stations.saveAndFlush(new Station(name, 10.77, 106.70, capacity));
     }
@@ -422,6 +429,29 @@ class StatisticsIntegrationTest {
 
         var filtered = ok("/statistics/stations/load?stationId=" + l3.getId(), both);
         assertEquals(0, filtered.size()); // ngoài phạm vi
+    }
+
+    // ---------- xuất báo cáo 5.3 ----------
+
+    @Test
+    void excelAndPdfOpenAndWrongRoleIsBlocked() throws Exception {
+        var data = seed();
+        String filters = "/statistics/orders/export.xlsx?from=2026-11-10&to=2026-11-10";
+        var excel = getBytes(filters, data.manager().token());
+        assertEquals(200, excel.statusCode());
+        assertNotNull(excel.headers().firstValue("content-disposition").orElse(null));
+        assertTrue(excel.body().length > 100);
+        assertEquals("PK", new String(excel.body(), 0, 2));
+
+        String pdfFilters = "/statistics/orders/export.pdf?from=2026-11-10&to=2026-11-10";
+        var pdf = getBytes(pdfFilters, data.manager().token());
+        assertEquals(200, pdf.statusCode());
+        assertTrue(pdf.body().length > 100);
+        assertEquals("%PDF", new String(pdf.body(), 0, 4));
+
+        var customer = identity(RoleName.CUSTOMER);
+        assertEquals(403, getBytes(filters, customer.token()).statusCode());
+        assertEquals(401, getBytes(filters, null).statusCode());
     }
 
     // ---------- thời gian đáp ứng ----------
