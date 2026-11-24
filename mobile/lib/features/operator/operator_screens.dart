@@ -68,7 +68,8 @@ class OperatorHomeScreen extends ConsumerWidget {
                     state: pickups,
                     emptyText: 'Không có đơn nào đang chờ khách nhận tại trạm của bạn.',
                     onRefresh: ref.read(pickupListProvider.notifier).reload,
-                    onLoadMore: () async {}),
+                    onLoadMore: () async {},
+                    onTap: (o) => context.push('/operator/pickups/${o.id}')),
               ])),
             ])));
   }
