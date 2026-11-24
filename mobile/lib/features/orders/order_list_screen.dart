@@ -53,6 +53,11 @@ class _CustomerHomeScreenState extends ConsumerState<CustomerHomeScreen> {
                   label: Text('$unread', key: const Key('unread-count')),
                   child: const Icon(Icons.notifications_outlined))),
           IconButton(
+              key: const Key('open-addresses'),
+              tooltip: 'Địa chỉ của tôi',
+              onPressed: () => context.push('/customer/addresses'),
+              icon: const Icon(Icons.location_on_outlined)),
+          IconButton(
               tooltip: 'Hồ sơ',
               onPressed: () => context.go('/profile'),
               icon: const Icon(Icons.account_circle_outlined)),
