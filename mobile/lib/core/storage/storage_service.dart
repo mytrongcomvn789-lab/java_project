@@ -1,32 +1,48 @@
+import 'dart:convert';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
-class StorageService {
-  static const FlutterSecureStorage _storage =
-      FlutterSecureStorage();
+class Tokens {
+  const Tokens(this.access, this.refresh);
+  final String access;
+  final String refresh;
+  factory Tokens.fromJson(Map<String, dynamic> json) =>
+      Tokens(json['accessToken'] as String, json['refreshToken'] as String);
+  Map<String, dynamic> toJson() =>
+      {'accessToken': access, 'refreshToken': refresh};
+}
 
-  static Future<void> saveAccessToken(String token) async {
-    await _storage.write(
-      key: 'access_token',
-      value: token,
-    );
+abstract class TokenStore {
+  Future<Tokens?> read();
+  Future<void> write(Tokens tokens);
+  Future<void> clear();
+}
+
+/// Write a rotated pair in one storage entry, never a half-updated pair.
+class SecureTokenStore implements TokenStore {
+  final FlutterSecureStorage _storage = const FlutterSecureStorage();
+  static const _key = 'smartdrone.session.v1';
+  @override
+  Future<Tokens?> read() async {
+    final raw = await _storage.read(key: _key);
+    if (raw == null) return null;
+    try {
+      return Tokens.fromJson(jsonDecode(raw) as Map<String, dynamic>);
+    } on FormatException {
+      await clear();
+      return null;
+    } on TypeError {
+      await clear();
+      return null;
+    }
   }
 
-  static Future<String?> getAccessToken() async {
-    return await _storage.read(key: 'access_token');
-  }
-
-  static Future<void> saveRefreshToken(String token) async {
-    await _storage.write(
-      key: 'refresh_token',
-      value: token,
-    );
-  }
-
-  static Future<String?> getRefreshToken() async {
-    return await _storage.read(key: 'refresh_token');
-  }
-
-  static Future<void> clearTokens() async {
+  @override
+  Future<void> write(Tokens tokens) =>
+      _storage.write(key: _key, value: jsonEncode(tokens.toJson()));
+  @override
+  Future<void> clear() async {
+    await _storage.delete(key: _key);
+    // Remove legacy keys from the original skeleton.
     await _storage.delete(key: 'access_token');
     await _storage.delete(key: 'refresh_token');
   }
