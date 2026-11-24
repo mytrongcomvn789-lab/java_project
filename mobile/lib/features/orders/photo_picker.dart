@@ -1,4 +1,5 @@
 import 'dart:typed_data';
+import 'package:flutter/services.dart' show PlatformException;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -15,6 +16,15 @@ class PickedPhoto {
 }
 
 typedef PhotoPicker = Future<PickedPhoto?> Function(PhotoSource source);
+
+/// Người dùng từ chối (hoặc hệ điều hành chặn) quyền camera / thư viện ảnh. Phân biệt với
+/// các lỗi khác để màn hình hướng dẫn cấp quyền thay vì báo lỗi chung.
+class PhotoPermissionDenied implements Exception {
+  const PhotoPermissionDenied(this.source);
+  final PhotoSource source;
+  @override
+  String toString() => 'PhotoPermissionDenied($source)';
+}
 
 /// Loại ảnh server cho phép (application.yml: allowed-content-types).
 const allowedPhotoTypes = {'image/jpeg', 'image/png', 'image/webp'};
@@ -33,13 +43,22 @@ String? contentTypeOf(PickedPhoto p) {
 }
 
 Future<PickedPhoto?> _pickWithImagePicker(PhotoSource source) async {
-  final file = await ImagePicker().pickImage(
-      source: source == PhotoSource.camera ? ImageSource.camera : ImageSource.gallery,
-      maxWidth: 1600, // thu nhỏ để tải nhanh, không lộ ảnh gốc quá lớn
-      imageQuality: 85);
-  if (file == null) return null; // người dùng hủy
-  return PickedPhoto(
-      name: file.name, bytes: await file.readAsBytes(), contentType: file.mimeType);
+  try {
+    final file = await ImagePicker().pickImage(
+        source: source == PhotoSource.camera ? ImageSource.camera : ImageSource.gallery,
+        maxWidth: 1600, // thu nhỏ để tải nhanh, không lộ ảnh gốc quá lớn
+        imageQuality: 85);
+    if (file == null) return null; // người dùng hủy
+    return PickedPhoto(
+        name: file.name, bytes: await file.readAsBytes(), contentType: file.mimeType);
+  } on PlatformException catch (e) {
+    // Mã lỗi của image_picker khi quyền bị từ chối (Android: camera_access_denied khi
+    // manifest khai báo CAMERA; iOS: camera_access_denied / photo_access_denied).
+    if (e.code == 'camera_access_denied' || e.code == 'photo_access_denied') {
+      throw PhotoPermissionDenied(source);
+    }
+    rethrow;
+  }
 }
 
 /// Có thể thay trong test để không mở bộ chọn ảnh thật.

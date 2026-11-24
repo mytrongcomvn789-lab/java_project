@@ -20,6 +20,10 @@ enum FailureKind {
   fileTooLarge, // 413
   fileTypeNotAllowed, // 415
   rateLimited, // 429
+  pickupCodeInvalid, // 422 PICKUP_CODE_INVALID: mã OTP/QR không đúng
+  pickupCodeExpired, // 410 PICKUP_CODE_EXPIRED: khách cần mở lại mã
+  pickupCodeLocked, // 429 PICKUP_CODE_LOCKED: nhập sai quá số lần
+  pickupCodeUsed, // 409 PICKUP_CODE_USED
   storageUnavailable, // 503 STORAGE_UNAVAILABLE
   server, // 5xx còn lại
   unknown,
@@ -39,6 +43,26 @@ class ApiFailure implements Exception {
 
   /// Không chắc server đã nhận yêu cầu hay chưa (chỉ gặp khi hết thời gian chờ).
   bool get outcomeUnknown => kind == FailureKind.timeout;
+
+  /// Lỗi tạm thời: gửi lại cùng yêu cầu có thể thành công mà không cần người dùng sửa gì
+  /// (mất mạng, hết thời gian chờ, máy chủ/kho ảnh lỗi, quá nhiều yêu cầu). Mã nhận hàng
+  /// bị khóa (429 PICKUP_CODE_LOCKED) KHÔNG nằm trong nhóm này. Dùng cho hàng đợi retry của 6.5.
+  bool get isRetryable => switch (kind) {
+        FailureKind.offline ||
+        FailureKind.timeout ||
+        FailureKind.server ||
+        FailureKind.storageUnavailable ||
+        FailureKind.rateLimited =>
+          true,
+        _ => false,
+      };
+
+  /// Mã nhận hàng không dùng được: người dùng phải nhập lại hoặc nhờ khách mở lại mã.
+  bool get isPickupCodeProblem =>
+      kind == FailureKind.pickupCodeInvalid ||
+      kind == FailureKind.pickupCodeExpired ||
+      kind == FailureKind.pickupCodeLocked ||
+      kind == FailureKind.pickupCodeUsed;
 
   @override
   String toString() => 'ApiFailure($kind, $status, $code, $message)';
@@ -91,6 +115,10 @@ ApiFailure toApiFailure(Object error) {
       return make(FailureKind.notFound,
           'Không tìm thấy dữ liệu hoặc bạn không có quyền xem.');
     case 409:
+      if (code == 'PICKUP_CODE_USED') {
+        return make(FailureKind.pickupCodeUsed,
+            'Mã nhận hàng đã được sử dụng.');
+      }
       if (code == 'INVALID_STATE_TRANSITION') {
         return make(FailureKind.stateConflict,
             'Đơn không còn ở trạng thái cho phép thao tác này.');
@@ -104,6 +132,12 @@ ApiFailure toApiFailure(Object error) {
     case 412:
       return make(FailureKind.versionConflict,
           'Đơn vừa được cập nhật. Vui lòng tải lại.');
+    case 410:
+      return make(FailureKind.pickupCodeExpired,
+          'Mã nhận hàng đã hết hạn. Nhờ khách mở lại mã.');
+    case 422:
+      return make(FailureKind.pickupCodeInvalid,
+          'Mã nhận hàng không đúng hoặc không còn hiệu lực.');
     case 413:
       return make(FailureKind.fileTooLarge, 'Ảnh vượt quá dung lượng cho phép.');
     case 415:
@@ -112,6 +146,10 @@ ApiFailure toApiFailure(Object error) {
       return make(FailureKind.preconditionRequired,
           'Thiếu thông tin phiên bản. Vui lòng tải lại.');
     case 429:
+      if (code == 'PICKUP_CODE_LOCKED') {
+        return make(FailureKind.pickupCodeLocked,
+            'Mã nhận hàng đã bị khóa do nhập sai quá số lần. Nhờ khách mở lại mã.');
+      }
       return make(FailureKind.rateLimited,
           'Quá nhiều yêu cầu. Vui lòng thử lại sau.');
     case 503:
@@ -141,4 +179,17 @@ String newIdempotencyKey([Random? random]) {
       .map((e) => e.toRadixString(16).padLeft(2, '0'))
       .join();
   return '${hex(0, 4)}-${hex(4, 6)}-${hex(6, 8)}-${hex(8, 10)}-${hex(10, 16)}';
+}
+
+/// Chạy một lời gọi API và đổi mọi [DioException] thành [ApiFailure]. Dữ liệu trả về sai
+/// định dạng cũng thành [ApiFailure] (không làm sập màn hình).
+Future<T> guardApi<T>(Future<T> Function() call) async {
+  try {
+    return await call();
+  } on DioException catch (e) {
+    throw toApiFailure(e);
+  } on TypeError {
+    throw const ApiFailure(
+        FailureKind.unknown, 'Dữ liệu máy chủ trả về không đúng định dạng.');
+  }
 }

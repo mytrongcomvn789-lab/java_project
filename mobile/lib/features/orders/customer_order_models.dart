@@ -267,9 +267,13 @@ class Station {
       required this.name,
       required this.latitude,
       required this.longitude,
-      required this.status});
+      required this.status,
+      this.address});
   final String id, name, status;
   final double latitude, longitude;
+
+  /// Địa chỉ dễ đọc của trạm; có thể trống với trạm tạo trước khi có cột này.
+  final String? address;
 
   /// Chỉ trạm ACTIVE mới chọn làm trạm gửi/nhận được (server vẫn kiểm tra lại).
   bool get isActive => status == 'ACTIVE';
@@ -278,6 +282,7 @@ class Station {
       id: json['id'] as String,
       name: json['name'] as String? ?? '',
       status: json['status'] as String? ?? '',
+      address: json['address'] as String?,
       latitude: (json['latitude'] as num?)?.toDouble() ?? 0,
       longitude: (json['longitude'] as num?)?.toDouble() ?? 0);
 }
