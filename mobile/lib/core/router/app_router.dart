@@ -5,6 +5,7 @@ import '../../features/addresses/address_screens.dart';
 import '../../features/auth/session.dart';
 import '../../features/auth/screens.dart';
 import '../../features/notifications/notification_screens.dart';
+import '../../features/operator/operator_screens.dart';
 import '../../features/orders/order_detail_screen.dart';
 import '../../features/orders/order_form_screen.dart';
 import '../../features/orders/order_list_screen.dart';
@@ -60,7 +61,13 @@ final routerProvider = Provider<GoRouter>((ref) {
           ]),
       GoRoute(
           path: '/operator',
-          builder: (_, __) => const WorkspaceScreen(operator: true)),
+          builder: (_, __) => const OperatorHomeScreen(),
+          routes: [
+            GoRoute(
+                path: 'receipts/:id',
+                builder: (_, state) =>
+                    ReceiptDetailScreen(orderId: state.pathParameters['id']!)),
+          ]),
       GoRoute(path: '/profile', builder: (_, __) => const ProfileScreen()),
       GoRoute(
           path: '/unsupported', builder: (_, __) => const UnsupportedScreen()),
