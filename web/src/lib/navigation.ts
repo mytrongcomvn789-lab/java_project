@@ -208,6 +208,20 @@ export const NAV_ITEMS: NavItem[] = [
 
   // ===== Quản lý hậu cần =====
   {
+    to: "/dashboard",
+    label: "Dashboard",
+    icon: LayoutDashboard,
+    roles: ["LOGISTICS_MANAGER"],
+    code: "FR-09",
+    summary: "Tổng quan hoạt động giao hàng với biểu đồ và bộ lọc thời gian.",
+    features: [
+      "Xem tổng quan số đơn theo thời gian",
+      "Biểu đồ số đơn theo ngày và trạng thái",
+      "Thống kê tỷ lệ giao, hoàn, hủy",
+      "Theo dõi tải trạm trong khung giờ hiện tại",
+    ],
+  },
+  {
     to: "/reports",
     label: "Thống kê & báo cáo",
     icon: BarChart3,
@@ -324,6 +338,7 @@ export const PLACEHOLDER_PATHS: string[] = Array.from(
           "/admin/roles",
           "/admin/settings",
           "/admin/audit-log",
+          "/dashboard",
         ].includes(p),
     ),
   ),
