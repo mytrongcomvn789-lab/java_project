@@ -206,3 +206,7 @@ Toàn bộ backend: 654 test, 0 lỗi, 9 skip (bộ test có sẵn từ trước
 
 - Nghiệm thu bằng dữ liệu vận hành thật sau khi giai đoạn 4 bàn giao; xem execution plan trên SQL Server.
 - 5.2 (dashboard) và 5.3 (báo cáo) chỉ gọi các endpoint này, không tự tính lại số liệu.
+
+## 14. Dashboard web (5.2)
+
+Trang `/dashboard` (chỉ `LOGISTICS_MANAGER`) gọi `summary`, `daily` và `stations/load` ở mục 9 với cùng một bộ lọc; web không tự tính lại số liệu, chỉ định dạng hiển thị. Tải trạm là **một khung giờ** (mặc định khung giờ hiện tại), không theo khoảng ngày đang lọc. Ngày mặc định và các nút chọn nhanh tính theo `Asia/Ho_Chi_Minh`. Kiểm chứng: `docs/07-testing/APDDMP-39-dashboard-verification.md`.

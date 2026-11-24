@@ -1,0 +1,245 @@
+.dashboard-filters {
+  margin-bottom: 20px;
+}
+
+.dashboard-filter-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.dashboard-filter-row label {
+  display: grid;
+  gap: 6px;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.dashboard-filter-row input,
+.dashboard-filter-row select {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.dashboard-filter-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.dashboard-quick-filters {
+  display: flex;
+  gap: 8px;
+}
+
+.quick-filter {
+  padding: 6px 12px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.quick-filter:hover {
+  background: var(--sidebar);
+}
+
+.dashboard-loading {
+  padding: 60px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 16px;
+}
+
+.dashboard-empty {
+  padding: 60px;
+  text-align: center;
+  border: 2px dashed var(--border);
+  border-radius: 8px;
+  margin: 20px 0;
+}
+
+.dashboard-empty p {
+  margin: 8px 0;
+}
+
+.dashboard-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.stat-card {
+  display: grid;
+  gap: 8px;
+  padding: 20px;
+}
+
+.stat-label {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.stat-value {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.stat-tooltip {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+.station-load-header {
+  margin-bottom: 16px;
+}
+
+.station-load-header h3 {
+  font-size: 18px;
+  margin-bottom: 8px;
+}
+
+.station-load-header p {
+  margin: 4px 0;
+}
+
+.dashboard-note {
+  background: var(--hero);
+  padding: 12px;
+  border-radius: 4px;
+  border-left: 3px solid var(--green);
+  margin-top: 12px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.station-load-table-wrapper {
+  overflow-x: auto;
+}
+
+.station-load-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.station-load-table th,
+.station-load-table td {
+  padding: 12px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+
+.station-load-table th {
+  background: var(--sidebar);
+  font-weight: 600;
+  text-align: right;
+}
+
+.station-load-table th:first-child,
+.station-load-table td:first-child {
+  text-align: left;
+}
+
+.station-load-table td {
+  text-align: right;
+}
+
+.station-load-table tbody tr:hover {
+  background: var(--hero);
+}
+
+.station-status {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 2px 8px;
+  border-radius: 3px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.status-active {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.status-maintenance {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.status-inactive {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .dashboard-filter-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .dashboard-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 560px) {
+  .dashboard-filter-row {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-filter-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .dashboard-quick-filters {
+    justify-content: stretch;
+  }
+
+  .quick-filter {
+    flex: 1;
+  }
+}
+
+@media (max-width: 390px) {
+  .stat-value {
+    font-size: 24px;
+  }
+
+  .dashboard-filter-row input,
+  .dashboard-filter-row select {
+    font-size: 13px;
+  }
+}
+
+/* Bổ sung: trạng thái, ghi chú, khoảng cách giữa các khối */
+.dashboard .card { margin-bottom: 16px; }
+.dashboard-body.is-loading { opacity: 0.55; pointer-events: none; }
+.dashboard-tz, .dashboard-applied { margin: 8px 0 0; font-size: 13px; }
+.dashboard-retry { margin-left: 12px; }
+.stat-note { font-size: 12px; color: var(--muted); }
+.chart-note { font-size: 12px; margin: 8px 0 0; }
+.dashboard-empty { display: grid; gap: 6px; }
+.dashboard-note p { margin: 4px 0; }
+.dashboard-note { margin-top: 12px; }
+.dashboard-quick-filters .quick-filter:disabled { opacity: 0.6; cursor: default; }
+.chart-svg-wrapper { max-width: 100%; }
+@media (max-width: 560px) { .dashboard-filter-actions { flex-direction: column; align-items: stretch; } }
