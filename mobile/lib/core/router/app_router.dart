@@ -1,30 +1,49 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../features/home/providers/home_provider.dart';
-import 'package:go_router/go_router.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import '../../features/auth/session.dart';
+import '../../features/auth/screens.dart';
 
-final appRouter = GoRouter(
-  initialLocation: '/',
-  routes: [
-    GoRoute(
-      path: '/',
-      builder: (context, state) => const HomePage(),
-    ),
-  ],
-);
-
-class HomePage extends ConsumerWidget {
-  const HomePage({super.key});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final message = ref.watch(homeMessageProvider);
-
-    return Scaffold(
-      body: Center(
-        child: Text(message),
-      ),
-    );
+String? sessionRedirect(Session session, String path) {
+  if (session.phase == SessionPhase.restoring ||
+      session.phase == SessionPhase.unavailable) {
+    return path == '/session' ? null : '/session';
   }
+  if (session.phase == SessionPhase.signedOut) {
+    return path == '/login' ? null : '/login';
+  }
+  final user = session.user!;
+  if (!user.supported) return path == '/unsupported' ? null : '/unsupported';
+  if (path == '/profile') return null;
+  if (path == user.home || path.startsWith('${user.home}/')) return null;
+  return user.home;
 }
 
+final routerProvider = Provider<GoRouter>((ref) {
+  final session = ref.read(sessionProvider);
+  final router = GoRouter(
+    initialLocation: '/session',
+    refreshListenable: session,
+    redirect: (context, state) => sessionRedirect(session, state.uri.path),
+    routes: [
+      GoRoute(path: '/session', builder: (_, __) => const SessionScreen()),
+      GoRoute(path: '/login', builder: (_, __) => const LoginScreen()),
+      GoRoute(
+          path: '/customer',
+          builder: (_, __) => const WorkspaceScreen(operator: false)),
+      GoRoute(
+          path: '/operator',
+          builder: (_, __) => const WorkspaceScreen(operator: true)),
+      GoRoute(path: '/profile', builder: (_, __) => const ProfileScreen()),
+      GoRoute(
+          path: '/unsupported', builder: (_, __) => const UnsupportedScreen()),
+    ],
+    errorBuilder: (context, state) => Scaffold(
+        body: Center(
+            child: TextButton(
+                onPressed: () => context.go('/session'),
+                child: const Text('Về trang chính')))),
+  );
+  ref.onDispose(router.dispose);
+  return router;
+});
