@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:dio/dio.dart';
+import 'package:smartdrone_mobile/core/realtime/realtime_provider.dart';
 import 'package:smartdrone_mobile/features/auth/session.dart';
 import 'package:smartdrone_mobile/main.dart';
 import 'support/fakes.dart';
@@ -12,6 +13,7 @@ void main() {
     await session.restore();
     await tester.pumpWidget(ProviderScope(overrides: [
       sessionProvider.overrideWith((ref) => session),
+      realtimeClientProvider.overrideWith((ref) => null), // no real socket in widget tests
     ], child: const MyApp()));
     await tester.pumpAndSettle();
   }
@@ -48,8 +50,8 @@ void main() {
     expect(auth.requests.length, 1);
     gate.complete(jsonResponse(tokenResponse()));
     await tester.pumpAndSettle();
-    expect(find.text('Khách hàng'), findsOneWidget);
-    expect(find.text('Hồ sơ của tôi'), findsOneWidget);
+    expect(find.text('Đơn hàng của tôi'), findsOneWidget);
+    expect(find.byKey(const Key('open-notifications')), findsOneWidget);
   });
 
   testWidgets('wrong password displays error and allows retry', (tester) async {

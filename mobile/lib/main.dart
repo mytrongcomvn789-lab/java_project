@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/router/app_router.dart';
 import 'features/auth/screens.dart';
+import 'features/notifications/realtime_host.dart';
 
 void main() => runApp(const ProviderScope(child: MyApp()));
 
@@ -18,5 +19,6 @@ class MyApp extends ConsumerWidget {
             inputDecorationTheme:
                 const InputDecorationTheme(border: OutlineInputBorder())),
         routerConfig: ref.watch(routerProvider),
+        builder: (context, child) => RealtimeHost(child: child ?? const SizedBox()),
       );
 }
