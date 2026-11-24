@@ -6,6 +6,9 @@ import StationParcelsPage from "../features/orders/StationParcelsPage";
 import StationReceiptPage from "../features/orders/StationReceiptPage";
 import OrdersPage from "../features/orders/OrdersPage";
 import DispatchRequestsPage from "../features/orders/DispatchRequestsPage";
+import DispatchSchedulePage from "../features/orders/DispatchSchedulePage";
+import DispatchFailuresPage from "../features/orders/DispatchFailuresPage";
+import StationAvailabilityPage from "../features/stations/StationAvailabilityPage";
 import OrderDetailPage from "../features/orders/OrderDetailPage";
 import CreateOrderPage from "../features/orders/CreateOrderPage";
 import EditOrderPage from "../features/orders/EditOrderPage";
@@ -43,6 +46,9 @@ export default function AppRouter() {
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/deliveries" element={<OrdersPage key="all-orders" />} />
           <Route path="/dispatch/requests" element={<DispatchRequestsPage />} />
+          <Route path="/dispatch/schedule" element={<DispatchSchedulePage />} />
+          <Route path="/dispatch/failures" element={<DispatchFailuresPage />} />
+          <Route path="/station/availability" element={<StationAvailabilityPage />} />
           <Route path="/deliveries/new" element={<CreateOrderPage />} />
           <Route path="/deliveries/:id" element={<OrderDetailPage />} />
           <Route path="/deliveries/:id/edit" element={<EditOrderPage />} />
@@ -50,7 +56,6 @@ export default function AppRouter() {
           <Route path="/stations" element={<StationsPage />} />
           <Route path="/station/parcels" element={<StationParcelsPage />} />
           <Route path="/station/parcels/:id" element={<StationReceiptPage />} />
-          <Route path="/stations" element={<StationsPage />} />
           <Route
             path="/stations/monitoring"
             element={<StationMonitoringPage />}

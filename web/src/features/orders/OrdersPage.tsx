@@ -31,8 +31,26 @@ const nextDay = (d: string) => {
   return t.toISOString();
 };
 
-export default function OrdersPage({ pendingOnly = false, receiptOnly = false }: { pendingOnly?: boolean; receiptOnly?: boolean }) {
-  const initial = { ...EMPTY, status: receiptOnly ? "SCHEDULED" : pendingOnly ? "PENDING" : "" };
+interface OrdersPageProps {
+  pendingOnly?: boolean;
+  receiptOnly?: boolean;
+  /** Khóa bộ lọc ở một trạng thái (vd điều phối xem riêng đơn FAILED / APPROVED). */
+  fixedStatus?: string;
+  title?: string;
+  subtitle?: string;
+  crumb?: string;
+}
+
+export default function OrdersPage({
+  pendingOnly = false,
+  receiptOnly = false,
+  fixedStatus,
+  title,
+  subtitle,
+  crumb,
+}: OrdersPageProps) {
+  const lockedStatus = fixedStatus ?? (receiptOnly ? "SCHEDULED" : pendingOnly ? "PENDING" : "");
+  const initial = { ...EMPTY, status: lockedStatus };
   const { isDemo } = useAuth();
   const [form, setForm] = useState(initial); // giá trị đang gõ
   const [applied, setApplied] = useState(initial); // giá trị đã áp dụng (gửi lên server)
@@ -86,9 +104,9 @@ export default function OrdersPage({ pendingOnly = false, receiptOnly = false }:
   return (
     <>
       <PageHeader
-        title={receiptOnly ? "Kiện chờ nhận tại trạm gửi" : pendingOnly ? "Yêu cầu chờ duyệt" : "Đơn giao hàng"}
-        subtitle="Tìm kiếm, lọc và xem chi tiết đơn trong phạm vi của bạn."
-        crumbs={["Trang chủ", "Đơn giao hàng"]}
+        title={title ?? (receiptOnly ? "Kiện chờ nhận tại trạm gửi" : pendingOnly ? "Yêu cầu chờ duyệt" : "Đơn giao hàng")}
+        subtitle={subtitle ?? "Tìm kiếm, lọc và xem chi tiết đơn trong phạm vi của bạn."}
+        crumbs={["Trang chủ", crumb ?? "Đơn giao hàng"]}
       />
       {isDemo ? (
         <div className="card customer-notice">
@@ -111,7 +129,7 @@ export default function OrdersPage({ pendingOnly = false, receiptOnly = false }:
                 <span>Trạng thái</span>
                 <select
                   value={form.status}
-                  disabled={pendingOnly || receiptOnly}
+                  disabled={lockedStatus !== ""}
                   onChange={(e) => set("status", e.target.value)}
                 >
                   <option value="">Tất cả</option>

@@ -5,6 +5,11 @@ import PageHeader from "../../components/ui/PageHeader";
 import StatusBadge from "../../components/ui/StatusBadge";
 import { useAuth } from "../auth/AuthContext";
 import { checkHealth } from "../../lib/healthService";
+import {
+  HOME_STAT_ROLES,
+  homeStatsService,
+  type HomeStats,
+} from "../../lib/homeStatsService";
 import { getMenuForRole } from "../../lib/navigation";
 import { ROLE_DESCRIPTIONS, ROLE_LABELS } from "../../lib/roles";
 import { ACTOR_LABELS, DELIVERY_FLOW } from "../../lib/workflow";
@@ -12,15 +17,21 @@ import type { RoleName } from "../../types/api";
 
 type Status = { state: "loading" | "ok" | "error"; message: string };
 
-// Vai trò xem số liệu tổng quan (FR-09): khách hàng xem đơn của mình, điều phối & hậu cần xem toàn hệ thống.
-const STAT_ROLES: RoleName[] = ["CUSTOMER", "DISPATCHER", "LOGISTICS_MANAGER"];
-
-const STATS = [
-  { label: "Tổng số đơn", icon: Package },
-  { label: "Đang xử lý", icon: Truck },
-  { label: "Đã giao", icon: Check },
-  { label: "Giao thất bại", icon: TriangleAlert },
+const STATS: { label: string; key: keyof HomeStats; icon: typeof Package }[] = [
+  { label: "Tổng số đơn", key: "total", icon: Package },
+  { label: "Đang xử lý", key: "inProgress", icon: Truck },
+  { label: "Đã giao", key: "delivered", icon: Check },
+  { label: "Giao thất bại", key: "failed", icon: TriangleAlert },
 ];
+
+// Phạm vi số liệu theo vai trò (backend tự lọc, web chỉ hiển thị).
+const STATS_NOTES: Partial<Record<RoleName, string>> = {
+  CUSTOMER: "Số liệu các đơn giao hàng của bạn.",
+  DISPATCHER: "Số liệu các đơn thuộc trạm bạn được phân công.",
+  STATION_OPERATOR: "Số liệu các đơn thuộc trạm bạn được phân công.",
+  LOGISTICS_MANAGER:
+    "Số liệu 30 ngày gần nhất theo ngày tạo đơn, cùng nguồn với Dashboard.",
+};
 
 // Ghi chú cho vai trò không trực tiếp xử lý bước nào trong quy trình giao hàng
 const FLOW_NOTES: Partial<Record<RoleName, string>> = {
@@ -33,6 +44,10 @@ const FLOW_NOTES: Partial<Record<RoleName, string>> = {
 export default function HomePage() {
   const { user, isDemo } = useAuth();
   const [api, setApi] = useState<Status>({ state: "loading", message: "" });
+  const [stats, setStats] = useState<HomeStats | null>(null);
+  const [statsError, setStatsError] = useState(false);
+  const role = user?.role;
+  const showStats = !!role && HOME_STAT_ROLES.includes(role);
 
   useEffect(() => {
     if (isDemo) return; // chế độ demo không gọi backend
@@ -41,12 +56,29 @@ export default function HomePage() {
       .catch((e: Error) => setApi({ state: "error", message: e.message }));
   }, [isDemo]);
 
+  useEffect(() => {
+    if (isDemo || !role || !HOME_STAT_ROLES.includes(role)) return;
+    let active = true;
+    setStats(null);
+    setStatsError(false);
+    homeStatsService
+      .load(role)
+      .then((value) => {
+        if (active) setStats(value);
+      })
+      .catch(() => {
+        if (active) setStatsError(true);
+      });
+    return () => {
+      active = false;
+    };
+  }, [role, isDemo]);
+
   if (!user) return null;
 
   const shortcuts = getMenuForRole(user.role).filter(
     (i) => i.to !== "/" && i.to !== "/profile",
   );
-  const showStats = STAT_ROLES.includes(user.role);
   const flowNote = FLOW_NOTES[user.role];
 
   return (
@@ -74,20 +106,22 @@ export default function HomePage() {
       {showStats && (
         <>
           <div className="stats">
-            {STATS.map(({ label, icon: Icon }) => (
+            {STATS.map(({ label, key, icon: Icon }) => (
               <div className="card stat" key={label}>
                 <span className="stat-icon">
                   <Icon size={20} strokeWidth={2} />
                 </span>
                 <span className="muted">{label}</span>
-                <strong>—</strong>
+                <strong>{stats ? stats[key] : "—"}</strong>
               </div>
             ))}
           </div>
           <p className="muted" style={{ marginTop: -8, fontSize: 13 }}>
-            {user.role === "CUSTOMER"
-              ? "Số liệu đơn hàng của bạn sẽ hiển thị khi có API đơn giao hàng."
-              : "Số liệu dashboard sẽ hiển thị khi có API thống kê."}
+            {isDemo
+              ? "Đăng nhập bằng tài khoản thật để xem số liệu."
+              : statsError
+                ? "Không tải được số liệu. Hãy tải lại trang."
+                : STATS_NOTES[user.role]}
           </p>
         </>
       )}
