@@ -170,5 +170,5 @@ class OrderCard extends StatelessWidget {
               'Người nhận: ${order.recipientName}\n${order.packageDescription ?? ''}\n${formatTime(order.createdAt)}'),
           isThreeLine: true,
           trailing: StatusChip(order.status, order.statusLabel),
-          onTap: () => context.go('/customer/orders/${order.id}')));
+          onTap: () => context.go('/customer/orders/${order.id}/detail')));
 }
