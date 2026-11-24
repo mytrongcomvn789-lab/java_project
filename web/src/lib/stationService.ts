@@ -4,13 +4,15 @@ export type StationStatus = "ACTIVE" | "MAINTENANCE" | "INACTIVE";
 
 export interface StationInput {
   name: string;
-  latitude: number;
-  longitude: number;
+  address: string;
   capacity: number;
 }
 
-export interface Station extends StationInput {
+export interface Station {
   id: string;
+  name: string;
+  address: string | null; // trạm tạo trước khi có cột địa chỉ thì trống
+  capacity: number;
   status: StationStatus;
 }
 
@@ -41,6 +43,7 @@ export interface StationPackageLoad {
 export interface StationMonitoring {
   id: string;
   name: string;
+  address: string | null;
   status: StationStatus;
   capacity: number;
   connection: StationConnection;

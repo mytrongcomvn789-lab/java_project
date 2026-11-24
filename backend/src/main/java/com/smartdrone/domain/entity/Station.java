@@ -34,6 +34,11 @@ public class Station {
     @Column(nullable = false)
     private int capacity;
 
+    /** Địa chỉ dễ đọc của trạm; có thể trống với trạm tạo trước khi có cột này. */
+    @Nationalized
+    @Column(length = 300)
+    private String address;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private StationStatus status = StationStatus.ACTIVE;
@@ -41,14 +46,25 @@ public class Station {
     protected Station() { }
 
     public Station(String name, double latitude, double longitude, int capacity) {
-        update(name, latitude, longitude, capacity);
+        this(name, latitude, longitude, capacity, null);
     }
 
-    public void update(String name, double latitude, double longitude, int capacity) {
-        this.name = name;
+    public Station(String name, double latitude, double longitude, int capacity, String address) {
         this.latitude = latitude;
         this.longitude = longitude;
+        update(name, capacity, address);
+    }
+
+    /** Tạo trạm chỉ với địa chỉ; tọa độ để 0,0 (theo dõi đơn coi là chưa có vị trí). */
+    public Station(String name, int capacity, String address) {
+        this(name, 0, 0, capacity, address);
+    }
+
+    /** Sửa thông tin hiển thị; không đụng tới tọa độ đã lưu. */
+    public void update(String name, int capacity, String address) {
+        this.name = name;
         this.capacity = capacity;
+        this.address = address;
     }
 
     public void changeStatus(StationStatus status) {
@@ -60,5 +76,6 @@ public class Station {
     public double getLatitude() { return latitude; }
     public double getLongitude() { return longitude; }
     public int getCapacity() { return capacity; }
+    public String getAddress() { return address; }
     public StationStatus getStatus() { return status; }
 }

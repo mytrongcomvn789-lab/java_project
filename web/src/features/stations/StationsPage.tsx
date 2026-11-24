@@ -7,18 +7,14 @@ import "./stations.css";
 
 type FormValues = Record<keyof StationInput, string>;
 type FormErrors = Partial<Record<keyof FormValues, string>>;
-const EMPTY: FormValues = { name: "", latitude: "", longitude: "", capacity: "" };
+const EMPTY: FormValues = { name: "", address: "", capacity: "" };
 
 function validate(values: FormValues): FormErrors {
   const errors: FormErrors = {};
   if (!values.name.trim()) errors.name = "Tên trạm không được để trống";
   else if (values.name.trim().length > 200) errors.name = "Tên trạm tối đa 200 ký tự";
-  const latitude = Number(values.latitude);
-  if (!values.latitude.trim() || !Number.isFinite(latitude) || latitude < -90 || latitude > 90)
-    errors.latitude = "Vĩ độ phải là số từ -90 đến 90";
-  const longitude = Number(values.longitude);
-  if (!values.longitude.trim() || !Number.isFinite(longitude) || longitude < -180 || longitude > 180)
-    errors.longitude = "Kinh độ phải là số từ -180 đến 180";
+  if (!values.address.trim()) errors.address = "Địa chỉ trạm không được để trống";
+  else if (values.address.trim().length > 300) errors.address = "Địa chỉ tối đa 300 ký tự";
   const capacity = Number(values.capacity);
   if (!values.capacity.trim() || !Number.isInteger(capacity) || capacity < 1)
     errors.capacity = "Sức chứa phải là số nguyên dương";
@@ -28,7 +24,6 @@ function validate(values: FormValues): FormErrors {
 export default function StationsPage() {
   const { user } = useAuth();
   const canManage = user?.role === "LOGISTICS_MANAGER";
-  const isOperator = user?.role === "STATION_OPERATOR";
   const [stations, setStations] = useState<Station[] | null>(null);
   const [editing, setEditing] = useState<Station | null>(null);
   const [showForm, setShowForm] = useState(false);
@@ -56,8 +51,7 @@ export default function StationsPage() {
     setEditing(station);
     setValues(station ? {
       name: station.name,
-      latitude: String(station.latitude),
-      longitude: String(station.longitude),
+      address: station.address ?? "",
       capacity: String(station.capacity),
     } : { ...EMPTY });
     setFieldErrors({});
@@ -77,8 +71,7 @@ export default function StationsPage() {
 
     const input: StationInput = {
       name: values.name.trim(),
-      latitude: Number(values.latitude),
-      longitude: Number(values.longitude),
+      address: values.address.trim(),
       capacity: Number(values.capacity),
     };
     setBusy(true);
@@ -132,18 +125,13 @@ export default function StationsPage() {
     {canManage && <div className="station-actions">
       <button type="button" className="station-primary" disabled={busy} onClick={() => openForm(null)}>Thêm trạm</button>
     </div>}
-    {isOperator && <p className="station-notice" role="note">
-      Chức năng đổi trạng thái của nhân viên trạm đang khóa vì hệ thống chưa có dữ liệu phân công trạm.
-      Cần chốt mô hình phân công trước khi cấp quyền cập nhật.
-    </p>}
     {message && <p role="status" className="station-success">{message}</p>}
     {formError && !showForm && <p role="alert" className="station-error">{formError}</p>}
     {showForm && <form className="station-panel" onSubmit={save}>
       <h3>{editing ? "Sửa trạm" : "Thêm trạm"}</h3>
       <div className="station-form-grid">
         {field("name", "Tên trạm", "text", { maxLength: 200 })}
-        {field("latitude", "Vĩ độ", "number", { min: -90, max: 90, step: "any" })}
-        {field("longitude", "Kinh độ", "number", { min: -180, max: 180, step: "any" })}
+        {field("address", "Địa chỉ", "text", { maxLength: 300, placeholder: "Số nhà, đường, phường, quận, thành phố" })}
         {field("capacity", "Sức chứa (số drone tối đa cùng lúc)", "number", { min: 1, step: 1 })}
       </div>
       <p className="station-hint">Sức chứa là số drone tối đa có thể đỗ đồng thời; chưa bao gồm lịch hoặc giữ chỗ theo khung giờ.</p>
@@ -165,7 +153,7 @@ export default function StationsPage() {
               {station.status === "ACTIVE" ? "Đang hoạt động" : station.status === "MAINTENANCE" ? "Đang bảo trì" : "Ngừng hoạt động"}
             </span>
           </div>
-          <p>Vĩ độ: {station.latitude} · Kinh độ: {station.longitude}</p>
+          <p className="station-address">{station.address ?? "Chưa có địa chỉ"}</p>
           <p>Sức chứa: {station.capacity} drone cùng lúc</p>
           {canManage && <div className="station-actions">
             <button type="button" disabled={busy} onClick={() => openForm(station)}>Sửa thông tin</button>

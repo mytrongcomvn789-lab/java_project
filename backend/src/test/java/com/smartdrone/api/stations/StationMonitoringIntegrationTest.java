@@ -110,7 +110,7 @@ class StationMonitoringIntegrationTest {
 
     private UUID createStation(Actor manager) throws Exception {
         var body = new LinkedHashMap<String, Object>(Map.of(
-                "name", "Trạm giám sát", "latitude", 10.7769, "longitude", 106.7009, "capacity", 6));
+                "name", "Trạm giám sát", "address", "45 Lê Lợi, Quận 1, TP. Hồ Chí Minh", "capacity", 6));
         var response = call("POST", "/stations", manager, body);
         assertEquals(201, response.statusCode(), response.body());
         return UUID.fromString(json(response).get("id").asString());

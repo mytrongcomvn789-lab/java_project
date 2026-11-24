@@ -86,8 +86,7 @@ class StationIntegrationTest {
     private Map<String, Object> valid() {
         return new LinkedHashMap<>(Map.of(
                 "name", "Trạm trung tâm",
-                "latitude", 10.7769,
-                "longitude", 106.7009,
+                "address", "12 Nguyễn Huệ, Quận 1, TP. Hồ Chí Minh",
                 "capacity", 4));
     }
 
@@ -151,10 +150,10 @@ class StationIntegrationTest {
     }
 
     @Test
-    void invalidCoordinatesCapacityOrNameAreRejectedWithFieldErrors() throws Exception {
+    void invalidAddressCapacityOrNameAreRejectedWithFieldErrors() throws Exception {
         var manager = actor(RoleName.LOGISTICS_MANAGER);
         var input = valid();
-        input.put("latitude", 90.01);
+        input.put("address", "  ");
         input.put("capacity", 0);
         var response = call("POST", "/stations", manager, input);
         assertEquals(400, response.statusCode(), response.body());
@@ -162,7 +161,7 @@ class StationIntegrationTest {
         assertEquals(0, stations.count());
 
         input = valid();
-        input.put("longitude", -180.01);
+        input.put("address", "x".repeat(301));
         input.put("name", "  ");
         response = call("POST", "/stations", manager, input);
         assertEquals(400, response.statusCode(), response.body());
