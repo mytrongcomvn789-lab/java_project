@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -189,6 +190,30 @@ class Session extends ChangeNotifier {
         await _invalidate();
       }
       rethrow;
+    }
+  }
+
+  /// Access token for the realtime socket. Refreshes first when the token is
+  /// expired/near expiry (or [forceRefresh]); null when signed out. A failed
+  /// refresh throws, so callers back off instead of treating it as signed out.
+  Future<String?> accessTokenForSocket({bool forceRefresh = false}) async {
+    if (_tokens == null) return null;
+    if (forceRefresh || _expiresWithin(_tokens!.access, 20)) {
+      await refresh();
+    }
+    return _tokens?.access;
+  }
+
+  static bool _expiresWithin(String jwt, int seconds) {
+    try {
+      final payload = jwt.split('.')[1];
+      final json = jsonDecode(
+          utf8.decode(base64Url.decode(base64Url.normalize(payload))));
+      final exp = (json as Map<String, dynamic>)['exp'] as num;
+      final left = exp.toInt() * 1000 - DateTime.now().millisecondsSinceEpoch;
+      return left < seconds * 1000;
+    } catch (_) {
+      return true; // unreadable token: rotate rather than guess
     }
   }
 
