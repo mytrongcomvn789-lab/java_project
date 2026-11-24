@@ -1,26 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../core/network/dio_client.dart';
 import '../../core/realtime/realtime_client.dart';
 import '../../core/realtime/realtime_provider.dart';
-import '../auth/screens.dart';
-import '../auth/session.dart';
-import '../notifications/notifications_controller.dart';
 import 'order_models.dart';
-import 'orders_api.dart';
 import 'tracking_controller.dart';
 import 'tracking_state.dart';
-
-/// Orders of the signed-in customer. Keyed by user so another account never
-/// sees a cached list; refreshed when a live notification arrives.
-final ordersListProvider =
-    FutureProvider.autoDispose<List<OrderListItem>>((ref) {
-  ref.watch(realtimeUserProvider);
-  ref.listen(notificationsProvider.select((s) => s.incomingSeq),
-      (_, __) => ref.invalidateSelf());
-  return ref.read(ordersApiProvider).listOrders();
-});
 
 String two(int n) => n.toString().padLeft(2, '0');
 String formatTime(DateTime? t) => t == null
@@ -51,88 +36,6 @@ class StatusChip extends StatelessWidget {
         child: Text(label,
             style: TextStyle(color: color, fontWeight: FontWeight.w600)));
   }
-}
-
-class CustomerHomeScreen extends ConsumerWidget {
-  const CustomerHomeScreen({super.key});
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final user = ref.watch(sessionProvider).user!;
-    final orders = ref.watch(ordersListProvider);
-    final unread = ref.watch(notificationsProvider.select((s) => s.unread));
-    return Scaffold(
-        appBar: AppBar(title: const Text('Đơn hàng của tôi'), actions: [
-          IconButton(
-              key: const Key('open-notifications'),
-              tooltip: 'Thông báo',
-              onPressed: () => context.go('/customer/notifications'),
-              icon: Badge(
-                  isLabelVisible: unread > 0,
-                  label: Text('$unread', key: const Key('unread-count')),
-                  child: const Icon(Icons.notifications_outlined))),
-          IconButton(
-              tooltip: 'Hồ sơ',
-              onPressed: () => context.go('/profile'),
-              icon: const Icon(Icons.account_circle_outlined)),
-          IconButton(
-              key: const Key('logout'),
-              tooltip: 'Đăng xuất',
-              onPressed: () => signOut(ref),
-              icon: const Icon(Icons.logout)),
-        ]),
-        body: Column(children: [
-          const ConnectionBanner(),
-          Expanded(
-              child: RefreshIndicator(
-                  onRefresh: () async {
-                    ref.invalidate(ordersListProvider);
-                    await ref.read(ordersListProvider.future).catchError((_) => <OrderListItem>[]);
-                  },
-                  child: orders.when(
-                    loading: () => const Center(child: CircularProgressIndicator()),
-                    error: (e, _) => ListView(children: [
-                      Padding(
-                          padding: const EdgeInsets.all(24),
-                          child: Column(children: [
-                            Text(apiError(e)),
-                            const SizedBox(height: 12),
-                            FilledButton(
-                                onPressed: () =>
-                                    ref.invalidate(ordersListProvider),
-                                child: const Text('Thử lại')),
-                          ]))
-                    ]),
-                    data: (items) => items.isEmpty
-                        ? ListView(children: [
-                            Padding(
-                                padding: const EdgeInsets.all(32),
-                                child: Text(
-                                    'Xin chào, ${user.name.isEmpty ? user.email : user.name}. Bạn chưa có đơn hàng nào.',
-                                    textAlign: TextAlign.center))
-                          ])
-                        : ListView.separated(
-                            padding: const EdgeInsets.all(12),
-                            itemCount: items.length,
-                            separatorBuilder: (_, __) => const SizedBox(height: 8),
-                            itemBuilder: (context, i) => OrderCard(items[i])),
-                  ))),
-        ]));
-  }
-}
-
-class OrderCard extends StatelessWidget {
-  const OrderCard(this.order, {super.key});
-  final OrderListItem order;
-  @override
-  Widget build(BuildContext context) => Card(
-      child: ListTile(
-          key: Key('order-${order.id}'),
-          title: Text('Đơn ${order.shortCode}'),
-          subtitle: Text(
-              'Người nhận: ${order.recipientName}\n${formatTime(order.createdAt)}'),
-          isThreeLine: true,
-          trailing: StatusChip(order.status, order.statusLabel),
-          onTap: () => context.go('/customer/orders/${order.id}')));
 }
 
 /// Shows realtime health; hidden while the live connection is fine.

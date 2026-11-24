@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../features/addresses/address_screens.dart';
 import '../../features/auth/session.dart';
 import '../../features/auth/screens.dart';
 import '../../features/notifications/notification_screens.dart';
+import '../../features/orders/order_detail_screen.dart';
+import '../../features/orders/order_form_screen.dart';
+import '../../features/orders/order_list_screen.dart';
 import '../../features/orders/order_screens.dart';
 
 String? sessionRedirect(Session session, String path) {
@@ -38,6 +42,18 @@ final routerProvider = Provider<GoRouter>((ref) {
                 path: 'orders/:id',
                 builder: (_, state) =>
                     OrderTrackingScreen(orderId: state.pathParameters['id']!)),
+            GoRoute(
+                path: 'orders/:id/detail',
+                builder: (_, state) =>
+                    OrderDetailScreen(orderId: state.pathParameters['id']!)),
+            GoRoute(
+                path: 'new-order',
+                builder: (_, __) => const OrderFormScreen()),
+            GoRoute(
+                path: 'addresses',
+                builder: (_, state) => AddressListScreen(
+                    pick: state.uri.queryParameters['pick'] == '1',
+                    selectedId: state.uri.queryParameters['selected'])),
             GoRoute(
                 path: 'notifications',
                 builder: (_, __) => const NotificationsScreen()),
