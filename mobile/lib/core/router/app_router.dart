@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../features/auth/session.dart';
 import '../../features/auth/screens.dart';
 import '../../features/notifications/notification_screens.dart';
+import '../../features/orders/order_list_screen.dart';
 import '../../features/orders/order_screens.dart';
 
 String? sessionRedirect(Session session, String path) {
