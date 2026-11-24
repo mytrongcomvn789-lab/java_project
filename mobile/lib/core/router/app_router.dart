@@ -6,6 +6,7 @@ import '../../features/auth/session.dart';
 import '../../features/auth/screens.dart';
 import '../../features/notifications/notification_screens.dart';
 import '../../features/orders/order_detail_screen.dart';
+import '../../features/orders/order_form_screen.dart';
 import '../../features/orders/order_list_screen.dart';
 import '../../features/orders/order_screens.dart';
 
@@ -45,6 +46,9 @@ final routerProvider = Provider<GoRouter>((ref) {
                 path: 'orders/:id/detail',
                 builder: (_, state) =>
                     OrderDetailScreen(orderId: state.pathParameters['id']!)),
+            GoRoute(
+                path: 'new-order',
+                builder: (_, __) => const OrderFormScreen()),
             GoRoute(
                 path: 'addresses',
                 builder: (_, state) => AddressListScreen(

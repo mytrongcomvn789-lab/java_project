@@ -67,6 +67,11 @@ class _CustomerHomeScreenState extends ConsumerState<CustomerHomeScreen> {
               onPressed: () => signOut(ref),
               icon: const Icon(Icons.logout)),
         ]),
+        floatingActionButton: FloatingActionButton.extended(
+            key: const Key('new-order'),
+            onPressed: () => context.push('/customer/new-order'),
+            icon: const Icon(Icons.add),
+            label: const Text('Tạo đơn')),
         body: Column(children: [
           const ConnectionBanner(),
           StatusFilterBar(selected: state.status, onSelected: controller.setStatus),
@@ -115,7 +120,7 @@ class _CustomerHomeScreenState extends ConsumerState<CustomerHomeScreen> {
     return ListView.separated(
         controller: _scroll,
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.fromLTRB(12, 12, 12, 88),
         itemCount: state.items.length + (state.hasMore ? 1 : 0),
         separatorBuilder: (_, __) => const SizedBox(height: 8),
         itemBuilder: (context, i) {
