@@ -177,3 +177,82 @@
   height: auto;
   border-radius: 8px;
 }
+/* Chi tiết đơn: một thẻ thông tin gọn, hai cột */
+.order-info-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.order-info-head h3 {
+  margin: 0;
+}
+.order-info-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 32px;
+}
+.order-info-grid h4 {
+  margin: 0 0 8px;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+.order-info-grid p {
+  margin: 0 0 10px;
+}
+.order-info-wide {
+  grid-column: 1 / -1;
+}
+.order-photos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.order-photos li {
+  width: 96px;
+}
+@media (max-width: 720px) {
+  .order-info-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* Lịch sử trạng thái dạng timeline thay cho bảng rộng */
+.order-timeline {
+  list-style: none;
+  margin: 0;
+  padding: 0 0 0 16px;
+  border-left: 2px solid var(--border);
+  display: grid;
+  gap: 14px;
+}
+.order-timeline li {
+  position: relative;
+  display: grid;
+  gap: 2px;
+}
+.order-timeline li::before {
+  content: "";
+  position: absolute;
+  left: -22px;
+  top: 6px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #6d8a52;
+}
+.order-timeline-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.order-timeline-reason {
+  margin: 4px 0 0;
+}

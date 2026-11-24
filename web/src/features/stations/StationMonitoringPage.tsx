@@ -53,8 +53,6 @@ const PACKAGE_GROUPS: {
   },
 ];
 
-const LOAD_LIMIT_NOTE = "Chưa tính kiện giao thất bại / đang hoàn về (chờ 4.8)";
-
 function formatTime(iso: string): string {
   const date = new Date(iso);
   return Number.isNaN(date.getTime())
@@ -198,9 +196,6 @@ export default function StationMonitoringPage() {
         </button>
       </div>
 
-      <p className="station-notice" role="note">
-        {LOAD_LIMIT_NOTE}
-      </p>
       {isOperator && (
         <p className="station-hint">
           Bạn chỉ xem và đổi trạng thái được các trạm đã được phân công.
@@ -247,6 +242,10 @@ export default function StationMonitoringPage() {
                   {STATUS_LABELS[row.status]}
                 </span>
               </div>
+
+              <p className="station-address">
+                {row.address ?? "Chưa có địa chỉ"}
+              </p>
 
               <div>
                 <p className="station-metric-title">Kết nối</p>

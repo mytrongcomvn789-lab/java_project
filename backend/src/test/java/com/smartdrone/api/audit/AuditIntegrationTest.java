@@ -149,7 +149,7 @@ class AuditIntegrationTest {
         assertTrue(access.get("detail").asString().contains("role=CUSTOMER->DISPATCHER"));
 
         var created = call("POST", "/stations", tokens.issue(manager), Map.of(
-                "name", "Trạm audit", "latitude", 10.77, "longitude", 106.70, "capacity", 5));
+                "name", "Trạm audit", "address", "12 Nguyễn Huệ, Quận 1, TP. Hồ Chí Minh", "capacity", 5));
         assertEquals(201, created.statusCode(), created.body());
         String stationId = JSON.readTree(created.body()).get("id").asString();
         JsonNode station = audit(admin, "targetType=STATION&targetId=" + q(stationId)).get(0);

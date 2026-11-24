@@ -78,7 +78,7 @@ public class StationMonitoringService {
         // Chỗ đang giữ lấy từ truy vấn của 4.2, cùng nguồn với kiểm tra sức chứa khi lên lịch.
         long used = attempts.countActiveOverlapping(s.getId(), slotStart, slotEnd);
         long free = Math.max(0, s.getCapacity() - used);
-        return new StationMonitoringView(s.getId(), s.getName(), s.getStatus(), s.getCapacity(),
+        return new StationMonitoringView(s.getId(), s.getName(), s.getAddress(), s.getStatus(), s.getCapacity(),
                 StationConnection.noData(), new StationSlotUsage(slotStart, slotEnd, used, free),
                 new StationPackageLoad(sc, pr, in, wp, pr + wp, sc + pr + in + wp));
     }

@@ -48,7 +48,7 @@ public class StationService implements StationDirectory {
     @PreAuthorize("hasRole('LOGISTICS_MANAGER')")
     public StationView create(StationInput input) {
         var station = stations.saveAndFlush(
-                new Station(input.name(), input.latitude(), input.longitude(), input.capacity()));
+                new Station(input.name(), input.capacity(), input.address()));
         audit.recordForCurrentUser("STATION_CREATED", "STATION", station.getId().toString(), describe(input));
         return StationView.from(station);
     }
@@ -57,7 +57,7 @@ public class StationService implements StationDirectory {
     @PreAuthorize("hasRole('LOGISTICS_MANAGER')")
     public StationView update(UUID id, StationInput input) {
         var station = stations.findById(id).orElseThrow(StationService::notFound);
-        station.update(input.name(), input.latitude(), input.longitude(), input.capacity());
+        station.update(input.name(), input.capacity(), input.address());
         var saved = stations.saveAndFlush(station);
         audit.recordForCurrentUser("STATION_UPDATED", "STATION", id.toString(), describe(input));
         return StationView.from(saved);
@@ -91,7 +91,7 @@ public class StationService implements StationDirectory {
     }
 
     private static String describe(StationInput input) {
-        return "name=" + input.name() + ", lat=" + input.latitude() + ", lng=" + input.longitude()
+        return "name=" + input.name() + ", address=" + input.address()
                 + ", capacity=" + input.capacity();
     }
 
