@@ -1,8 +1,6 @@
 package com.smartdrone.api.controller;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
 
 import org.springframework.format.annotation.DateTimeFormat;
@@ -18,8 +16,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.smartdrone.application.ai.AiDataAccessGuard;
-import com.smartdrone.application.ai.AiDataBlock;
-import com.smartdrone.application.ai.AiProperties;
 import com.smartdrone.application.ai.AiResult;
 import com.smartdrone.application.ai.AiService;
 import com.smartdrone.application.ai.AiTask;
@@ -33,11 +29,10 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
-import tools.jackson.databind.node.ObjectNode;
 
 /**
  * 7.1: controller KHUNG cho /v1/ai/** (hợp đồng nháp, chờ chốt với 7.2-7.6). Chỉ JWT người dùng (RbacPolicy +
- * @PreAuthorize); API key 5.4 không dùng được. Chưa có logic ETA/tóm tắt/chat thật: chỉ kiểm quyền, thu thập dữ liệu
+ * @PreAuthorize); API key 5.4 không dùng được. Chat đã triển khai tại 7.4; ETA/tóm tắt còn theo hợp đồng 7.1: chỉ kiểm quyền, thu thập dữ liệu
  * tối thiểu qua AiDataAccessGuard rồi gọi AiService. Chi tiết: docs/05-api/ai-api.md.
  */
 @RestController
@@ -48,12 +43,12 @@ import tools.jackson.databind.node.ObjectNode;
 public class AiController {
     private final AiService ai;
     private final AiDataAccessGuard guard;
-    private final AiProperties props;
+    private final com.smartdrone.application.ai.chat.CustomerChatService chat;
 
-    public AiController(AiService ai, AiDataAccessGuard guard, AiProperties props) {
+    public AiController(AiService ai, AiDataAccessGuard guard, com.smartdrone.application.ai.chat.CustomerChatService chat) {
         this.ai = ai;
         this.guard = guard;
-        this.props = props;
+        this.chat = chat;
     }
 
     public record ChatRequest(UUID conversationId, @NotBlank String message, UUID orderId) { }
@@ -79,24 +74,10 @@ public class AiController {
     }
 
     @PostMapping("/chat")
-    @PreAuthorize("hasAnyRole('CUSTOMER','DISPATCHER','STATION_OPERATOR')")
-    @Operation(summary = "Hỏi đáp (khung 7.1; logic thật và nơi lưu hội thoại ở 7.4)")
+    @PreAuthorize("hasRole('CUSTOMER')")
+    @Operation(summary = "7.4: Chatbot khách hàng, hội thoại riêng và dữ liệu đơn theo quyền")
     public ResponseEntity<AiResult> chat(JwtAuthenticationToken auth, @Valid @RequestBody ChatRequest request) {
-        if (request.message().length() > props.maxChatMessageChars()) {
-            throw new ApiException(ErrorCode.VALIDATION_ERROR,
-                    "Tin nhắn vượt quá " + props.maxChatMessageChars() + " ký tự");
-        }
-        List<AiDataBlock> blocks = new ArrayList<>();
-        if (request.orderId() != null) { // đơn ngoài quyền -> 404, như GET /v1/orders/{id}
-            blocks.addAll(guard.orderBlocks(AiTask.CHAT, user(auth), role(auth), request.orderId()));
-        } else {
-            guard.requireTask(AiTask.CHAT, role(auth));
-        }
-        blocks.add(new AiDataBlock("user_message", request.message()));
-        AiResult result = ai.run(user(auth), role(auth), AiTask.CHAT, blocks);
-        UUID conversationId = request.conversationId() == null ? UUID.randomUUID() : request.conversationId();
-        if (result.result() instanceof ObjectNode node) node.put("conversationId", conversationId.toString());
-        return ok(result);
+        return ok(chat.chat(user(auth), role(auth), request.conversationId(), request.orderId(), request.message()));
     }
 
     @PostMapping("/analytics")

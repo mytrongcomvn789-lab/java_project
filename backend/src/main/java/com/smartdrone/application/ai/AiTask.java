@@ -11,7 +11,7 @@ public enum AiTask {
     /** 7.3: tóm tắt đơn hàng. */
     ORDER_SUMMARY(Set.of(RoleName.CUSTOMER, RoleName.DISPATCHER, RoleName.STATION_OPERATOR)),
     /** 7.4: trợ lý hỏi đáp. */
-    CHAT(Set.of(RoleName.CUSTOMER, RoleName.DISPATCHER, RoleName.STATION_OPERATOR)),
+    CHAT(Set.of(RoleName.CUSTOMER)),
     /** 7.5/7.6: phân tích vận hành, chỉ trên số liệu tổng hợp của thống kê 5.1. */
     OPS_ANALYSIS(Set.of(RoleName.LOGISTICS_MANAGER));
 

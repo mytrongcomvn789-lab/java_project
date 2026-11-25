@@ -96,7 +96,7 @@ public final class RbacPolicy {
             // 7.1: AI Service (hợp đồng nháp). Chỉ JWT người dùng; service còn kiểm phạm vi đơn/trạm.
             rule(GET, "/v1/ai/orders/{id}/eta", CUSTOMER, DISPATCHER, STATION_OPERATOR),
             rule(POST, "/v1/ai/orders/{id}/summary", CUSTOMER, DISPATCHER, STATION_OPERATOR),
-            rule(POST, "/v1/ai/chat", CUSTOMER, DISPATCHER, STATION_OPERATOR),
+            rule(POST, "/v1/ai/chat", CUSTOMER),
             rule(POST, "/v1/ai/analytics", LOGISTICS_MANAGER),
             // 5.1: thống kê đơn, tỷ lệ giao, tải trạm (service còn @PreAuthorize và lọc theo trạm được phân công).
             rule(GET, "/v1/statistics/orders/summary", LOGISTICS_MANAGER),

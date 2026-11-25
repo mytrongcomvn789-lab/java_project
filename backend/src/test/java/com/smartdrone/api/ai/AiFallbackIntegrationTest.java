@@ -63,7 +63,8 @@ class AiFallbackIntegrationTest {
         assertTrue(body.get("degraded").asBoolean());
         assertFalse(body.get("mock").asBoolean());
         assertEquals("FALLBACK", body.get("source").asString());
-        assertTrue(body.get("result").isNull());
+        assertTrue(body.path("result").path("reply").asString().contains("tạm thời"));
+        assertFalse(body.path("result").path("conversationId").asString().isBlank());
         assertFalse(r.body().contains("FAKE-KEY"), "khóa không được xuất hiện trong response");
         assertFalse(props.toString().contains("FAKE-KEY"), "AiProperties.toString không được in khóa");
         assertFalse(props.gemini().toString().contains("FAKE-KEY"));
