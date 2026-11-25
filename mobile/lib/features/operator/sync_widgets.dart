@@ -12,17 +12,17 @@ class QueuedNotice extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    // Cùng màu vàng với banner "chờ đồng bộ" ở màn chính để người dùng nhận ra là một việc.
+    final warn = StatusPalette.pending;
     return Container(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(14),
         margin: const EdgeInsets.only(bottom: 12),
         decoration: BoxDecoration(
-            color: scheme.tertiaryContainer,
-            borderRadius: BorderRadius.circular(8)),
+            color: warn.background, borderRadius: BorderRadius.circular(14)),
         child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          const Icon(Icons.cloud_off_outlined),
-          const SizedBox(width: 8),
-          Expanded(child: Text(text)),
+          Icon(Icons.cloud_off_outlined, color: warn.foreground),
+          const SizedBox(width: 10),
+          Expanded(child: Text(text, style: TextStyle(color: warn.foreground))),
         ]));
   }
 }

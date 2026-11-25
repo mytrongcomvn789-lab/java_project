@@ -834,7 +834,7 @@ class _ReturnDetailScreenState extends ConsumerState<ReturnDetailScreen> {
       ]),
       const SizedBox(height: 16),
       InfoCard('Lộ trình', [
-        InfoRow('Trạm gửi (nhận lại)', _stationName(stations, o.pickupStationId)),
+        InfoRow('Trạm gửi', _stationName(stations, o.pickupStationId)),
         InfoRow('Trạm nhận', _stationName(stations, o.dropoffStationId)),
       ]),
       InfoCard('Kiện hàng', [
