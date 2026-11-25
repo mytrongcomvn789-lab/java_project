@@ -73,6 +73,31 @@ app:
     max-failed-attempts: 5
     otp-digits: 6
 
+smartdrone:
+  ai: # 7.1: AI Service. Mọi giá trị hạn mức là ƯỚC LƯỢNG thấp hơn gói miễn phí Gemini; đối chiếu trang rate limit trong AI Studio.
+    provider: AUTO # AUTO: có key -> Gemini; không key -> Mock (chỉ profile dev/test/h2/demo) hoặc Disabled
+    fallback-enabled: false # true: khi provider lỗi/không cấu hình trả degraded=true thay vì lỗi 5xx
+    send-personal-data: false # false: che email/SĐT/dãy số dài trước khi gửi ra ngoài (khuyến nghị cho gói miễn phí)
+    max-chat-message-chars: 1000
+    gemini:
+      api-key: ${SMARTDRONE_AI_GEMINI_API_KEY:} # chỉ đọc từ biến môi trường; KHÔNG ghi khóa vào file này
+      model: gemini-2.5-flash-lite # CẦN KIỂM TRA LẠI: Google đổi tên/ngừng model thường xuyên
+      base-url: https://generativelanguage.googleapis.com
+      api-version: v1beta
+      connect-timeout: PT3S
+      read-timeout: PT15S
+      max-retries: 2 # tối đa 2
+      max-output-tokens: 1024
+    rate-limit:
+      per-user-per-minute: 5
+      global-per-minute: 10
+    budget:
+      user-tokens-per-day: 20000
+      global-tokens-per-day: 200000
+    breaker:
+      failure-threshold: 5
+      open-duration: PT30S
+
 logging:
   level:
     root: INFO
