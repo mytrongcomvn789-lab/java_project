@@ -1,3 +1,5 @@
+> **7.5 đã triển khai:** hợp đồng analytics hiện hành ở [operations-ai-analytics.md](operations-ai-analytics.md). Phần analytics khung 7.1 bên dưới chỉ là lịch sử; dùng report/analysis, evidence IDs và fallback của 7.5.
+
 > Cập nhật 7.4 (25/11/2026): hợp đồng CHAT đã được triển khai và thay thế phần chat nháp bên dưới. Xem [customer-ai-chat.md](customer-ai-chat.md): chỉ CUSTOMER, hội thoại theo chủ sở hữu, fallback chat có result. ETA/summary/analytics không thay đổi.
 
 # AI API (task 7.1, APDDMP-51) — hợp đồng NHÁP v1
