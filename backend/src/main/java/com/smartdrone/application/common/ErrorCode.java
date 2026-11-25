@@ -39,6 +39,12 @@ public enum ErrorCode {
     PICKUP_CODE_EXPIRED(HttpStatus.GONE, "Mã nhận hàng đã hết hạn, khách cần mở lại mã"),
     PICKUP_CODE_LOCKED(HttpStatus.TOO_MANY_REQUESTS, "Mã nhận hàng đã bị khóa do nhập sai quá số lần cho phép"),
     PICKUP_CODE_USED(HttpStatus.CONFLICT, "Mã nhận hàng đã được sử dụng"),
+    AI_NOT_CONFIGURED(HttpStatus.SERVICE_UNAVAILABLE, "Tính năng AI chưa được cấu hình"),
+    AI_PROVIDER_UNAVAILABLE(HttpStatus.SERVICE_UNAVAILABLE, "Dịch vụ AI tạm thời không khả dụng, vui lòng thử lại sau"),
+    AI_TIMEOUT(HttpStatus.GATEWAY_TIMEOUT, "Dịch vụ AI phản hồi quá chậm, vui lòng thử lại sau"),
+    AI_RATE_LIMITED(HttpStatus.TOO_MANY_REQUESTS, "Bạn gửi yêu cầu AI quá nhanh, vui lòng thử lại sau"),
+    AI_BUDGET_EXCEEDED(HttpStatus.TOO_MANY_REQUESTS, "Đã hết hạn mức sử dụng AI trong ngày"),
+    AI_RESPONSE_INVALID(HttpStatus.BAD_GATEWAY, "Dịch vụ AI trả về kết quả không hợp lệ"),
     INTERNAL_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "Lỗi hệ thống, vui lòng thử lại sau");
     
     private final HttpStatus status;
