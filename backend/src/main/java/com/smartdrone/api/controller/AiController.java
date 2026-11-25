@@ -45,10 +45,14 @@ public class AiController {
     private final AiDataAccessGuard guard;
     private final com.smartdrone.application.ai.chat.CustomerChatService chat;
 
-    public AiController(AiService ai, AiDataAccessGuard guard, com.smartdrone.application.ai.chat.CustomerChatService chat) {
+    private final com.smartdrone.application.eta.EtaService eta;
+
+    public AiController(AiService ai, AiDataAccessGuard guard, com.smartdrone.application.ai.chat.CustomerChatService chat,
+                        com.smartdrone.application.eta.EtaService eta) {
         this.ai = ai;
         this.guard = guard;
         this.chat = chat;
+        this.eta = eta;
     }
 
     public record ChatRequest(UUID conversationId, @NotBlank String message, UUID orderId) { }
@@ -59,10 +63,9 @@ public class AiController {
 
     @GetMapping("/orders/{id}/eta")
     @PreAuthorize("hasAnyRole('CUSTOMER','DISPATCHER','STATION_OPERATOR')")
-    @Operation(summary = "Ước lượng thời gian giao (khung 7.1; logic thật ở 7.2)")
+    @Operation(summary = "7.2: ETA bản công thức (khoảng cách ÷ vận tốc + chờ trạm), không dùng AI/ML")
     public ResponseEntity<AiResult> eta(JwtAuthenticationToken auth, @PathVariable UUID id) {
-        var blocks = guard.orderBlocks(AiTask.ETA, user(auth), role(auth), id);
-        return ok(ai.run(user(auth), role(auth), AiTask.ETA, blocks));
+        return ok(eta.estimate(user(auth), role(auth), id));
     }
 
     @PostMapping("/orders/{id}/summary")
