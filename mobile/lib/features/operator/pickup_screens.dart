@@ -83,10 +83,17 @@ class _QrScanScreenState extends ConsumerState<QrScanScreen> {
           builder(context, onCode: _onCode, errorView: _problem),
           // Khung ngắm và vạch quét chỉ để trang trí, không chặn thao tác chạm.
           const IgnorePointer(child: _ScanOverlay()),
-          SafeArea(
-              child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Row(children: [
+          // Phải gắn vào mép trên bằng Positioned: Stack(expand) sẽ kéo giãn một con thường ra toàn
+          // màn hình và đẩy thanh này xuống giữa.
+          Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              child: SafeArea(
+                  bottom: false,
+                  child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Row(children: [
                     _RoundButton(
                         key: const Key('scan-close'),
                         icon: Icons.arrow_back,
@@ -105,7 +112,7 @@ class _QrScanScreenState extends ConsumerState<QrScanScreen> {
                         tooltip: torch ? 'Tắt đèn flash' : 'Bật đèn flash',
                         onTap: () =>
                             ref.read(scanTorchProvider.notifier).state = !torch),
-                  ]))),
+                  ])))),
           Positioned(
               left: 16,
               right: 16,

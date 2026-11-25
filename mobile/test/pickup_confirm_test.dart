@@ -439,6 +439,9 @@ void main() {
       await tester.tap(find.byKey(const Key('scan-button')));
       await tester.pumpAndSettle();
       expect(find.text('Quét mã nhận hàng'), findsOneWidget);
+      // Thanh nút phải ở mép TRÊN màn hình (từng bị đẩy xuống giữa do Stack kéo giãn SafeArea).
+      expect(tester.getTopLeft(find.byKey(const Key('scan-close'))).dy, lessThan(120));
+      expect(tester.getTopLeft(find.byKey(const Key('scan-torch'))).dy, lessThan(120));
       expect(find.byTooltip('Bật đèn flash'), findsOneWidget);
       final scope = ProviderScope.containerOf(tester.element(find.byType(QrScanScreen)));
       expect(scope.read(scanTorchProvider), isFalse);
