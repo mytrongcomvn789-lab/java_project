@@ -39,21 +39,25 @@ Ghi chú: `GET /v1/orders/{id}/eta` và `/summary` (không có `ai`) là route n
 
 ## 3. Endpoint
 
-### 3.1 ETA — `GET /v1/ai/orders/{id}/eta` (7.2)
+### 3.1 ETA — `GET /v1/ai/orders/{id}/eta` (7.2, ĐÃ TRIỂN KHAI, thay hợp đồng nháp)
 
-Thành công `200`:
+ETA tính bằng **công thức**, không gọi AI/provider: `ETA = mốc xuất phát + ceil(khoảng cách haversine ÷ vận tốc × 60) + thời gian chờ trạm`. `source = FORMULA`, `model = null`, `usage = 0`. Đây là ước tính nghiệp vụ, **không phải ML** và không điều khiển drone. Vận tốc/thời gian chờ lấy từ `app.eta.*` (giá trị hiện tại là giả định demo chưa hiệu chuẩn).
+
+- SCHEDULED/PREPARING: mốc xuất phát = `slotStart` của lần giao ACTIVE (chưa có thì `now`; quá khứ thì chặn về `now`).
+- IN_TRANSIT: mốc = thời điểm cất cánh trong lịch sử trạng thái + thời gian bay (không cộng chờ trạm). Quá hạn ước tính thì `etaAt = now`, kèm `OVERDUE_NO_LIVE_POSITION` (chưa có GPS drone thật).
+- Trạng thái khác: `applicable=false`, `reason=STATUS_NOT_APPLICABLE`.
+
+`result` khi tính được:
 
 ```json
-{
-  "result": { "etaMinutes": 25, "confidence": "LOW", "explanation": "..." },
-  "model": "gemini-2.5-flash-lite", "mock": false, "degraded": false, "source": "PROVIDER",
-  "usage": { "promptTokens": 410, "outputTokens": 60, "totalTokens": 470 },
-  "requestId": "8f0c7a52-3b0e-4a86-9d63-5d6b1c1f2a10",
-  "generatedAt": "2026-11-25T03:00:00Z", "fallbackReason": null
-}
+{ "orderId": "...", "status": "SCHEDULED", "applicable": true, "computed": true,
+  "method": "FORMULA_V1", "computedAt": "2026-11-25T03:00:00Z",
+  "etaAt": "2026-11-25T05:08:00Z", "etaMinutes": 128,
+  "travelMinutes": 3, "waitMinutes": 5, "distanceKm": 1.57,
+  "confidence": "LOW", "limitations": ["STRAIGHT_LINE_DISTANCE", "CONSTANT_SPEED_UNCALIBRATED", "CONSTANT_STATION_WAIT"] }
 ```
 
-`etaMinutes`: số nguyên 0..10080; `confidence`: `LOW|MEDIUM|HIGH`.
+Không tính được: `computed=false`, `reason` là `COORDINATES_MISSING` | `SPEED_INVALID` | `WAIT_INVALID`, `etaAt`/`etaMinutes` = null. `confidence` luôn `LOW` (không phải xác suất). Quyền: như bảng mục 2 (đơn ngoài phạm vi và không tồn tại → 404).
 
 ### 3.2 Tóm tắt đơn — `POST /v1/ai/orders/{id}/summary` (7.3)
 
