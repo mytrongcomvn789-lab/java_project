@@ -14,19 +14,37 @@ class AssignedStation {
       {required this.id,
       required this.name,
       required this.status,
-      this.address});
+      this.address,
+      this.capacity = 0,
+      this.slotUsed = 0,
+      this.connection = 'UNKNOWN'});
   final String id, name, status;
 
   /// Trạm tạo trước khi có cột địa chỉ thì trống; hiển thị tên trạm thay thế.
   final String? address;
 
+  /// Số lịch giao tối đa mỗi khung giờ và số chỗ đang giữ trong khung giờ hiện tại (4.2).
+  final int capacity, slotUsed;
+
+  /// `ONLINE`, `OFFLINE` hoặc `UNKNOWN`. Backend chưa có nguồn heartbeat nên thường là UNKNOWN
+  /// và app không được giả là online.
+  final String connection;
+
   bool get isActive => status == 'ACTIVE';
 
-  factory AssignedStation.fromJson(Map<String, dynamic> json) => AssignedStation(
-      id: json['id'] as String,
-      name: json['name'] as String? ?? '',
-      status: json['status'] as String? ?? '',
-      address: json['address'] as String?);
+  factory AssignedStation.fromJson(Map<String, dynamic> json) {
+    final conn = json['connection'];
+    final slot = json['slot'];
+    return AssignedStation(
+        id: json['id'] as String,
+        name: json['name'] as String? ?? '',
+        status: json['status'] as String? ?? '',
+        address: json['address'] as String?,
+        capacity: (json['capacity'] as num?)?.toInt() ?? 0,
+        slotUsed: slot is Map ? (slot['used'] as num?)?.toInt() ?? 0 : 0,
+        connection:
+            conn is Map ? conn['state'] as String? ?? 'UNKNOWN' : 'UNKNOWN');
+  }
 }
 
 /// Lần giao đang hiệu lực của đơn; `id` bắt buộc khi nhận kiện.

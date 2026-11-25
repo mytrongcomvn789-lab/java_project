@@ -10,6 +10,10 @@ import 'support/fakes.dart';
 
 void main() {
   Future<void> mount(WidgetTester tester, Session session) async {
+    // Khung điện thoại 390 × 844 dp theo đặc tả giao diện (mặc định của test là 800 × 600).
+    tester.view.physicalSize = const Size(1170, 2532);
+    tester.view.devicePixelRatio = 3;
+    addTearDown(tester.view.reset);
     await session.restore();
     await tester.pumpWidget(ProviderScope(overrides: [
       sessionProvider.overrideWith((ref) => session),

@@ -15,6 +15,14 @@ final operatorUserProvider = Provider<String?>((ref) => ref.watch(sessionProvide
         ? s.user!.id
         : null)));
 
+/// Mã nhận hàng vừa quét bằng nút Quét QR ở thanh điều hướng, chờ operator chọn đơn cần giao.
+/// Màn xác nhận giao lấy mã này một lần rồi xóa. Gắn với tài khoản đang đăng nhập nên đổi tài
+/// khoản thì mã bị bỏ; chỉ nằm trong bộ nhớ, không ghi ra ổ đĩa và không được ghi log.
+final scannedCredentialProvider = StateProvider.autoDispose<PickupCredential?>((ref) {
+  ref.watch(operatorUserProvider);
+  return null;
+});
+
 /// Các trạm operator được phân công (server đã giới hạn theo người gọi).
 final assignedStationsProvider =
     FutureProvider.autoDispose<List<AssignedStation>>((ref) {

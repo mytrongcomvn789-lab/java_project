@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/network/dio_client.dart';
+import '../../core/theme/app_theme.dart';
+import 'drone_hero.dart';
 import 'session.dart';
 
 final appMessengerKey = GlobalKey<ScaffoldMessengerState>();
@@ -80,105 +82,200 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       if (mounted) setState(() => _busy = false);
     }
   }
+  /// Vai trò chỉ là gợi ý hiển thị: server quyết định vai trò thật theo tài khoản và app tự
+  /// chuyển tới màn chính tương ứng sau khi đăng nhập.
+  _LoginRole _role = _LoginRole.customer;
 
   @override
   Widget build(BuildContext context) => Scaffold(
-      body: SafeArea(
-          child: Center(
-              child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(24),
-                  child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 440),
-                      child: AutofillGroup(
-                          child: Form(
-                              key: _form,
-                              child: Column(
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.stretch,
-                                  children: [
-                                    Icon(Icons.flight_takeoff,
-                                        size: 56,
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .primary),
-                                    const SizedBox(height: 16),
-                                    Text('SmartDroneDelivery',
-                                        textAlign: TextAlign.center,
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .headlineSmall),
-                                    const SizedBox(height: 8),
-                                    const Text('Đăng nhập để tiếp tục',
-                                        textAlign: TextAlign.center),
-                                    const SizedBox(height: 28),
-                                    TextFormField(
-                                        controller: _email,
-                                        enabled: !_busy,
-                                        decoration: const InputDecoration(
-                                            labelText: 'Email'),
-                                        keyboardType:
-                                            TextInputType.emailAddress,
-                                        autofillHints: const [
-                                          AutofillHints.username
-                                        ],
-                                        textInputAction: TextInputAction.next,
-                                        validator: (value) => value == null ||
-                                                !RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$')
-                                                    .hasMatch(value.trim())
-                                            ? 'Nhập địa chỉ email hợp lệ.'
-                                            : null),
-                                    const SizedBox(height: 16),
-                                    TextFormField(
-                                        controller: _password,
-                                        enabled: !_busy,
-                                        obscureText: _obscure,
-                                        autocorrect: false,
-                                        enableSuggestions: false,
-                                        autofillHints: const [
-                                          AutofillHints.password
-                                        ],
-                                        onFieldSubmitted: (_) => _submit(),
-                                        decoration: InputDecoration(
-                                            labelText: 'Mật khẩu',
-                                            suffixIcon: IconButton(
-                                                tooltip: _obscure
-                                                    ? 'Hiện mật khẩu'
-                                                    : 'Ẩn mật khẩu',
-                                                onPressed: () => setState(
-                                                    () => _obscure = !_obscure),
-                                                icon: Icon(_obscure
-                                                    ? Icons.visibility
-                                                    : Icons.visibility_off))),
-                                        validator: (value) =>
-                                            value == null || value.isEmpty
-                                                ? 'Nhập mật khẩu.'
-                                                : null),
-                                    if (_error != null)
-                                      Padding(
-                                          padding:
-                                              const EdgeInsets.only(top: 16),
-                                          child: Text(_error!,
-                                              style: TextStyle(
-                                                  color: Theme.of(context)
-                                                      .colorScheme
-                                                      .error),
-                                              semanticsLabel:
-                                                  'Lỗi đăng nhập: $_error')),
-                                    const SizedBox(height: 24),
-                                    FilledButton(
-                                        onPressed: _busy ? null : _submit,
-                                        child: Padding(
-                                            padding: const EdgeInsets.all(12),
-                                            child: Text(_busy
-                                                ? 'Đang đăng nhập…'
-                                                : 'Đăng nhập'))),
-                                    const SizedBox(height: 16),
-                                    const Text(
-                                        'Dành cho khách hàng và người vận hành trạm.',
-                                        textAlign: TextAlign.center),
-                                  ]))))))));
+      backgroundColor: AppColors.dark,
+      body: LayoutBuilder(builder: (context, box) {
+        final heroH = (box.maxHeight * 0.34).clamp(200.0, 320.0);
+        return Stack(children: [
+          Positioned(top: 0, left: 0, right: 0, height: heroH, child: const DroneHero()),
+          const Positioned(
+              top: 0,
+              left: 0,
+              child: SafeArea(
+                  child: Padding(
+                      padding: EdgeInsets.fromLTRB(24, 16, 0, 0), child: _Logo()))),
+          SingleChildScrollView(
+              padding: EdgeInsets.only(top: heroH - 30),
+              child: ConstrainedBox(
+                  constraints: BoxConstraints(minHeight: box.maxHeight - heroH + 30),
+                  child: Container(
+                      decoration: const BoxDecoration(
+                          color: AppColors.surface,
+                          borderRadius: BorderRadius.vertical(
+                              top: Radius.circular(AppRadii.sheet))),
+                      padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
+                      child: Center(
+                          child: ConstrainedBox(
+                              constraints: const BoxConstraints(maxWidth: 440),
+                              child: _formBody(context)))))),
+        ]);
+      }));
+
+  Widget _formBody(BuildContext context) {
+    final theme = Theme.of(context);
+    return AutofillGroup(
+        child: Form(
+            key: _form,
+            child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+              Text('Giao hàng bằng drone,\ntheo dõi từng phút',
+                  style: theme.textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.w800, height: 1.25, color: AppColors.text)),
+              const SizedBox(height: 8),
+              const Text(
+                  'Đăng nhập để tạo đơn, theo dõi hành trình và vận hành trạm.',
+                  style: TextStyle(color: AppColors.textMuted, height: 1.4)),
+              const SizedBox(height: 20),
+              _RoleSwitch(
+                  selected: _role,
+                  onChanged: _busy ? null : (r) => setState(() => _role = r)),
+              const SizedBox(height: 20),
+              TextFormField(
+                  controller: _email,
+                  enabled: !_busy,
+                  decoration: InputDecoration(
+                      labelText: 'Email',
+                      hintText: _role == _LoginRole.customer
+                          ? 'ten@email.com'
+                          : 'nhanvien@tram.vn',
+                      prefixIcon: const Icon(Icons.mail_outline)),
+                  keyboardType: TextInputType.emailAddress,
+                  autofillHints: const [AutofillHints.username],
+                  textInputAction: TextInputAction.next,
+                  validator: (value) => value == null ||
+                          !RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$').hasMatch(value.trim())
+                      ? 'Nhập địa chỉ email hợp lệ.'
+                      : null),
+              const SizedBox(height: 16),
+              TextFormField(
+                  controller: _password,
+                  enabled: !_busy,
+                  obscureText: _obscure,
+                  autocorrect: false,
+                  enableSuggestions: false,
+                  autofillHints: const [AutofillHints.password],
+                  onFieldSubmitted: (_) => _submit(),
+                  decoration: InputDecoration(
+                      labelText: 'Mật khẩu',
+                      prefixIcon: const Icon(Icons.lock_outline),
+                      suffixIcon: IconButton(
+                          tooltip: _obscure ? 'Hiện mật khẩu' : 'Ẩn mật khẩu',
+                          onPressed: () => setState(() => _obscure = !_obscure),
+                          icon: Icon(_obscure
+                              ? Icons.visibility_outlined
+                              : Icons.visibility_off_outlined))),
+                  validator: (value) =>
+                      value == null || value.isEmpty ? 'Nhập mật khẩu.' : null),
+              if (_error != null)
+                Container(
+                    margin: const EdgeInsets.only(top: 16),
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                        color: StatusPalette.failed.background,
+                        borderRadius: BorderRadius.circular(12)),
+                    child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                      const Icon(Icons.error_outline, size: 18, color: AppColors.danger),
+                      const SizedBox(width: 8),
+                      Expanded(
+                          child: Text(_error!,
+                              style: const TextStyle(color: AppColors.danger),
+                              semanticsLabel: 'Lỗi đăng nhập: $_error')),
+                    ])),
+              const SizedBox(height: 24),
+              FilledButton(
+                  onPressed: _busy ? null : _submit,
+                  child: Text(_busy ? 'Đang đăng nhập…' : 'Đăng nhập')),
+              const SizedBox(height: 16),
+              Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                const Icon(Icons.lock_outline, size: 14, color: AppColors.textMuted),
+                const SizedBox(width: 6),
+                Flexible(
+                    child: Text(
+                        _role == _LoginRole.customer
+                            ? 'Dành cho khách hàng. Phiên đăng nhập được bảo vệ bằng JWT.'
+                            : 'Dành cho nhân viên vận hành trạm. Phiên được bảo vệ bằng JWT.',
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                            color: AppColors.textMuted, fontSize: 12, height: 1.4))),
+              ]),
+            ])));
+  }
 }
 
+
+enum _LoginRole { customer, operator }
+
+class _Logo extends StatelessWidget {
+  const _Logo();
+  @override
+  Widget build(BuildContext context) => Row(mainAxisSize: MainAxisSize.min, children: [
+        Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+                color: AppColors.amber, borderRadius: BorderRadius.circular(11)),
+            child: const Icon(Icons.flight, color: AppColors.dark, size: 22)),
+        const SizedBox(width: 10),
+        const Text('SmartDrone',
+            style: TextStyle(
+                color: Colors.white, fontSize: 20, fontWeight: FontWeight.w800)),
+      ]);
+}
+
+/// Chọn vai trò hiển thị trên màn đăng nhập (Khách hàng / Vận hành trạm). Vùng chạm cao 48.
+class _RoleSwitch extends StatelessWidget {
+  const _RoleSwitch({required this.selected, required this.onChanged});
+  final _LoginRole selected;
+  final ValueChanged<_LoginRole>? onChanged;
+
+  @override
+  Widget build(BuildContext context) => Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+          color: AppColors.background, borderRadius: BorderRadius.circular(14)),
+      child: Row(children: [
+        _seg('Khách hàng', Icons.person_outline, _LoginRole.customer),
+        _seg('Vận hành trạm', Icons.warehouse_outlined, _LoginRole.operator),
+      ]));
+
+  Widget _seg(String label, IconData icon, _LoginRole role) {
+    final on = selected == role;
+    return Expanded(
+        child: Semantics(
+            button: true,
+            selected: on,
+            label: label,
+            excludeSemantics: true,
+            child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: onChanged == null ? null : () => onChanged!(role),
+                child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 150),
+                    height: 44,
+                    decoration: BoxDecoration(
+                        color: on ? AppColors.surface : Colors.transparent,
+                        borderRadius: BorderRadius.circular(11),
+                        boxShadow: on ? cardShadow : null),
+                    child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                      Icon(icon,
+                          size: 18,
+                          color: on ? AppColors.primary : AppColors.textMuted),
+                      const SizedBox(width: 6),
+                      Flexible(
+                          child: Text(label,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: on ? FontWeight.w700 : FontWeight.w500,
+                                  color: on ? AppColors.primary : AppColors.textMuted))),
+                    ])))));
+  }
+}
 class WorkspaceScreen extends ConsumerWidget {
   const WorkspaceScreen({super.key, required this.operator});
   final bool operator;

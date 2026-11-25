@@ -82,6 +82,13 @@ class PickupConfirmController
     ref.watch(operatorUserProvider);
     ref.onDispose(() => _generation++);
     Future.microtask(reload);
+    // Mã vừa quét ở thanh điều hướng: lấy một lần rồi xóa để không dùng lại cho đơn khác.
+    final scanned = ref.read(scannedCredentialProvider);
+    if (scanned != null) {
+      Future.microtask(
+          () => ref.read(scannedCredentialProvider.notifier).state = null);
+      return PickupConfirmState(credential: scanned);
+    }
     return const PickupConfirmState();
   }
 

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../core/theme/app_theme.dart';
 import '../../core/realtime/realtime_client.dart';
 import '../../core/realtime/realtime_provider.dart';
 import 'order_models.dart';
@@ -12,20 +13,9 @@ String formatTime(DateTime? t) => t == null
     ? '—'
     : '${two(t.hour)}:${two(t.minute)}:${two(t.second)} ${two(t.day)}/${two(t.month)}/${t.year}';
 
-/// Màu theo ý nghĩa: xanh lá = xong/đến nơi, cam = đang chờ hoặc cần chú ý, xanh dương = đang di
-/// chuyển, đỏ = lỗi hoặc bị từ chối, xám = đã đóng. Người vận hành nhìn màu là biết đơn nào cần xử lý.
-Color statusColor(BuildContext context, String status) {
-  final scheme = Theme.of(context).colorScheme;
-  return switch (status) {
-    'DELIVERED' || 'AWAITING_PICKUP' => Colors.green.shade700,
-    'PENDING' || 'RETURNING' => Colors.orange.shade800,
-    'REJECTED' || 'FAILED' => scheme.error,
-    'IN_TRANSIT' => Colors.blue.shade700,
-    'SCHEDULED' || 'PREPARING' || 'APPROVED' => Colors.indigo.shade600,
-    'CANCELLED' || 'RETURNED' => Colors.blueGrey.shade600,
-    _ => scheme.primary,
-  };
-}
+/// Màu chữ/icon của một trạng thái, lấy từ bảng màu chip của đặc tả ([StatusPalette]).
+Color statusColor(BuildContext context, String status) =>
+    StatusPalette.of(status).foreground;
 
 IconData statusIcon(String status) => switch (status) {
       'PENDING' => Icons.hourglass_top_rounded,
@@ -48,20 +38,23 @@ class StatusChip extends StatelessWidget {
   final String status, label;
   @override
   Widget build(BuildContext context) {
-    final color = statusColor(context, status);
+    final palette = StatusPalette.of(status);
     return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
         decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.12),
-            borderRadius: BorderRadius.circular(20)),
+            color: palette.background,
+            borderRadius: BorderRadius.circular(AppRadii.pill)),
         child: Row(mainAxisSize: MainAxisSize.min, children: [
-          Icon(statusIcon(status), size: 14, color: color),
+          Icon(statusIcon(status),
+              size: 14, color: palette.foreground, semanticLabel: label),
           const SizedBox(width: 4),
           Flexible(
               child: Text(label,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                      color: color, fontSize: 12, fontWeight: FontWeight.w600))),
+                      color: palette.foreground,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700))),
         ]));
   }
 }
@@ -76,8 +69,16 @@ class OrderListCard extends StatelessWidget {
       required this.statusLabel,
       required this.lines,
       this.time,
-      this.onTap});
+      this.onTap,
+      this.actionLabel,
+      this.actionKey,
+      this.onAction});
   final String title, status, statusLabel;
+
+  /// Nút hành động chính của thẻ (ví dụ "Nhận kiện"); bỏ trống thì không hiện.
+  final String? actionLabel;
+  final Key? actionKey;
+  final VoidCallback? onAction;
 
   /// Mỗi phần tử là (icon, nội dung). Dòng trống bị bỏ.
   final List<(IconData, String)> lines;
@@ -87,9 +88,15 @@ class OrderListCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Card(
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
+    final shape = BorderRadius.circular(AppRadii.card);
+    return DecoratedBox(
+        decoration: BoxDecoration(
+            color: AppColors.surface, borderRadius: shape, boxShadow: cardShadow),
+        child: Material(
+            color: Colors.transparent,
+            borderRadius: shape,
+            clipBehavior: Clip.antiAlias,
+            child: InkWell(
             onTap: onTap,
             child: Padding(
                 padding: const EdgeInsets.all(14),
@@ -122,7 +129,16 @@ class OrderListCard extends StatelessWidget {
                         child: Text(time!,
                             style: theme.textTheme.bodySmall?.copyWith(
                                 color: theme.colorScheme.onSurfaceVariant))),
-                ]))));
+                  if (actionLabel != null)
+                    Padding(
+                        padding: const EdgeInsets.only(top: 12),
+                        child: FilledButton(
+                            key: actionKey,
+                            onPressed: onAction ?? onTap,
+                            style: FilledButton.styleFrom(
+                                minimumSize: const Size.fromHeight(44)),
+                            child: Text(actionLabel!))),
+                ])))));
   }
 }
 
