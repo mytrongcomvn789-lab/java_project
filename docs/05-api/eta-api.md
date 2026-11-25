@@ -60,7 +60,21 @@ Phạm vi xem đơn do `OrderTrackingService` quyết định, cùng quy tắc v
    - `source = "FORMULA"`, `result.method = "FORMULA_V1"`, `result.confidence = "LOW"`.
    - `etaAt` bằng `slotStart + travelMinutes + waitMinutes` (đơn SCHEDULED/PREPARING).
    - Với đơn DELIVERED hoặc PENDING: `applicable=false`.
-5. Lưu ý với dữ liệu seed: các đơn IN_TRANSIT trong seed **không có dòng lịch sử cất cánh**, nên mốc xuất phát lùi về `now`. Số này chỉ để minh hoạ, không phải thời gian bay thật.
+5. **Bằng chứng đã chạy (25/11/2026, SQL Server local, profile `sqlserver`, tài khoản `customer@demo.local`):**
+
+   | Trạng thái đơn | Kết quả |
+   |---|---|
+   | SCHEDULED | 200, `FORMULA`, ETA 22 phút (di chuyển 17 + chờ 5, 11,26 km) |
+   | PREPARING | 200, `FORMULA`, ETA 29 phút (24 + 5, 15,62 km) |
+   | IN_TRANSIT | 200, `FORMULA`, ETA 8 phút (8 + 0, 4,72 km) |
+   | APPROVED, REJECTED, AWAITING_PICKUP, FAILED, RETURNING, DELIVERED | 200, `applicable=false`, `STATUS_NOT_APPLICABLE` |
+   | Đơn không tồn tại | 404 |
+   | `manager@demo.local` | 403 |
+   | Không có JWT | 401 |
+
+   Đây là kiểm tra chức năng bằng gọi tay trên dữ liệu seed. Nó **không** phải đánh giá độ chính xác của ETA.
+
+6. Lưu ý với dữ liệu seed: các đơn IN_TRANSIT trong seed **không có dòng lịch sử cất cánh**, nên mốc xuất phát lùi về `now`. Số này chỉ để minh hoạ, không phải thời gian bay thật.
 
 ## 5. Đánh giá baseline và điều kiện nâng cấp hồi quy
 
