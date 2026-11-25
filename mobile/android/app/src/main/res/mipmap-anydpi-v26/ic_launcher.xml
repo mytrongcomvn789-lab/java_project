@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Icon thích ứng (Android 8+): nền #073B45 + lớp trước là drone và ghim vị trí.
+     Nguồn: assets/icon/icon.svg. Lớp trước đã thu nhỏ để nằm trong vùng an toàn của mọi kiểu mặt nạ. -->
+<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+    <background android:drawable="@color/ic_launcher_background"/>
+    <foreground android:drawable="@mipmap/ic_launcher_foreground"/>
+</adaptive-icon>

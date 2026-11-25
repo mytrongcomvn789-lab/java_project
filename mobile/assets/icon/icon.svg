@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <rect width="1024" height="1024" fill="#073B45"/>
+  <circle cx="512" cy="512" r="430" fill="none" stroke="#0D5560" stroke-width="6"/>
+  <circle cx="512" cy="512" r="330" fill="none" stroke="#0D5560" stroke-width="4" stroke-dasharray="6 22"/>
+  <g stroke="#E8F7F6" stroke-width="46" stroke-linecap="round">
+    <path d="M512 512L262 262M512 512L762 262M512 512L262 762M512 512L762 762"/>
+  </g>
+  <g fill="#0D5560" stroke="#0FB5A6" stroke-width="26">
+    <circle cx="262" cy="262" r="118"/><circle cx="762" cy="262" r="118"/>
+    <circle cx="262" cy="762" r="118"/><circle cx="762" cy="762" r="118"/>
+  </g>
+  <g fill="#E8F7F6">
+    <circle cx="262" cy="262" r="20"/><circle cx="762" cy="262" r="20"/>
+    <circle cx="262" cy="762" r="20"/><circle cx="762" cy="762" r="20"/>
+  </g>
+  <path d="M512 300C420 300 360 372 360 452C360 570 512 722 512 722C512 722 664 570 664 452C664 372 604 300 512 300Z" fill="#FFFFFF"/>
+  <circle cx="512" cy="452" r="66" fill="#FFB703"/>
+  <circle cx="512" cy="452" r="26" fill="#073B45"/>
+</svg>
