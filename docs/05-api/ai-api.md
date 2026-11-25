@@ -1,3 +1,5 @@
+> Cập nhật 7.4 (25/11/2026): hợp đồng CHAT đã được triển khai và thay thế phần chat nháp bên dưới. Xem [customer-ai-chat.md](customer-ai-chat.md): chỉ CUSTOMER, hội thoại theo chủ sở hữu, fallback chat có result. ETA/summary/analytics không thay đổi.
+
 # AI API (task 7.1, APDDMP-51) — hợp đồng NHÁP v1
 
 > **Chờ chốt với chủ 7.2–7.6.** Task 7.1 chỉ dựng khung: endpoint trả đúng envelope này nhưng **chưa có logic ETA/tóm tắt/chat/phân tích thật**. Schema `result` của từng tác vụ có thể đổi khi các task đó làm.
