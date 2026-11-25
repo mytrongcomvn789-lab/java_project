@@ -102,6 +102,32 @@ class OperatorApi {
             replayed: res.headers.value('idempotent-replayed') == 'true');
       });
 
+  /// Đơn đang hoàn về (RETURNING). Server trả đơn có trạm gửi HOẶC trạm nhận thuộc phạm vi;
+  /// màn hình lọc thêm theo trạm GỬI vì hàng hoàn về nơi gửi (4.8).
+  Future<OrderPage> listReturning(
+          {int page = 1, int pageSize = 20, String? stationId}) =>
+      guardApi(() async {
+        final res = await _dio.get<Map<String, dynamic>>('/v1/orders',
+            queryParameters: {
+              'status': 'RETURNING',
+              'page': page,
+              'pageSize': pageSize,
+              'sort': 'createdAt,asc',
+              if (stationId != null) 'stationId': stationId,
+            });
+        return OrderPage.fromJson(res.data!);
+      });
+
+  /// Xác nhận đã nhận hàng hoàn: RETURNING → RETURNED. Trả đơn đã cập nhật.
+  Future<OrderDetail> completeReturn(CompleteReturnRequest r) =>
+      guardApi(() async {
+        final res = await _dio.post<Map<String, dynamic>>(
+            '/v1/orders/${r.orderId}/complete-return',
+            data: r.toBody(),
+            options: Options(headers: {'If-Match': r.ifMatch}));
+        return OrderDetail.fromJson(res.data!);
+      });
+
   /// Bằng chứng giao hàng của đơn đã giao (`GET /v1/orders/{id}/confirmation`).
   Future<DeliveryConfirmation> confirmation(String orderId) =>
       guardApi(() async {

@@ -4,6 +4,7 @@ import '../auth/session.dart';
 import '../orders/customer_order_models.dart' show OrderDetail, OrderSummary;
 import 'operator_api.dart';
 import 'operator_models.dart';
+import 'operator_sync.dart';
 
 const operatorPageSize = 20;
 
@@ -182,9 +183,13 @@ class ReceiptDetailState {
       this.receiving = false,
       this.notice,
       this.actionError,
-      this.gone = false});
+      this.gone = false,
+      this.queued = false});
   final ReceiptContext? context;
   final bool loading, receiving;
+
+  /// Mất mạng nên yêu cầu nhận kiện được lưu và sẽ tự gửi lại: đơn CHƯA được nhận trên server.
+  final bool queued;
 
   /// Lỗi tải chi tiết khi chưa có dữ liệu để hiện.
   final ApiFailure? error;
@@ -201,7 +206,7 @@ class ReceiptDetailState {
   OrderDetail? get order => context?.order;
 
   /// Đơn còn chờ nhận kiện (chỉ để quyết định hiện nút; server vẫn kiểm tra).
-  bool get canReceive => order?.status == 'SCHEDULED' && !gone;
+  bool get canReceive => order?.status == 'SCHEDULED' && !gone && !queued;
 
   ReceiptDetailState copyWith(
           {ReceiptContext? context,
@@ -211,6 +216,7 @@ class ReceiptDetailState {
           String? notice,
           ApiFailure? actionError,
           bool? gone,
+          bool? queued,
           bool clearError = false,
           bool clearNotice = false,
           bool clearActionError = false}) =>
@@ -221,7 +227,8 @@ class ReceiptDetailState {
           receiving: receiving ?? this.receiving,
           notice: clearNotice ? null : notice ?? this.notice,
           actionError: clearActionError ? null : actionError ?? this.actionError,
-          gone: gone ?? this.gone);
+          gone: gone ?? this.gone,
+          queued: queued ?? this.queued);
 }
 
 /// Chi tiết một đơn chờ nhận kiện và thao tác nhận. Server quyết định mọi điều kiện (đúng trạm,
@@ -276,15 +283,27 @@ class ReceiptDetailController
     if (ctx == null || state.receiving || !state.canReceive) return false;
     state = state.copyWith(
         receiving: true, clearActionError: true, clearNotice: true);
+    final request = ReceiveRequest.fromContext(ctx, note: note);
     try {
-      await _api.receive(ReceiveRequest.fromContext(ctx, note: note));
+      await _api.receive(request);
       _generation++; // bỏ phản hồi tải lại đang chờ (nếu có)
       ref.invalidate(receiptListProvider); // đơn rời danh sách chờ nhận
       state = state.copyWith(receiving: false);
       return true;
     } catch (e) {
       final failure = toApiFailure(e);
-      if (failure.kind == FailureKind.notFound) {
+      if (failure.kind == FailureKind.offline || failure.outcomeUnknown) {
+        // Mất mạng: lưu vào hàng đợi (6.5) để tự gửi lại. Khi gửi lại, hàng đợi tải đơn trước và
+        // chỉ gửi nếu đơn vẫn chờ nhận ở đúng phiên bản này (nhận kiện không replay được).
+        final user = ref.read(operatorUserProvider);
+        final saved = user != null &&
+            await ref
+                .read(operatorSyncProvider.notifier)
+                .enqueue(pendingReceive(user, request));
+        state = saved
+            ? state.copyWith(receiving: false, queued: true)
+            : state.copyWith(receiving: false, actionError: failure);
+      } else if (failure.kind == FailureKind.notFound) {
         ref.invalidate(receiptListProvider);
         state = state.copyWith(
             receiving: false,

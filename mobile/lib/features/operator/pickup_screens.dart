@@ -11,6 +11,7 @@ import 'confirmation_photo_picker.dart';
 import 'operator_models.dart';
 import 'pickup_confirm_controller.dart';
 import 'qr_scanner.dart';
+import 'sync_widgets.dart' show QueuedNotice;
 
 void _leave(BuildContext context) {
   if (context.canPop()) {
@@ -160,6 +161,10 @@ class _PickupConfirmScreenState extends ConsumerState<PickupConfirmScreen> {
                 ]));
     if (ok != true) return;
     final done = await _controller.confirm(_note.text);
+    if (!done && mounted && ref.read(pickupConfirmProvider(widget.orderId)).queued) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('Chưa có mạng: đã lưu, sẽ tự gửi khi có mạng.')));
+    }
     if (done && mounted) {
       final replayed = ref.read(pickupConfirmProvider(widget.orderId)).result?.replayed ?? false;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -242,6 +247,18 @@ class _PickupConfirmScreenState extends ConsumerState<PickupConfirmScreen> {
 
     if (state.result != null) {
       return _Success(state.result!, onDone: () => _leave(context));
+    }
+    if (state.queued) {
+      return ListView(padding: const EdgeInsets.all(16), children: [
+        const QueuedNotice(
+            key: Key('confirm-queued'),
+            text:
+                'Chưa có mạng nên yêu cầu xác nhận giao (kèm mã và ảnh) đã được lưu mã hóa trên máy. Đơn CHƯA được giao trên hệ thống; app sẽ tự gửi khi có mạng. Mã nhận hàng của khách chỉ có hiệu lực 30 phút nên hãy kết nối mạng sớm.'),
+        FilledButton(
+            key: const Key('confirm-queued-back'),
+            onPressed: () => _leave(context),
+            child: const Text('Về danh sách')),
+      ]);
     }
     final ready = state.credential != null &&
         photo.fileId != null &&

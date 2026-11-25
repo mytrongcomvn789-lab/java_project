@@ -7,6 +7,8 @@ import '../orders/customer_order_models.dart' show OrderSummary, Station;
 import '../orders/order_detail_controller.dart' show stationsProvider;
 import '../orders/order_screens.dart' show StatusChip, formatTime;
 import 'operator_controllers.dart';
+import 'return_controller.dart';
+import 'sync_widgets.dart';
 
 String _stationName(List<Station>? stations, String id) {
   for (final s in stations ?? const <Station>[]) {
@@ -25,10 +27,11 @@ class OperatorHomeScreen extends ConsumerWidget {
     final user = ref.watch(sessionProvider).user!;
     final receipts = ref.watch(receiptListProvider);
     final pickups = ref.watch(pickupListProvider);
+    final returns = ref.watch(returnListProvider);
     String count(OperatorListState s) =>
         s.loading || s.error != null ? '' : ' (${s.total})';
     return DefaultTabController(
-        length: 2,
+        length: 3,
         child: Scaffold(
             appBar: AppBar(
                 title: const Text('Vận hành trạm'),
@@ -50,10 +53,14 @@ class OperatorHomeScreen extends ConsumerWidget {
                   Tab(
                       key: const Key('tab-pickups'),
                       text: 'Chờ giao khách${count(pickups)}'),
+                  Tab(
+                      key: const Key('tab-returns'),
+                      text: 'Chờ nhận hoàn${count(returns)}'),
                 ])),
             body: Column(children: [
               _StationsBanner(
                   name: user.name.isEmpty ? user.email : user.name),
+              const SyncBanner(),
               Expanded(
                   child: TabBarView(children: [
                 _PagedOrders(
@@ -70,6 +77,13 @@ class OperatorHomeScreen extends ConsumerWidget {
                     onRefresh: ref.read(pickupListProvider.notifier).reload,
                     onLoadMore: () async {},
                     onTap: (o) => context.push('/operator/pickups/${o.id}')),
+                _PagedOrders(
+                    key: const Key('list-returns'),
+                    state: returns,
+                    emptyText: 'Không có đơn nào đang hoàn về trạm gửi của bạn.',
+                    onRefresh: ref.read(returnListProvider.notifier).reload,
+                    onLoadMore: () async {},
+                    onTap: (o) => context.push('/operator/returns/${o.id}')),
               ])),
             ])));
   }
@@ -284,10 +298,14 @@ class _ReceiptDetailScreenState extends ConsumerState<ReceiptDetailScreen> {
                 ]));
     if (ok != true) return;
     final received = await controller.receive(_note.text);
-    if (received && mounted) {
+    if (!mounted) return;
+    if (received) {
       ScaffoldMessenger.of(context)
           .showSnackBar(const SnackBar(content: Text('Đã nhận kiện.')));
       _backToList();
+    } else if (ref.read(receiptDetailProvider(widget.orderId)).queued) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('Chưa có mạng: đã lưu, sẽ tự gửi khi có mạng.')));
     }
   }
 
@@ -387,7 +405,12 @@ class _ReceiptDetailScreenState extends ConsumerState<ReceiptDetailScreen> {
         _Row('Khung giờ',
             '${formatTime(ctx.attempt.slotStart)} → ${formatTime(ctx.attempt.slotEnd)}'),
       ]),
-      if (!state.canReceive)
+      if (state.queued)
+        const QueuedNotice(
+            key: Key('receipt-queued'),
+            text:
+                'Chưa có mạng nên yêu cầu nhận kiện đã được lưu trên máy. Đơn CHƯA được nhận trên hệ thống; app sẽ tự gửi khi có mạng.')
+      else if (!state.canReceive)
         Container(
             key: const Key('receipt-not-pending'),
             padding: const EdgeInsets.all(12),
@@ -425,6 +448,198 @@ class _ReceiptDetailScreenState extends ConsumerState<ReceiptDetailScreen> {
                     height: 20,
                     child: CircularProgressIndicator(strokeWidth: 2))
                 : const Text('Nhận kiện')),
+      ],
+    ]);
+  }
+}
+
+/// Chi tiết đơn đang hoàn về: xem các lần giao thất bại và xác nhận đã nhận hàng hoàn tại trạm
+/// gửi. Route `/operator/returns/:id`.
+class ReturnDetailScreen extends ConsumerStatefulWidget {
+  const ReturnDetailScreen({super.key, required this.orderId});
+  final String orderId;
+  @override
+  ConsumerState<ReturnDetailScreen> createState() => _ReturnDetailScreenState();
+}
+
+class _ReturnDetailScreenState extends ConsumerState<ReturnDetailScreen> {
+  final _note = TextEditingController();
+  bool _checked = false;
+
+  @override
+  void dispose() {
+    _note.dispose();
+    super.dispose();
+  }
+
+  void _backToList() {
+    if (context.canPop()) {
+      context.pop();
+    } else {
+      context.go('/operator');
+    }
+  }
+
+  Future<void> _complete() async {
+    final ok = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+                title: const Text('Xác nhận đã nhận hàng hoàn?'),
+                content: const Text(
+                    'Đơn sẽ chuyển sang "Đã hoàn hàng" và không hoàn tác được. Hãy chắc chắn kiện đã về tới trạm gửi.'),
+                actions: [
+                  TextButton(
+                      key: const Key('return-dismiss'),
+                      onPressed: () => Navigator.of(ctx).pop(false),
+                      child: const Text('Quay lại')),
+                  FilledButton(
+                      key: const Key('return-confirm'),
+                      onPressed: () => Navigator.of(ctx).pop(true),
+                      child: const Text('Đã nhận hàng hoàn')),
+                ]));
+    if (ok != true) return;
+    final done = await ref
+        .read(returnDetailProvider(widget.orderId).notifier)
+        .complete(_note.text);
+    if (!mounted) return;
+    if (done) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('Đã xác nhận nhận hàng hoàn.')));
+      _backToList();
+    } else if (ref.read(returnDetailProvider(widget.orderId)).queued) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('Chưa có mạng: đã lưu, sẽ tự gửi khi có mạng.')));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final state = ref.watch(returnDetailProvider(widget.orderId));
+    final controller = ref.read(returnDetailProvider(widget.orderId).notifier);
+    final stations = ref.watch(stationsProvider).valueOrNull;
+    final order = state.order;
+    final scheme = Theme.of(context).colorScheme;
+    return Scaffold(
+        appBar: AppBar(
+            title: Text(order == null ? 'Nhận hàng hoàn' : 'Đơn ${order.shortCode}'),
+            actions: [
+              IconButton(
+                  tooltip: 'Tải lại',
+                  onPressed: () => controller.reload(),
+                  icon: const Icon(Icons.refresh))
+            ]),
+        body: Column(children: [
+          if (state.notice != null)
+            _Banner(
+                key: const Key('return-notice'),
+                text: state.notice!,
+                color: scheme.tertiaryContainer,
+                onClose: controller.dismissNotice),
+          if (state.actionError != null)
+            _Banner(
+                key: const Key('return-action-error'),
+                text: state.actionError!.message,
+                color: scheme.errorContainer,
+                onClose: controller.dismissNotice),
+          Expanded(child: _body(context, state, controller, stations)),
+        ]));
+  }
+
+  Widget _body(BuildContext context, ReturnDetailState state,
+      ReturnDetailController controller, List<Station>? stations) {
+    final o = state.order;
+    if (o == null) {
+      if (state.error != null) {
+        return Center(
+            child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(mainAxisSize: MainAxisSize.min, children: [
+                  Text(
+                      state.gone
+                          ? 'Đơn không còn trong phạm vi của bạn hoặc không tồn tại.'
+                          : state.error!.message,
+                      key: const Key('return-error'),
+                      textAlign: TextAlign.center),
+                  const SizedBox(height: 12),
+                  FilledButton(
+                      onPressed:
+                          state.gone ? _backToList : () => controller.reload(),
+                      child: Text(state.gone ? 'Quay lại danh sách' : 'Thử lại')),
+                ])));
+      }
+      return const Center(child: CircularProgressIndicator());
+    }
+    final theme = Theme.of(context);
+    return ListView(padding: const EdgeInsets.all(16), children: [
+      Row(children: [
+        Expanded(
+            child: Text(o.statusLabel,
+                key: const Key('return-status'),
+                style: theme.textTheme.headlineSmall)),
+        StatusChip(o.status, o.statusLabel),
+      ]),
+      const SizedBox(height: 16),
+      _Section('Lộ trình', [
+        _Row('Trạm gửi (nhận lại)', _stationName(stations, o.pickupStationId)),
+        _Row('Trạm nhận', _stationName(stations, o.dropoffStationId)),
+      ]),
+      _Section('Kiện hàng', [
+        _Row('Mô tả', o.package.description),
+        _Row('Khối lượng', '${o.package.weightGrams} g'),
+        _Row('Người nhận', o.recipient.name),
+      ]),
+      if (state.failures.isNotEmpty)
+        _Section('Lý do hoàn hàng', [
+          for (final h in state.failures)
+            _Row(h.toLabel,
+                '${h.reason ?? 'Không ghi lý do'}\n${formatTime(h.occurredAt)}'),
+        ]),
+      if (state.done)
+        const QueuedNotice(
+            key: Key('return-done'),
+            text: 'Đã xác nhận nhận hàng hoàn.')
+      else if (state.queued)
+        const QueuedNotice(
+            key: Key('return-queued'),
+            text:
+                'Chưa có mạng nên xác nhận đã được lưu trên máy. Đơn CHƯA được hoàn tất trên hệ thống; app sẽ tự gửi khi có mạng.')
+      else if (!state.canComplete)
+        Container(
+            key: const Key('return-not-pending'),
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+                color: theme.colorScheme.surfaceContainerHighest,
+                borderRadius: BorderRadius.circular(8)),
+            child: Text(state.gone
+                ? 'Đơn không còn trong phạm vi của bạn.'
+                : 'Đơn không còn chờ nhận hàng hoàn (trạng thái: ${o.statusLabel}).'))
+      else ...[
+        TextField(
+            key: const Key('return-note'),
+            controller: _note,
+            maxLength: 500,
+            maxLines: 2,
+            decoration: const InputDecoration(
+                labelText: 'Ghi chú (tùy chọn)', border: OutlineInputBorder())),
+        CheckboxListTile(
+            key: const Key('return-checked'),
+            contentPadding: EdgeInsets.zero,
+            controlAffinity: ListTileControlAffinity.leading,
+            title: const Text('Tôi đã nhận kiện hoàn về và kiểm tra tình trạng kiện'),
+            value: _checked,
+            onChanged: state.completing
+                ? null
+                : (v) => setState(() => _checked = v ?? false)),
+        const SizedBox(height: 8),
+        FilledButton(
+            key: const Key('return-button'),
+            onPressed: state.completing || !_checked ? null : _complete,
+            child: state.completing
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2))
+                : const Text('Đã nhận hàng hoàn')),
       ],
     ]);
   }
