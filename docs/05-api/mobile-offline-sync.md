@@ -67,9 +67,21 @@ flutter test --no-pub
 
 `flutter test`: **235 test đều qua** (195 trước đó). File mới `operator_sync_test.dart` có 40 test: lưu và đọc hàng đợi, bản ghi hỏng, giãn cách thử lại, tách theo tài khoản, từng nhánh đồng bộ (mất mạng giữa chừng, đã được xử lý ở lần trước, đổi phiên bản, đổi trạng thái, mã hết hạn/khóa, 429), thứ tự hàng đợi, tab nhận hoàn, màn hình và dải đồng bộ. Bốn test cũ của 6.4 về "mất mạng thì hiện Gửi lại" được viết lại theo hành vi mới (xếp hàng rồi đồng bộ).
 
+### Kiểm chứng trên emulator với backend thật
+
+Môi trường: emulator Android 37, backend Spring Boot với SQL Server local (profile `sqlserver,demo`). Mất mạng bằng chế độ máy bay; kết quả phía server đọc lại bằng API.
+
+| Kịch bản | Kết quả |
+|---|---|
+| **Nhận kiện** khi mất mạng | Màn hình ghi "Đơn CHƯA được nhận trên hệ thống", nút nhận biến mất. Server vẫn `SCHEDULED` (phiên bản 2). Màn chính hiện banner vàng "1 thao tác chờ đồng bộ khi có mạng". |
+| Bật lại mạng, bấm **Thử lại** | Server chuyển `SCHEDULED → PREPARING` (phiên bản 3), đúng một lần; banner biến mất, số "Chờ nhận" giảm 3 → 2, đơn rời danh sách. |
+| **Nhận hàng hoàn** khi mất mạng | Cùng hành vi xếp hàng như trên. Khi có mạng, server từ chối (xem lưu ý dữ liệu demo), thao tác chuyển sang "cần xem lại" kèm lý do của server và **không tự thử lại**; "Bỏ yêu cầu" xóa được. |
+| Tắt hẳn app rồi mở lại | Thao tác trong hàng đợi (kể cả loại "cần xem lại") **còn nguyên** vì lưu trong kho mã hóa. |
+
+**Lưu ý dữ liệu demo:** `DemoDataSeeder` tạo các đơn đã qua trạng thái PENDING với lịch sử tới phiên bản 2 nhưng đơn chỉ ở phiên bản 1, nên mọi chuyển trạng thái tiếp theo bị backend từ chối (`412`, log: `Violation of UNIQUE KEY constraint 'uq_order_status_history_version'`). Đó là lỗi của dữ liệu seed, không phải của mobile (gọi thẳng `complete-return` bằng `curl` cũng `412`). Để thử đầy đủ, dùng đơn PENDING của seeder rồi đưa qua quy trình thật: điều phối viên `approve` (`If-Match: "0"`) và `schedules`.
+
 ### Chưa kiểm chứng
 
-- **Chưa chạy trên emulator hoặc điện thoại thật với backend thật**: mọi kiểm thử ở trên dùng API giả. Cần thử: bật chế độ máy bay, nhận kiện / xác nhận giao / nhận hàng hoàn, tắt chế độ máy bay và bấm "Đồng bộ ngay".
-- Kho `flutter_secure_storage` chỉ được kiểm bằng kho trong bộ nhớ; chưa thử trên thiết bị (khôi phục sau khi app bị hệ điều hành đóng).
-- Hẹn giờ tự thử lại chỉ chạy khi app đang mở; app bị đóng thì đồng bộ ở lần mở sau (không có đồng bộ nền).
-- Tab "Chờ nhận hoàn" cần đơn RETURNING thật (điều phối viên báo FAIL và START_RETURN qua API 4.8).
+- **Xác nhận giao** khi mất mạng trên thiết bị (cần đơn `AWAITING_PICKUP` nhất quán, ảnh và OTP của khách); chỉ có test với API giả. Nhận hàng hoàn thành công sau khi có mạng cũng chưa thử trên máy thật vì lỗi dữ liệu demo ở trên.
+- Hẹn giờ tự thử lại chỉ chạy khi app đang mở; app bị đóng thì đồng bộ ở lần mở sau (không có đồng bộ nền). Chưa đo thời điểm tự thử lại trên máy thật, đã thử bằng nút "Thử lại".
+- Tab "Chờ nhận hoàn" (hiện nhãn "Thất bại") hiển thị đúng đơn RETURNING của trạm gửi; phần "Lý do hoàn hàng" chỉ có khi lịch sử đơn có bước `FAILED` kèm lý do, mà dữ liệu seed không có.
