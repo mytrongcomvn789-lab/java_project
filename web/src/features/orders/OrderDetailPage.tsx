@@ -68,7 +68,8 @@ export default function OrderDetailPage() {
   useEffect(() => {
     if (isDemo) return;
     let active = true;
-    setOrder(null);
+    // Tải lại cùng một đơn thì giữ nội dung cũ, không xóa trắng cả trang (tránh nhấp nháy, mất thông báo).
+    setOrder((prev) => (prev && prev.id === id ? prev : null));
     setError("");
     orderService
       .get(id)
@@ -114,7 +115,7 @@ export default function OrderDetailPage() {
             {notice && <p role="status">{notice}</p>}
             {user?.role === "DISPATCHER" && order.status === "PENDING" && (
               <OrderReviewActions
-                key={`${order.id}:${order.version}`}
+                key={`review:${order.id}:${order.version}`}
                 order={order}
                 onReviewed={(updated, message) => {
                   setOrder(updated);
@@ -126,7 +127,7 @@ export default function OrderDetailPage() {
             {user?.role === "DISPATCHER" &&
               (order.status === "APPROVED" || order.status === "FAILED") && (
                 <OrderScheduleActions
-                  key={`${order.id}:${order.version}`}
+                  key={`schedule:${order.id}:${order.version}`}
                   order={order}
                   onScheduled={(updated, message) => {
                     setOrder(updated);
@@ -137,7 +138,7 @@ export default function OrderDetailPage() {
               )}
             {user?.role === "CUSTOMER" && order.status === "PENDING" && (
               <OrderCustomerActions
-                key={`${order.id}:${order.version}`}
+                key={`customer:${order.id}:${order.version}`}
                 order={order}
                 onChanged={(updated, message) => {
                   setOrder(updated);
@@ -152,7 +153,7 @@ export default function OrderDetailPage() {
             {user?.role === "STATION_OPERATOR" &&
               order.status === "AWAITING_PICKUP" && (
                 <ConfirmDeliveryPanel
-                  key={`${order.id}:${order.version}`}
+                  key={`confirm:${order.id}:${order.version}`}
                   order={order}
                   onConfirmed={(message) => {
                     setNotice(message);
@@ -165,7 +166,7 @@ export default function OrderDetailPage() {
               <DeliveryEvidencePanel orderId={order.id} />
             )}
             <OrderFailurePanel
-              key={`${order.id}:${order.version}`}
+              key={`failure:${order.id}:${order.version}`}
               order={order}
               onChanged={(updated, message) => {
                 setOrder(updated);

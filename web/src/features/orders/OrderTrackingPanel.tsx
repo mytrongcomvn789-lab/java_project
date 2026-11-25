@@ -109,6 +109,10 @@ export default function OrderTrackingPanel({
   const [note, setNote] = useState('');
   const [busy, setBusy] = useState(false);
   const lastVersion = useRef<number | null>(null);
+  // Giữ callback của trang cha trong ref: nếu để trong deps của `load`, mỗi lần trang cha render lại
+  // (callback mới) thì `load` đổi, effect chạy lại và gọi API ngay, gây vòng lặp tải lại liên tục.
+  const onVersionChangeRef = useRef(onVersionChange);
+  onVersionChangeRef.current = onVersionChange;
   const inFlight = useRef(false);
 
   const load = useCallback(async () => {
@@ -123,7 +127,7 @@ export default function OrderTrackingPanel({
       setOffline(false);
       setError('');
       if (lastVersion.current !== null && lastVersion.current !== next.version)
-        onVersionChange?.(next.version);
+        onVersionChangeRef.current?.(next.version);
       lastVersion.current = next.version;
     } catch (e) {
       const status = e instanceof ApiRequestError ? e.status : undefined;
@@ -133,7 +137,7 @@ export default function OrderTrackingPanel({
         );
       else setOffline(true); // mất kết nối/5xx: giữ dữ liệu cũ, báo rõ trạng thái
     }
-  }, [orderId, onVersionChange]);
+  }, [orderId]);
 
   useEffect(() => {
     void load();
