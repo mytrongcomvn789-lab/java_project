@@ -20,7 +20,7 @@ public class MockAiProvider implements AiProvider {
             case ETA -> "{\"etaMinutes\":25,\"confidence\":\"LOW\",\"explanation\":\"[MOCK] Dữ liệu giả lập, không phải ước lượng thật.\"}";
             case ORDER_SUMMARY -> "{\"summary\":\"[MOCK] Tóm tắt giả lập, không phải kết quả AI thật.\",\"highlights\":[\"[MOCK]\"]}";
             case CHAT -> "{\"reply\":\"[MOCK] Câu trả lời giả lập, không phải kết quả AI thật.\"}";
-            case OPS_ANALYSIS -> "{\"insights\":[\"[MOCK] Nhận định giả lập.\"],\"recommendations\":[\"[MOCK] Khuyến nghị giả lập.\"]}";
+            case OPS_ANALYSIS -> "{\"insights\":[\"ORDER_VOLUME\"],\"recommendations\":[\"ORDER_VOLUME\"]}";
         };
         return new AiResponse(request.requestId(), text, MODEL, AiSource.MOCK, false,
                 new AiUsage(0, 0, 0), 0, clock.instant());

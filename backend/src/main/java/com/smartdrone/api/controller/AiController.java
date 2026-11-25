@@ -32,7 +32,7 @@ import jakarta.validation.constraints.NotBlank;
 
 /**
  * 7.1: controller KHUNG cho /v1/ai/** (hợp đồng nháp, chờ chốt với 7.2-7.6). Chỉ JWT người dùng (RbacPolicy +
- * @PreAuthorize); API key 5.4 không dùng được. Chat đã triển khai tại 7.4; ETA/tóm tắt còn theo hợp đồng 7.1: chỉ kiểm quyền, thu thập dữ liệu
+ * @PreAuthorize); API key 5.4 không dùng được. ETA đã triển khai tại 7.2, chat tại 7.4, analytics tại 7.5; tóm tắt còn theo hợp đồng 7.1: chỉ kiểm quyền, thu thập dữ liệu
  * tối thiểu qua AiDataAccessGuard rồi gọi AiService. Chi tiết: docs/05-api/ai-api.md.
  */
 @RestController
@@ -41,6 +41,7 @@ import jakarta.validation.constraints.NotBlank;
 @Tag(name = "AI", description = "7.1 Khung AI Service (hợp đồng nháp v1)")
 @SecurityRequirement(name = "bearerAuth")
 public class AiController {
+    private final com.smartdrone.application.ai.analytics.OperationsAnalyticsService analytics;
     private final AiService ai;
     private final AiDataAccessGuard guard;
     private final com.smartdrone.application.ai.chat.CustomerChatService chat;
@@ -48,7 +49,9 @@ public class AiController {
     private final com.smartdrone.application.eta.EtaService eta;
 
     public AiController(AiService ai, AiDataAccessGuard guard, com.smartdrone.application.ai.chat.CustomerChatService chat,
-                        com.smartdrone.application.eta.EtaService eta) {
+            com.smartdrone.application.eta.EtaService eta,
+            com.smartdrone.application.ai.analytics.OperationsAnalyticsService analytics) {
+        this.analytics = analytics;
         this.ai = ai;
         this.guard = guard;
         this.chat = chat;
@@ -85,11 +88,10 @@ public class AiController {
 
     @PostMapping("/analytics")
     @PreAuthorize("hasRole('LOGISTICS_MANAGER')")
-    @Operation(summary = "Phân tích vận hành trên số liệu tổng hợp 5.1 (khung 7.1; logic thật ở 7.5/7.6)")
+    @Operation(summary = "7.5: Phân tích vận hành theo quyền, số liệu xác minh và fallback")
     public ResponseEntity<AiResult> analytics(JwtAuthenticationToken auth, @RequestBody AnalyticsRequest request) {
-        var blocks = guard.analyticsBlocks(user(auth), role(auth), request.from(), request.to(),
-                request.dateBasis(), request.stationId());
-        return ok(ai.run(user(auth), role(auth), AiTask.OPS_ANALYSIS, blocks));
+        return ok(analytics.analyze(user(auth), role(auth), request.from(), request.to(),
+                request.dateBasis(), request.stationId()));
     }
 
     private static ResponseEntity<AiResult> ok(AiResult body) {
