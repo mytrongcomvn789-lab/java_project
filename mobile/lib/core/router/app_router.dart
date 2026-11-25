@@ -3,10 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../features/addresses/address_screens.dart';
 import '../../features/auth/session.dart';
+import '../../features/assistant/assistant_screen.dart';
 import '../../features/auth/screens.dart';
 import '../../features/notifications/notification_screens.dart';
 import '../../features/operator/operator_screens.dart';
 import '../../features/operator/pickup_screens.dart';
+import '../../features/orders/customer_dashboard.dart';
 import '../../features/orders/order_detail_screen.dart';
 import '../../features/orders/order_form_screen.dart';
 import '../../features/orders/order_list_screen.dart';
@@ -38,8 +40,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/login', builder: (_, __) => const LoginScreen()),
       GoRoute(
           path: '/customer',
-          builder: (_, __) => const CustomerHomeScreen(),
+          builder: (_, __) => const CustomerDashboardScreen(),
           routes: [
+            GoRoute(path: 'orders', builder: (_, __) => const OrderListScreen()),
+            GoRoute(path: 'assistant', builder: (_, __) => const AssistantScreen()),
             GoRoute(
                 path: 'orders/:id',
                 builder: (_, state) =>

@@ -90,7 +90,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Widget build(BuildContext context) => Scaffold(
       backgroundColor: AppColors.dark,
       body: LayoutBuilder(builder: (context, box) {
-        final heroH = (box.maxHeight * 0.34).clamp(200.0, 320.0);
+        // Dùng chiều cao cả màn hình (không đổi khi bàn phím mở) để hình nền không co lại và đè lên logo.
+        final heroH = (MediaQuery.sizeOf(context).height * 0.34).clamp(200.0, 320.0);
         return Stack(children: [
           Positioned(top: 0, left: 0, right: 0, height: heroH, child: const DroneHero()),
           const Positioned(
@@ -102,7 +103,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           SingleChildScrollView(
               padding: EdgeInsets.only(top: heroH - 30),
               child: ConstrainedBox(
-                  constraints: BoxConstraints(minHeight: box.maxHeight - heroH + 30),
+                  constraints: BoxConstraints(
+                      minHeight: (box.maxHeight - heroH + 30).clamp(0.0, double.infinity)),
                   child: Container(
                       decoration: const BoxDecoration(
                           color: AppColors.surface,

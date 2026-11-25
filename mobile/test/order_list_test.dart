@@ -191,7 +191,7 @@ void main() {
           customerOrdersApiProvider.overrideWithValue(small),
           realtimeClientProvider.overrideWith((ref) => null),
         ],
-        child: const MaterialApp(home: CustomerHomeScreen())));
+        child: const MaterialApp(home: OrderListScreen())));
     await tester.pumpAndSettle();
     expect(find.text('Đơn 00000001'), findsOneWidget);
     expect(find.text('Gói 2'), findsOneWidget); // mỗi thông tin là một dòng riêng trong thẻ
