@@ -10,6 +10,7 @@ import {
 } from "../../lib/orderService";
 import { receiptService } from "../../lib/receiptService";
 import { useAuth } from "../auth/AuthContext";
+import "./orders.css";
 
 const PAGE_SIZE = 20;
 const EMPTY: OrderFilters = {
@@ -207,50 +208,59 @@ export default function OrdersPage({
           ) : (
             <>
               <p className="muted">{data.total} đơn</p>
-              <div
-                className="card customer-panel"
-                style={{ overflowX: "auto" }}
-              >
-                <table>
+              <div className="card orders-card">
+                <table className="orders-table">
                   <thead>
                     <tr>
                       <th>Mã đơn</th>
                       <th>Trạng thái</th>
                       <th>Người nhận</th>
                       <th>Gói hàng</th>
-                      <th>Ngày tạo</th>
+                      <th className="col-date">Ngày tạo</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {data.items.map((o) => (
-                      <tr key={o.id}>
-                        <td>
-                          <Link to={receiptOnly ? `/station/parcels/${o.id}` : `/deliveries/${o.id}`}>
-                            {o.id.slice(0, 8)}…
-                          </Link>
-                        </td>
-                        <td>
-                          <span
-                            className={`badge st-${o.status.toLowerCase()}`}
-                          >
-                            {o.statusLabel}
-                          </span>
-                        </td>
-                        <td>
-                          {o.recipientName}
-                          <br />
-                          <small className="muted">
-                            {o.recipientAddressLine}
-                          </small>
-                        </td>
-                        <td>
-                          {o.packageDescription ?? "—"}
-                          {o.packageWeightGrams != null &&
-                            ` · ${o.packageWeightGrams} g`}
-                        </td>
-                        <td>{new Date(o.createdAt).toLocaleString("vi-VN")}</td>
-                      </tr>
-                    ))}
+                    {data.items.map((o) => {
+                      const created = new Date(o.createdAt);
+                      return (
+                        <tr key={o.id}>
+                          <td>
+                            <Link
+                              className="order-id"
+                              title={o.id}
+                              to={receiptOnly ? `/station/parcels/${o.id}` : `/deliveries/${o.id}`}
+                            >
+                              #{o.id.slice(0, 8)}
+                            </Link>
+                          </td>
+                          <td>
+                            <span className={`badge st-${o.status.toLowerCase()}`}>
+                              {o.statusLabel}
+                            </span>
+                          </td>
+                          <td>
+                            <div className="order-cell-main">{o.recipientName}</div>
+                            <div className="order-cell-sub">{o.recipientAddressLine}</div>
+                          </td>
+                          <td>
+                            <div className="order-cell-main">
+                              {o.packageDescription ?? "—"}
+                            </div>
+                            {o.packageWeightGrams != null && (
+                              <div className="order-cell-sub">{o.packageWeightGrams} g</div>
+                            )}
+                          </td>
+                          <td className="col-date">
+                            <div className="order-date-day">
+                              {created.toLocaleDateString("vi-VN")}
+                            </div>
+                            <div className="order-date-time">
+                              {created.toLocaleTimeString("vi-VN")}
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>

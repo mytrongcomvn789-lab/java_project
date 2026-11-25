@@ -10,4 +10,6 @@ import com.smartdrone.domain.entity.Order;
 
 public interface OrderRepository extends JpaRepository<Order, UUID>, JpaSpecificationExecutor<Order> {
     Optional<Order> findByIdAndCustomerId(UUID id, UUID customerId);
+
+    boolean existsByCustomerId(UUID customerId);
 }

@@ -1,0 +1,74 @@
+.orders-card {
+  padding: 8px 8px 4px;
+  overflow-x: auto;
+}
+.orders-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 14px;
+}
+.orders-table th {
+  text-align: left;
+  padding: 12px 16px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+.orders-table td {
+  padding: 14px 16px;
+  vertical-align: middle;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+}
+.orders-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+.orders-table tbody tr:hover {
+  background: #f8f9f4;
+}
+.orders-table .col-date {
+  white-space: nowrap;
+  text-align: right;
+}
+.orders-table th.col-date {
+  text-align: right;
+}
+.order-id {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: var(--hero);
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--dark);
+  text-decoration: none;
+}
+.order-id:hover {
+  background: var(--active);
+}
+.order-cell-main {
+  font-weight: 600;
+  color: var(--text);
+}
+.order-cell-sub {
+  margin-top: 2px;
+  font-size: 12.5px;
+  color: var(--muted);
+}
+.order-date-day {
+  font-weight: 600;
+}
+.order-date-time {
+  margin-top: 2px;
+  font-size: 12.5px;
+  color: var(--muted);
+}
+.orders-table .badge {
+  white-space: nowrap;
+}

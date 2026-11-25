@@ -1,0 +1,6 @@
+# Bật dữ liệu demo cho dev: thêm profile "demo" khi chạy backend, ví dụ
+#   mvn spring-boot:run "-Dspring-boot.run.profiles=sqlserver,demo"
+# Không dùng ở môi trường thật (tài khoản demo có mật khẩu công khai).
+app:
+  seed:
+    demo: true

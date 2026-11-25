@@ -14,4 +14,6 @@ public interface StaffStationAssignmentRepository extends JpaRepository<StaffSta
             where a.staff.id = :staffId and a.staff.enabled = true and a.staff.role.name = :role
             """)
     Set<UUID> findStationIds(@Param("staffId") UUID staffId, @Param("role") RoleName role);
+
+    boolean existsByStaff_IdAndStation_Id(UUID staffId, UUID stationId);
 }
