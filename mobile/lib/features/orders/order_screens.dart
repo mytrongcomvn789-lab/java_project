@@ -12,15 +12,36 @@ String formatTime(DateTime? t) => t == null
     ? '—'
     : '${two(t.hour)}:${two(t.minute)}:${two(t.second)} ${two(t.day)}/${two(t.month)}/${t.year}';
 
+/// Màu theo ý nghĩa: xanh lá = xong/đến nơi, cam = đang chờ hoặc cần chú ý, xanh dương = đang di
+/// chuyển, đỏ = lỗi hoặc bị từ chối, xám = đã đóng. Người vận hành nhìn màu là biết đơn nào cần xử lý.
 Color statusColor(BuildContext context, String status) {
   final scheme = Theme.of(context).colorScheme;
   return switch (status) {
     'DELIVERED' || 'AWAITING_PICKUP' => Colors.green.shade700,
-    'REJECTED' || 'CANCELLED' || 'FAILED' => scheme.error,
+    'PENDING' || 'RETURNING' => Colors.orange.shade800,
+    'REJECTED' || 'FAILED' => scheme.error,
     'IN_TRANSIT' => Colors.blue.shade700,
+    'SCHEDULED' || 'PREPARING' || 'APPROVED' => Colors.indigo.shade600,
+    'CANCELLED' || 'RETURNED' => Colors.blueGrey.shade600,
     _ => scheme.primary,
   };
 }
+
+IconData statusIcon(String status) => switch (status) {
+      'PENDING' => Icons.hourglass_top_rounded,
+      'APPROVED' => Icons.thumb_up_alt_outlined,
+      'REJECTED' => Icons.block,
+      'SCHEDULED' => Icons.event_available_outlined,
+      'PREPARING' => Icons.inventory_2_outlined,
+      'IN_TRANSIT' => Icons.flight_takeoff,
+      'AWAITING_PICKUP' => Icons.storefront_outlined,
+      'DELIVERED' => Icons.check_circle_outline,
+      'CANCELLED' => Icons.cancel_outlined,
+      'FAILED' => Icons.error_outline,
+      'RETURNING' => Icons.keyboard_return,
+      'RETURNED' => Icons.assignment_returned_outlined,
+      _ => Icons.circle_outlined,
+    };
 
 class StatusChip extends StatelessWidget {
   const StatusChip(this.status, this.label, {super.key});
@@ -32,9 +53,76 @@ class StatusChip extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
         decoration: BoxDecoration(
             color: color.withValues(alpha: 0.12),
-            borderRadius: BorderRadius.circular(12)),
-        child: Text(label,
-            style: TextStyle(color: color, fontWeight: FontWeight.w600)));
+            borderRadius: BorderRadius.circular(20)),
+        child: Row(mainAxisSize: MainAxisSize.min, children: [
+          Icon(statusIcon(status), size: 14, color: color),
+          const SizedBox(width: 4),
+          Flexible(
+              child: Text(label,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                      color: color, fontSize: 12, fontWeight: FontWeight.w600))),
+        ]));
+  }
+}
+
+/// Thẻ đơn dùng chung cho danh sách của khách và của operator: mã đơn đậm cùng chip trạng thái
+/// ở hàng đầu, các dòng thông tin có icon ở dưới, thời gian nhỏ ở cuối.
+class OrderListCard extends StatelessWidget {
+  const OrderListCard(
+      {super.key,
+      required this.title,
+      required this.status,
+      required this.statusLabel,
+      required this.lines,
+      this.time,
+      this.onTap});
+  final String title, status, statusLabel;
+
+  /// Mỗi phần tử là (icon, nội dung). Dòng trống bị bỏ.
+  final List<(IconData, String)> lines;
+  final String? time;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Card(
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+            onTap: onTap,
+            child: Padding(
+                padding: const EdgeInsets.all(14),
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Row(children: [
+                    Expanded(
+                        child: Text(title,
+                            style: theme.textTheme.titleMedium
+                                ?.copyWith(fontWeight: FontWeight.w700))),
+                    const SizedBox(width: 8),
+                    StatusChip(status, statusLabel),
+                  ]),
+                  const SizedBox(height: 10),
+                  for (final (icon, text) in lines)
+                    if (text.trim().isNotEmpty)
+                      Padding(
+                          padding: const EdgeInsets.only(bottom: 4),
+                          child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Icon(icon,
+                                    size: 16,
+                                    color: theme.colorScheme.onSurfaceVariant),
+                                const SizedBox(width: 8),
+                                Expanded(child: Text(text)),
+                              ])),
+                  if (time != null)
+                    Padding(
+                        padding: const EdgeInsets.only(top: 4),
+                        child: Text(time!,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant))),
+                ]))));
   }
 }
 

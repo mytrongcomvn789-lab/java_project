@@ -5,7 +5,7 @@ import '../auth/screens.dart' show signOut;
 import '../auth/session.dart';
 import '../orders/customer_order_models.dart' show OrderSummary, Station;
 import '../orders/order_detail_controller.dart' show stationsProvider;
-import '../orders/order_screens.dart' show StatusChip, formatTime;
+import '../orders/order_screens.dart' show OrderListCard, StatusChip, formatTime;
 import 'operator_controllers.dart';
 import 'return_controller.dart';
 import 'sync_widgets.dart';
@@ -232,22 +232,27 @@ class _OrderCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final weight = order.packageWeightGrams;
-    return Card(
-        child: ListTile(
-            key: Key('order-${order.id}'),
-            title: Text('Đơn ${order.shortCode}'),
-            subtitle: Text([
-              [
-                if (order.packageDescription != null) order.packageDescription!,
-                if (weight != null) '$weight g',
-              ].join(' · '),
-              '${_stationName(stations, order.pickupStationId)} → ${_stationName(stations, order.dropoffStationId)}',
-              'Người nhận: ${order.recipientName}',
-              formatTime(order.updatedAt ?? order.createdAt),
-            ].where((e) => e.isNotEmpty).join('\n')),
-            isThreeLine: true,
-            trailing: StatusChip(order.status, order.statusLabel),
-            onTap: onTap == null ? null : () => onTap!(order)));
+    return OrderListCard(
+        key: Key('order-${order.id}'),
+        title: 'Đơn ${order.shortCode}',
+        status: order.status,
+        statusLabel: order.statusLabel,
+        lines: [
+          (
+            Icons.route_outlined,
+            '${_stationName(stations, order.pickupStationId)} → ${_stationName(stations, order.dropoffStationId)}'
+          ),
+          (
+            Icons.inventory_2_outlined,
+            [
+              if (order.packageDescription != null) order.packageDescription!,
+              if (weight != null) '$weight g',
+            ].join(' · ')
+          ),
+          (Icons.person_outline, 'Người nhận: ${order.recipientName}'),
+        ],
+        time: formatTime(order.updatedAt ?? order.createdAt),
+        onTap: onTap == null ? null : () => onTap!(order));
   }
 }
 

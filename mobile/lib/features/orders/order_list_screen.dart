@@ -172,13 +172,15 @@ class OrderCard extends StatelessWidget {
   const OrderCard(this.order, {super.key});
   final OrderSummary order;
   @override
-  Widget build(BuildContext context) => Card(
-      child: ListTile(
-          key: Key('order-${order.id}'),
-          title: Text('Đơn ${order.shortCode}'),
-          subtitle: Text(
-              'Người nhận: ${order.recipientName}\n${order.packageDescription ?? ''}\n${formatTime(order.createdAt)}'),
-          isThreeLine: true,
-          trailing: StatusChip(order.status, order.statusLabel),
-          onTap: () => context.go('/customer/orders/${order.id}/detail')));
+  Widget build(BuildContext context) => OrderListCard(
+      key: Key('order-${order.id}'),
+      title: 'Đơn ${order.shortCode}',
+      status: order.status,
+      statusLabel: order.statusLabel,
+      lines: [
+        (Icons.person_outline, 'Người nhận: ${order.recipientName}'),
+        (Icons.inventory_2_outlined, order.packageDescription ?? ''),
+      ],
+      time: formatTime(order.createdAt),
+      onTap: () => context.go('/customer/orders/${order.id}/detail'));
 }

@@ -194,7 +194,7 @@ void main() {
         child: const MaterialApp(home: CustomerHomeScreen())));
     await tester.pumpAndSettle();
     expect(find.text('Đơn 00000001'), findsOneWidget);
-    expect(find.text('Gói 2', findRichText: true), findsNothing); // nằm trong subtitle nhiều dòng
+    expect(find.text('Gói 2'), findsOneWidget); // mỗi thông tin là một dòng riêng trong thẻ
     expect(find.textContaining('Người nhận: Người 1'), findsOneWidget);
     await tester.tap(find.byKey(const Key('filter-APPROVED')));
     await tester.pumpAndSettle();
