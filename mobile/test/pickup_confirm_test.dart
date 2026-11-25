@@ -9,13 +9,17 @@ import 'package:smartdrone_mobile/core/network/api_failure.dart';
 import 'package:smartdrone_mobile/features/operator/confirmation_photo_controller.dart';
 import 'package:smartdrone_mobile/features/operator/operator_api.dart';
 import 'package:smartdrone_mobile/features/operator/operator_controllers.dart';
+import 'package:smartdrone_mobile/core/offline/pending_action.dart';
 import 'package:smartdrone_mobile/features/operator/operator_models.dart';
+import 'package:smartdrone_mobile/features/operator/operator_sync.dart';
 import 'package:smartdrone_mobile/features/operator/pickup_confirm_controller.dart';
 import 'package:smartdrone_mobile/features/operator/pickup_screens.dart';
 import 'package:smartdrone_mobile/features/operator/qr_scanner.dart';
 import 'package:smartdrone_mobile/features/orders/customer_order_models.dart';
 import 'package:smartdrone_mobile/features/orders/order_detail_controller.dart';
 import 'package:smartdrone_mobile/features/orders/photo_picker.dart';
+
+import 'support/pending_fakes.dart';
 
 const orderId = '11111111-1111-1111-1111-111111111111';
 final validQr = '55555555-5555-5555-5555-555555555555.${'A' * 43}';
@@ -97,6 +101,16 @@ class FakeConfirmApi extends OperatorApi {
   Future<List<AssignedStation>> assignedStations() async => const [];
 
   @override
+  Future<OrderPage> listReceipts(
+          {int page = 1, int pageSize = 20, String? stationId}) async =>
+      OrderPage(items: const [], page: 1, pageSize: 20, total: 0);
+
+  @override
+  Future<OrderPage> listReturning(
+          {int page = 1, int pageSize = 20, String? stationId}) async =>
+      OrderPage(items: const [], page: 1, pageSize: 50, total: 0);
+
+  @override
   Future<ConfirmResult> confirm(ConfirmRequest r) async {
     sent.add(r);
     final g = gate;
@@ -128,7 +142,10 @@ void main() {
   late StateProvider<String?> user;
   late ProviderContainer container;
 
+  late MemoryPendingStore store;
+
   List<Override> overrides() => [
+        ...pendingOverrides(store),
         operatorApiProvider.overrideWithValue(api),
         operatorUserProvider.overrideWith((ref) => ref.watch(user)),
         photoPickerProvider.overrideWithValue((s) async =>
@@ -141,6 +158,7 @@ void main() {
 
   setUp(() {
     api = FakeConfirmApi();
+    store = MemoryPendingStore();
     user = StateProvider<String?>((ref) => 'op-1');
     container = ProviderContainer(overrides: overrides());
     addTearDown(container.dispose);
@@ -253,19 +271,39 @@ void main() {
       expect(read().awaitingPickup, isFalse);
     });
 
-    test('mất mạng: không báo thành công; gửi lại dùng ĐÚNG yêu cầu cũ', () async {
+    test('mất mạng: không báo thành công, lưu vào hàng đợi; đồng bộ gửi ĐÚNG yêu cầu cũ', () async {
       await boot();
       ctl().setCredential(PickupCredential.otp('123456'));
       api.confirmError = offline();
       expect(await ctl().confirm('ghi chú'), isFalse);
       expect(read().result, isNull);
-      expect(read().failure?.kind, FailureKind.offline);
-      expect(read().credential, isNotNull);
-      expect(await ctl().confirm('ghi chú'), isTrue);
+      expect(read().queued, isTrue);
+      expect(read().failure, isNull);
+      expect(read().credential, isNull); // mã chỉ còn trong hàng đợi mã hóa
+      expect(read().awaitingPickup, isFalse); // không cho xác nhận lần hai khi đã xếp hàng
+      final saved = store.data['op-1']!;
+      expect(saved.single.kind, PendingKind.confirm);
+      expect(saved.single.orderId, orderId);
+
+      await container.read(operatorSyncProvider.notifier).syncNow();
+      expect(api.sent.length, 2);
       final a = api.sent[0], b = api.sent[1];
       expect(b.version, a.version);
       expect(b.photoFileId, a.photoFileId);
       expect(b.credential.value, a.credential.value);
+      expect(container.read(operatorSyncProvider).isEmpty, isTrue);
+      expect(store.data['op-1'], isEmpty);
+    });
+
+    test('mất mạng nhưng không lưu được hàng đợi: báo lỗi như cũ, giữ mã để gửi lại', () async {
+      await boot();
+      ctl().setCredential(PickupCredential.otp('123456'));
+      store.failWrites = true;
+      api.confirmError = offline();
+      expect(await ctl().confirm(null), isFalse);
+      expect(read().queued, isFalse);
+      expect(read().failure?.kind, FailureKind.offline);
+      expect(read().credential, isNotNull);
     });
 
     test('hết thời gian chờ: gửi lại là an toàn, server trả lại kết quả cũ (replayed)', () async {
@@ -274,11 +312,13 @@ void main() {
       api.confirmError = DioException(
           requestOptions: RequestOptions(), type: DioExceptionType.receiveTimeout);
       expect(await ctl().confirm(null), isFalse);
-      expect(read().failure?.outcomeUnknown, isTrue);
+      expect(read().queued, isTrue); // chưa rõ kết quả: xếp hàng để gửi lại
       expect(read().result, isNull);
       api.replayNext = true; // lần trước server đã xử lý xong
-      expect(await ctl().confirm(null), isTrue);
-      expect(read().result?.replayed, isTrue);
+      await container.read(operatorSyncProvider.notifier).syncNow();
+      // Gửi lại y nguyên: server trả lại kết quả cũ nên không giao hai lần và hàng đợi sạch.
+      expect(api.sent.length, 2);
+      expect(container.read(operatorSyncProvider).isEmpty, isTrue);
     });
 
     test('404 (sai trạm hoặc ảnh không hợp lệ): thông báo rõ, không treo', () async {
@@ -433,7 +473,7 @@ void main() {
       expect(tester.widget<TextField>(find.byKey(const Key('otp-field'))).controller!.text, isEmpty);
     });
 
-    testWidgets('mất mạng: "Đơn CHƯA được xác nhận giao", nút thành Gửi lại rồi thành công', (tester) async {
+    testWidgets('mất mạng: "Đơn CHƯA được giao", yêu cầu được lưu và tự gửi khi đồng bộ', (tester) async {
       await mount(tester);
       await tester.tap(find.text('Nhập OTP'));
       await tester.pumpAndSettle();
@@ -446,15 +486,13 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('confirm-ok')));
       await tester.pumpAndSettle();
-      expect(find.textContaining('CHƯA được xác nhận giao'), findsOneWidget);
-      expect(find.text('Gửi lại'), findsOneWidget);
+      expect(find.byKey(const Key('confirm-queued')), findsOneWidget);
+      expect(find.textContaining('CHƯA được giao'), findsOneWidget);
       expect(find.byKey(const Key('confirm-success')), findsNothing);
-      await tester.ensureVisible(find.byKey(const Key('confirm-button')));
-      await tester.tap(find.byKey(const Key('confirm-button')));
-      await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const Key('confirm-ok')));
-      await tester.pumpAndSettle();
-      expect(find.byKey(const Key('confirm-success')), findsOneWidget);
+      expect(find.byKey(const Key('confirm-button')), findsNothing); // không xác nhận lần hai
+      expect(store.data['op-1']!.single.kind, PendingKind.confirm);
+      final scope = ProviderScope.containerOf(tester.element(find.byType(PickupConfirmScreen)));
+      await scope.read(operatorSyncProvider.notifier).syncNow();
       expect(api.sent.length, 2);
       expect(api.sent[1].photoFileId, api.sent[0].photoFileId);
     });
