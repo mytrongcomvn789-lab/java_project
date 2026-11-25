@@ -553,7 +553,6 @@ class _ReceiptDetailScreenState extends ConsumerState<ReceiptDetailScreen> {
     final controller = ref.read(receiptDetailProvider(widget.orderId).notifier);
     final stations = ref.watch(stationsProvider).valueOrNull;
     final ctx = state.context;
-    final scheme = Theme.of(context).colorScheme;
     return Scaffold(
         appBar: AppBar(
             title: Text(ctx == null ? 'Nhận kiện' : 'Đơn ${ctx.order.shortCode}'),
@@ -565,19 +564,34 @@ class _ReceiptDetailScreenState extends ConsumerState<ReceiptDetailScreen> {
             ]),
         body: Column(children: [
           if (state.notice != null)
-            _Banner(
+            MessageBanner(
                 key: const Key('receipt-notice'),
                 text: state.notice!,
-                color: scheme.tertiaryContainer,
+                color: StatusPalette.pending.background,
                 onClose: controller.dismissNotice),
           if (state.actionError != null)
-            _Banner(
+            MessageBanner(
                 key: const Key('receipt-action-error'),
                 text: state.actionError!.message,
-                color: scheme.errorContainer,
+                color: StatusPalette.failed.background,
                 onClose: controller.dismissNotice),
           Expanded(child: _body(context, state, controller, stations)),
-        ]));
+        ]),
+        // Nút chính luôn nằm cố định ở đáy màn hình, trong tầm ngón tay cái.
+        bottomNavigationBar: ctx != null && state.canReceive
+            ? BottomActionBar(
+                child: FilledButton(
+                    key: const Key('receive-button'),
+                    // Vô hiệu hóa khi đang gửi hoặc chưa tích kiểm tra: chặn bấm đúp.
+                    onPressed: state.receiving || !_checked ? null : _confirm,
+                    child: state.receiving
+                        ? const SizedBox(
+                            width: 22,
+                            height: 22,
+                            child: CircularProgressIndicator(
+                                strokeWidth: 2, color: Colors.white))
+                        : const Text('Nhận kiện')))
+            : null);
   }
 
   Widget _body(BuildContext context, ReceiptDetailState state,
@@ -620,27 +634,27 @@ class _ReceiptDetailScreenState extends ConsumerState<ReceiptDetailScreen> {
         StatusChip(o.status, o.statusLabel),
       ]),
       const SizedBox(height: 16),
-      _Section('Lộ trình', [
-        _Row('Trạm gửi', _stationName(stations, o.pickupStationId)),
-        _Row('Trạm nhận', _stationName(stations, o.dropoffStationId)),
+      InfoCard('Lộ trình', [
+        InfoRow('Trạm gửi', _stationName(stations, o.pickupStationId)),
+        InfoRow('Trạm nhận', _stationName(stations, o.dropoffStationId)),
       ]),
-      _Section('Người gửi và người nhận', [
-        _Row('Người gửi', ctx.senderName),
-        _Row('Người nhận', o.recipient.name),
-        _Row('Điện thoại', o.recipient.phone),
-        _Row('Địa chỉ', o.recipient.addressLine),
+      InfoCard('Người gửi và người nhận', [
+        InfoRow('Người gửi', ctx.senderName),
+        InfoRow('Người nhận', o.recipient.name),
+        InfoRow('Điện thoại', o.recipient.phone),
+        InfoRow('Địa chỉ', o.recipient.addressLine),
       ]),
-      _Section('Kiện hàng', [
-        _Row('Mô tả', p.description),
-        _Row('Khối lượng', '${p.weightGrams} g'),
-        _Row('Kích thước',
+      InfoCard('Kiện hàng', [
+        InfoRow('Mô tả', p.description),
+        InfoRow('Khối lượng', '${p.weightGrams} g'),
+        InfoRow('Kích thước',
             '${_n(p.lengthCm)} × ${_n(p.widthCm)} × ${_n(p.heightCm)} cm'),
-        _Row('Ảnh', p.photoFileIds.isEmpty ? 'Không có' : '${p.photoFileIds.length} ảnh'),
-        _Row('Mã kiện', ctx.packageId.substring(0, ctx.packageId.length >= 8 ? 8 : ctx.packageId.length).toUpperCase()),
+        InfoRow('Ảnh', p.photoFileIds.isEmpty ? 'Không có' : '${p.photoFileIds.length} ảnh'),
+        InfoRow('Mã kiện', ctx.packageId.substring(0, ctx.packageId.length >= 8 ? 8 : ctx.packageId.length).toUpperCase()),
       ]),
-      _Section('Lần giao', [
-        _Row('Lần', '${ctx.attempt.attemptNo}'),
-        _Row('Khung giờ',
+      InfoCard('Lần giao', [
+        InfoRow('Lần', '${ctx.attempt.attemptNo}'),
+        InfoRow('Khung giờ',
             '${formatTime(ctx.attempt.slotStart)} → ${formatTime(ctx.attempt.slotEnd)}'),
       ]),
       if (state.queued)
@@ -658,35 +672,25 @@ class _ReceiptDetailScreenState extends ConsumerState<ReceiptDetailScreen> {
             child: Text(state.gone
                 ? 'Đơn không còn trong phạm vi của bạn.'
                 : 'Đơn không còn chờ nhận kiện (trạng thái: ${o.statusLabel}).'))
-      else ...[
-        TextField(
-            key: const Key('receipt-note'),
-            controller: _note,
-            maxLength: 500,
-            maxLines: 2,
-            decoration: const InputDecoration(
-                labelText: 'Ghi chú (tùy chọn)', border: OutlineInputBorder())),
-        CheckboxListTile(
-            key: const Key('receipt-checked'),
-            contentPadding: EdgeInsets.zero,
-            controlAffinity: ListTileControlAffinity.leading,
-            title: const Text('Tôi đã đối chiếu mã kiện và kiểm tra bao bì thực tế'),
-            value: _checked,
-            onChanged: state.receiving
-                ? null
-                : (v) => setState(() => _checked = v ?? false)),
-        const SizedBox(height: 8),
-        FilledButton(
-            key: const Key('receive-button'),
-            // Vô hiệu hóa khi đang gửi hoặc chưa tích kiểm tra: chặn bấm đúp.
-            onPressed: state.receiving || !_checked ? null : _confirm,
-            child: state.receiving
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2))
-                : const Text('Nhận kiện')),
-      ],
+      else
+        InfoCard('Đối chiếu kiện', [
+          CheckboxListTile(
+              key: const Key('receipt-checked'),
+              contentPadding: EdgeInsets.zero,
+              controlAffinity: ListTileControlAffinity.leading,
+              title: const Text('Tôi đã đối chiếu mã kiện và kiểm tra bao bì thực tế'),
+              value: _checked,
+              onChanged: state.receiving
+                  ? null
+                  : (v) => setState(() => _checked = v ?? false)),
+          const SizedBox(height: 8),
+          TextField(
+              key: const Key('receipt-note'),
+              controller: _note,
+              maxLength: 500,
+              maxLines: 2,
+              decoration: const InputDecoration(labelText: 'Ghi chú (tùy chọn)')),
+        ]),
     ]);
   }
 }
@@ -756,7 +760,6 @@ class _ReturnDetailScreenState extends ConsumerState<ReturnDetailScreen> {
     final controller = ref.read(returnDetailProvider(widget.orderId).notifier);
     final stations = ref.watch(stationsProvider).valueOrNull;
     final order = state.order;
-    final scheme = Theme.of(context).colorScheme;
     return Scaffold(
         appBar: AppBar(
             title: Text(order == null ? 'Nhận hàng hoàn' : 'Đơn ${order.shortCode}'),
@@ -768,19 +771,32 @@ class _ReturnDetailScreenState extends ConsumerState<ReturnDetailScreen> {
             ]),
         body: Column(children: [
           if (state.notice != null)
-            _Banner(
+            MessageBanner(
                 key: const Key('return-notice'),
                 text: state.notice!,
-                color: scheme.tertiaryContainer,
+                color: StatusPalette.pending.background,
                 onClose: controller.dismissNotice),
           if (state.actionError != null)
-            _Banner(
+            MessageBanner(
                 key: const Key('return-action-error'),
                 text: state.actionError!.message,
-                color: scheme.errorContainer,
+                color: StatusPalette.failed.background,
                 onClose: controller.dismissNotice),
           Expanded(child: _body(context, state, controller, stations)),
-        ]));
+        ]),
+        bottomNavigationBar: order != null && state.canComplete
+            ? BottomActionBar(
+                child: FilledButton(
+                    key: const Key('return-button'),
+                    onPressed: state.completing || !_checked ? null : _complete,
+                    child: state.completing
+                        ? const SizedBox(
+                            width: 22,
+                            height: 22,
+                            child: CircularProgressIndicator(
+                                strokeWidth: 2, color: Colors.white))
+                        : const Text('Đã nhận hàng hoàn')))
+            : null);
   }
 
   Widget _body(BuildContext context, ReturnDetailState state,
@@ -817,19 +833,19 @@ class _ReturnDetailScreenState extends ConsumerState<ReturnDetailScreen> {
         StatusChip(o.status, o.statusLabel),
       ]),
       const SizedBox(height: 16),
-      _Section('Lộ trình', [
-        _Row('Trạm gửi (nhận lại)', _stationName(stations, o.pickupStationId)),
-        _Row('Trạm nhận', _stationName(stations, o.dropoffStationId)),
+      InfoCard('Lộ trình', [
+        InfoRow('Trạm gửi (nhận lại)', _stationName(stations, o.pickupStationId)),
+        InfoRow('Trạm nhận', _stationName(stations, o.dropoffStationId)),
       ]),
-      _Section('Kiện hàng', [
-        _Row('Mô tả', o.package.description),
-        _Row('Khối lượng', '${o.package.weightGrams} g'),
-        _Row('Người nhận', o.recipient.name),
+      InfoCard('Kiện hàng', [
+        InfoRow('Mô tả', o.package.description),
+        InfoRow('Khối lượng', '${o.package.weightGrams} g'),
+        InfoRow('Người nhận', o.recipient.name),
       ]),
       if (state.failures.isNotEmpty)
-        _Section('Lý do hoàn hàng', [
+        InfoCard('Lý do hoàn hàng', [
           for (final h in state.failures)
-            _Row(h.toLabel,
+            InfoRow(h.toLabel,
                 '${h.reason ?? 'Không ghi lý do'}\n${formatTime(h.occurredAt)}'),
         ]),
       if (state.done)
@@ -851,82 +867,27 @@ class _ReturnDetailScreenState extends ConsumerState<ReturnDetailScreen> {
             child: Text(state.gone
                 ? 'Đơn không còn trong phạm vi của bạn.'
                 : 'Đơn không còn chờ nhận hàng hoàn (trạng thái: ${o.statusLabel}).'))
-      else ...[
-        TextField(
-            key: const Key('return-note'),
-            controller: _note,
-            maxLength: 500,
-            maxLines: 2,
-            decoration: const InputDecoration(
-                labelText: 'Ghi chú (tùy chọn)', border: OutlineInputBorder())),
-        CheckboxListTile(
-            key: const Key('return-checked'),
-            contentPadding: EdgeInsets.zero,
-            controlAffinity: ListTileControlAffinity.leading,
-            title: const Text('Tôi đã nhận kiện hoàn về và kiểm tra tình trạng kiện'),
-            value: _checked,
-            onChanged: state.completing
-                ? null
-                : (v) => setState(() => _checked = v ?? false)),
-        const SizedBox(height: 8),
-        FilledButton(
-            key: const Key('return-button'),
-            onPressed: state.completing || !_checked ? null : _complete,
-            child: state.completing
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2))
-                : const Text('Đã nhận hàng hoàn')),
-      ],
+      else
+        InfoCard('Xác nhận nhận hàng hoàn', [
+          CheckboxListTile(
+              key: const Key('return-checked'),
+              contentPadding: EdgeInsets.zero,
+              controlAffinity: ListTileControlAffinity.leading,
+              title: const Text('Tôi đã nhận kiện hoàn về và kiểm tra tình trạng kiện'),
+              value: _checked,
+              onChanged: state.completing
+                  ? null
+                  : (v) => setState(() => _checked = v ?? false)),
+          const SizedBox(height: 8),
+          TextField(
+              key: const Key('return-note'),
+              controller: _note,
+              maxLength: 500,
+              maxLines: 2,
+              decoration: const InputDecoration(labelText: 'Ghi chú (tùy chọn)')),
+        ]),
     ]);
   }
 }
 
 String _n(double v) => v == v.roundToDouble() ? v.toInt().toString() : v.toString();
-
-class _Banner extends StatelessWidget {
-  const _Banner(
-      {super.key, required this.text, required this.color, required this.onClose});
-  final String text;
-  final Color color;
-  final VoidCallback onClose;
-  @override
-  Widget build(BuildContext context) => Container(
-      width: double.infinity,
-      color: color,
-      padding: const EdgeInsets.only(left: 12, top: 4, bottom: 4),
-      child: Row(children: [
-        Expanded(child: Text(text)),
-        IconButton(
-            tooltip: 'Đóng', onPressed: onClose, icon: const Icon(Icons.close)),
-      ]));
-}
-
-class _Section extends StatelessWidget {
-  const _Section(this.title, this.rows);
-  final String title;
-  final List<Widget> rows;
-  @override
-  Widget build(BuildContext context) => Padding(
-      padding: const EdgeInsets.only(bottom: 16),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text(title, style: Theme.of(context).textTheme.titleMedium),
-        const SizedBox(height: 8),
-        ...rows,
-      ]));
-}
-
-class _Row extends StatelessWidget {
-  const _Row(this.label, this.value);
-  final String label, value;
-  @override
-  Widget build(BuildContext context) => Padding(
-      padding: const EdgeInsets.symmetric(vertical: 2),
-      child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        SizedBox(
-            width: 100,
-            child: Text(label, style: Theme.of(context).textTheme.bodySmall)),
-        Expanded(child: Text(value)),
-      ]));
-}

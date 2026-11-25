@@ -23,16 +23,19 @@ Widget defaultQrScanner(
 final qrScannerBuilderProvider =
     Provider<QrScannerBuilder>((ref) => defaultQrScanner);
 
-class _CameraScanner extends StatefulWidget {
+/// Đèn flash của camera quét (bật/tắt từ nút trên màn quét). Mặc định tắt.
+final scanTorchProvider = StateProvider.autoDispose<bool>((ref) => false);
+
+class _CameraScanner extends ConsumerStatefulWidget {
   const _CameraScanner({required this.onCode, required this.errorView});
   final void Function(String raw) onCode;
   final Widget Function(ScanProblem problem) errorView;
 
   @override
-  State<_CameraScanner> createState() => _CameraScannerState();
+  ConsumerState<_CameraScanner> createState() => _CameraScannerState();
 }
 
-class _CameraScannerState extends State<_CameraScanner> {
+class _CameraScannerState extends ConsumerState<_CameraScanner> {
   // Chỉ đọc mã QR; không lặp lại cùng một mã liên tục.
   final _controller = MobileScannerController(
       formats: const [BarcodeFormat.qrCode],
@@ -45,20 +48,26 @@ class _CameraScannerState extends State<_CameraScanner> {
   }
 
   @override
-  Widget build(BuildContext context) => MobileScanner(
-      controller: _controller,
-      onDetect: (capture) {
-        for (final b in capture.barcodes) {
-          final raw = b.rawValue;
-          if (raw != null && raw.isNotEmpty) {
-            widget.onCode(raw);
-            return;
+  Widget build(BuildContext context) {
+    // Nút flash đổi trạng thái thì bật/tắt đèn của camera. Máy không có đèn thì bỏ qua lỗi.
+    ref.listen(scanTorchProvider, (prev, next) {
+      if (prev != next) _controller.toggleTorch().catchError((_) {});
+    });
+    return MobileScanner(
+        controller: _controller,
+        onDetect: (capture) {
+          for (final b in capture.barcodes) {
+            final raw = b.rawValue;
+            if (raw != null && raw.isNotEmpty) {
+              widget.onCode(raw);
+              return;
+            }
           }
-        }
-      },
-      errorBuilder: (context, error) => widget.errorView(switch (error.errorCode) {
-            MobileScannerErrorCode.permissionDenied => ScanProblem.permissionDenied,
-            MobileScannerErrorCode.unsupported => ScanProblem.unsupported,
-            _ => ScanProblem.other,
-          }));
+        },
+        errorBuilder: (context, error) => widget.errorView(switch (error.errorCode) {
+              MobileScannerErrorCode.permissionDenied => ScanProblem.permissionDenied,
+              MobileScannerErrorCode.unsupported => ScanProblem.unsupported,
+              _ => ScanProblem.other,
+            }));
+  }
 }

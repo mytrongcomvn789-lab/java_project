@@ -194,3 +194,91 @@ class AppBottomNav extends StatelessWidget {
                     color: AppColors.textMuted, fontSize: 11, fontWeight: FontWeight.w500)),
           ])));
 }
+
+/// Thẻ thông tin có tiêu đề (Lộ trình, Kiện hàng…): nền trắng, bo góc, bóng nhẹ.
+class InfoCard extends StatelessWidget {
+  const InfoCard(this.title, this.rows, {super.key});
+  final String title;
+  final List<Widget> rows;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      // Bóng ở lớp ngoài, nền ở Material bên trong để ô tích/ô nhập con vẫn thấy hiệu ứng chạm.
+      child: DecoratedBox(
+          decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(AppRadii.card), boxShadow: cardShadow),
+          child: Material(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(AppRadii.card),
+              clipBehavior: Clip.antiAlias,
+              child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    Text(title,
+                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w700, color: AppColors.primary)),
+                    const SizedBox(height: 10),
+                    ...rows,
+                  ])))));
+}
+
+/// Một dòng "nhãn: giá trị" trong [InfoCard].
+class InfoRow extends StatelessWidget {
+  const InfoRow(this.label, this.value, {super.key});
+  final String label, value;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+      padding: const EdgeInsets.symmetric(vertical: 3),
+      child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        SizedBox(
+            width: 104,
+            child: Text(label,
+                style: const TextStyle(color: AppColors.textMuted, fontSize: 13))),
+        Expanded(
+            child: Text(value, style: const TextStyle(fontWeight: FontWeight.w500))),
+      ]));
+}
+
+/// Banner thông báo có nút đóng, bo góc, nằm trên cùng màn hình.
+class MessageBanner extends StatelessWidget {
+  const MessageBanner(
+      {super.key, required this.text, required this.color, required this.onClose});
+  final String text;
+  final Color color;
+  final VoidCallback onClose;
+
+  @override
+  Widget build(BuildContext context) => Container(
+      width: double.infinity,
+      margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+      padding: const EdgeInsets.only(left: 14, top: 4, bottom: 4),
+      decoration:
+          BoxDecoration(color: color, borderRadius: BorderRadius.circular(14)),
+      child: Row(children: [
+        Expanded(child: Text(text)),
+        IconButton(tooltip: 'Đóng', onPressed: onClose, icon: const Icon(Icons.close)),
+      ]));
+}
+
+/// Thanh hành động cố định ở đáy màn hình (nút chính luôn trong tầm ngón tay cái). Tự chừa vùng
+/// thanh cử chỉ của hệ thống.
+class BottomActionBar extends StatelessWidget {
+  const BottomActionBar({super.key, required this.child, this.hint});
+  final Widget child;
+
+  /// Dòng nhắc nhỏ phía trên nút (ví dụ "Chưa quét mã QR.").
+  final Widget? hint;
+
+  @override
+  Widget build(BuildContext context) => Container(
+      padding: EdgeInsets.fromLTRB(16, 12, 16, 12 + MediaQuery.paddingOf(context).bottom),
+      decoration: const BoxDecoration(color: AppColors.surface, boxShadow: [
+        BoxShadow(color: Color(0x1a073b45), blurRadius: 18, offset: Offset(0, -4))
+      ]),
+      child: Column(mainAxisSize: MainAxisSize.min, children: [
+        if (hint != null) Padding(padding: const EdgeInsets.only(bottom: 8), child: hint),
+        child,
+      ]));
+}
