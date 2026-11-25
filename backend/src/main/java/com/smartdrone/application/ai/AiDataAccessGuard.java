@@ -18,7 +18,7 @@ import com.smartdrone.domain.enums.RoleName;
 import tools.jackson.databind.ObjectMapper;
 
 /**
- * Cổng truy cập dữ liệu DUY NHẤT của module AI: kiểm vai trò theo tác vụ và phạm vi đơn/trạm TRƯỚC khi lấy dữ liệu,
+ * Cổng truy cập dữ liệu đơn của module AI (7.5 dùng OperationsDataReader qua StatisticsService): kiểm vai trò theo tác vụ và phạm vi đơn/trạm TRƯỚC khi lấy dữ liệu,
  * rồi chỉ trả về dữ liệu tối thiểu (không email, SĐT, địa chỉ chi tiết, tên người nhận, mã nhận hàng).
  * Chỉ đi qua OrderQueryService (khách chỉ đơn của mình, nhân viên theo trạm) và StatisticsService (số liệu tổng hợp);
  * không chạm repository/entity. Đơn ngoài phạm vi và đơn không tồn tại cùng trả 404 (quy ước của repo).
