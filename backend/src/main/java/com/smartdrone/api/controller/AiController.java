@@ -18,7 +18,6 @@ import org.springframework.web.bind.annotation.RestController;
 import com.smartdrone.application.ai.AiDataAccessGuard;
 import com.smartdrone.application.ai.AiResult;
 import com.smartdrone.application.ai.AiService;
-import com.smartdrone.application.ai.AiTask;
 import com.smartdrone.application.common.ApiException;
 import com.smartdrone.application.common.ErrorCode;
 import com.smartdrone.application.statistics.DateBasis;
@@ -47,10 +46,13 @@ public class AiController {
     private final com.smartdrone.application.ai.chat.CustomerChatService chat;
 
     private final com.smartdrone.application.eta.EtaService eta;
+    private final com.smartdrone.application.ai.summary.OrderSummaryService summaries;
 
     public AiController(AiService ai, AiDataAccessGuard guard, com.smartdrone.application.ai.chat.CustomerChatService chat,
             com.smartdrone.application.eta.EtaService eta,
-            com.smartdrone.application.ai.analytics.OperationsAnalyticsService analytics) {
+            com.smartdrone.application.ai.analytics.OperationsAnalyticsService analytics,
+            com.smartdrone.application.ai.summary.OrderSummaryService summaries) {
+        this.summaries = summaries;
         this.analytics = analytics;
         this.ai = ai;
         this.guard = guard;
@@ -73,10 +75,9 @@ public class AiController {
 
     @PostMapping("/orders/{id}/summary")
     @PreAuthorize("hasAnyRole('CUSTOMER','DISPATCHER','STATION_OPERATOR')")
-    @Operation(summary = "Tóm tắt đơn hàng (khung 7.1; logic thật ở 7.3)")
+    @Operation(summary = "7.3: Tóm tắt giao hàng từ timeline đơn, kiểm chứng đầu ra và fallback xác định")
     public ResponseEntity<AiResult> summary(JwtAuthenticationToken auth, @PathVariable UUID id) {
-        var blocks = guard.orderBlocks(AiTask.ORDER_SUMMARY, user(auth), role(auth), id);
-        return ok(ai.run(user(auth), role(auth), AiTask.ORDER_SUMMARY, blocks));
+        return ok(summaries.summarize(user(auth), role(auth), id));
     }
 
     @PostMapping("/chat")

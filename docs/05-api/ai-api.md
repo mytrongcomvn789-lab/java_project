@@ -63,7 +63,23 @@ Không tính được: `computed=false`, `reason` là `COORDINATES_MISSING` | `S
 
 ### 3.2 Tóm tắt đơn — `POST /v1/ai/orders/{id}/summary` (7.3)
 
-Không có body. `result`: `{ "summary": "…", "highlights": ["…"] }`.
+Không có body. Quyền như bảng mục 2 (đơn ngoài phạm vi và không tồn tại → 404, không gọi AI). Chỉ đọc.
+
+Luồng: Java dựng **dữ kiện timeline** của đúng một đơn (trạng thái, mốc thời gian, số phút giữa các bước, vai trò thực hiện, mã lý do thất bại; **không** có ghi chú tự do, tên, SĐT, địa chỉ) → gọi LLM chỉ với khối `order_timeline` đó → kiểm chứng đầu ra → nếu AI tắt/lỗi/không qua kiểm chứng thì dùng bản tóm tắt xác định (không AI).
+
+`result`:
+```json
+{ "orderId": "…", "status": "DELIVERED", "statusLabel": "Đã giao",
+  "summary": "Đơn được duyệt rồi giao xong sau 20 phút.",
+  "highlights": ["Giai đoạn bay mất 10 phút."],
+  "timeline": [ { "status": "APPROVED", "label": "Đã duyệt", "at": "2026-11-25T03:00:00Z", "minutesSincePrevious": null } ],
+  "summaryVersion": "ORDER_SUMMARY_V1", "mode": "AI_VERIFIED", "readOnly": true }
+```
+
+- `mode`: `AI_VERIFIED` (văn bản do LLM, đã qua kiểm chứng) hoặc `DETERMINISTIC_FALLBACK` (văn bản do Java sinh; envelope `degraded=true`, `source=FALLBACK`, `fallbackReason` = `AI_NOT_CONFIGURED|AI_TIMEOUT|AI_PROVIDER_UNAVAILABLE|AI_RESPONSE_INVALID`). `timeline` luôn do Java tính, không do AI.
+- Kiểm chứng đầu ra: `summary` ≤ 800 ký tự, `highlights` ≤ 5 ý ≤ 200 ký tự, không URL/email, và **mọi con số** trong văn bản (giờ, ngày, số bước, số phút) phải có trong dữ kiện. Giới hạn: đây không phải chứng minh văn tự do đúng, chỉ chặn số bịa và nội dung nguy hiểm.
+- Lỗi `AI_RATE_LIMITED` (429) và `AI_BUDGET_EXCEEDED` **không** bị fallback che.
+- Đơn chưa có lịch sử vẫn trả `200` với `timeline: []` và câu "Chưa có lịch sử xử lý để tóm tắt".
 
 ### 3.3 Chat — `POST /v1/ai/chat` (7.4)
 
