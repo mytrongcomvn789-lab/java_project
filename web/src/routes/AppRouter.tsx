@@ -31,6 +31,8 @@ import PackageFormPreviewPage from "../features/packages/PackageFormPreviewPage"
 import StationsPage from "../features/stations/StationsPage";
 import ReportsPage from "../features/reports/ReportsPage";
 import DashboardPage from "../features/dashboard/DashboardPage";
+import AssistantPage from "../features/assistant/AssistantPage";
+import OperationsAnalyticsPage from "../features/reports/OperationsAnalyticsPage";
 // Task 2.6 sẽ bọc thêm RoleRoute (chặn theo vai trò) bên trong nhóm RequireAuth.
 export default function AppRouter() {
   return (
@@ -60,9 +62,14 @@ export default function AppRouter() {
             path="/stations/monitoring"
             element={<StationMonitoringPage />}
           />
+          {/* 7.6: chat AI chỉ cho khách hàng (backend cũng chặn vai trò khác bằng 403). */}
+          <Route element={<RequireRole roles={["CUSTOMER"]} />}>
+            <Route path="/assistant" element={<AssistantPage />} />
+          </Route>
           <Route element={<RequireRole roles={["LOGISTICS_MANAGER"]} />}>
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/reports" element={<ReportsPage />} />
+            <Route path="/ai-analytics" element={<OperationsAnalyticsPage />} />
           </Route>
           {/* FR-02: chỉ SYSTEM_ADMIN. Backend vẫn kiểm tra quyền ở mọi API. */}
           <Route element={<RequireRole roles={["SYSTEM_ADMIN"]} />}>

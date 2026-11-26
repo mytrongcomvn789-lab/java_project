@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../ai/ai_panels.dart';
+import '../ai/ai_task_controller.dart';
 import 'customer_order_models.dart';
 import 'order_detail_controller.dart';
 import 'order_screens.dart';
@@ -156,6 +158,9 @@ class OrderDetailScreen extends ConsumerWidget {
           Text('Tạo lúc ${formatTime(order.createdAt)}',
               style: theme.textTheme.bodySmall),
           const SizedBox(height: 16),
+          // 7.6: ETA (công thức) và tóm tắt đơn. Khóa đổi khi đơn đổi trạng thái/phiên bản.
+          AiEtaPanel(AiOrderKey(order.id, order.status, order.version)),
+          AiSummaryPanel(AiOrderKey(order.id, order.status, order.version)),
           _Section('Lộ trình', [
             _Row('Trạm gửi', stationName(order.pickupStationId)),
             _Row('Trạm nhận', stationName(order.dropoffStationId)),

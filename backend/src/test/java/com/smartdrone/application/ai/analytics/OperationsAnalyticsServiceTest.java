@@ -63,4 +63,39 @@ class OperationsAnalyticsServiceTest {
         var r=run(); assertEquals("AI_RESPONSE_INVALID",r.fallbackReason());
         assertFalse(r.result().toString().contains("999 orders")); assertTrue(r.degraded());
     }
+    @Test void evidenceBlocksDoNotExposeRecommendationProseToTheModel() {
+        data(20);
+        when(ai.run(any(),any(),any(),anyList())).thenReturn(new AiResult(
+                new ObjectMapper().readTree("{\"insights\":[\"ORDER_VOLUME\"],\"recommendations\":[\"ORDER_VOLUME\"]}"),
+                "fixture",true,false,AiSource.MOCK,new AiUsage(1,1,2),UUID.randomUUID(),clock.instant(),null));
+        run();
+        @SuppressWarnings("unchecked")
+        var captor = org.mockito.ArgumentCaptor.forClass(List.class);
+        verify(ai).run(any(),any(),any(),captor.capture());
+        List<AiDataBlock> blocks = captor.getValue();
+        var evidence = blocks.stream().filter(b -> b.label().startsWith("evidence_")).toList();
+        assertFalse(evidence.isEmpty());
+        for (var b : evidence) {
+            assertTrue(b.value().contains("\"id\":"), b.value());
+            assertTrue(b.value().contains("\"text\":"), b.value());
+            // Nếu model thấy câu khuyến nghị nó sẽ chép vào recommendations thay vì trả ID (lỗi gặp với Gemini thật).
+            assertFalse(b.value().contains("recommendation"), "không gửi câu khuyến nghị cho model: " + b.value());
+        }
+    }
+    @Test void recommendationsStillComeFromServerGivenIds() {
+        data(20);
+        when(ai.run(any(),any(),any(),anyList())).thenReturn(new AiResult(
+                new ObjectMapper().readTree("{\"insights\":[\"ORDER_VOLUME\"],\"recommendations\":[\"ORDER_VOLUME\"]}"),
+                "fixture",true,false,AiSource.MOCK,new AiUsage(1,1,2),UUID.randomUUID(),clock.instant(),null));
+        var r = run();
+        assertFalse(r.degraded());
+        assertEquals("AI_SELECTED_VERIFIED_EVIDENCE", r.result().path("narrativeMode").asString());
+        assertEquals("Đối chiếu danh sách đơn và bộ lọc trước khi ra quyết định.",
+                r.result().path("recommendations").path(0).asString());
+    }
+    @Test void analyticsInstructionTellsModelToReturnIdsOnly() {
+        String instruction = new PromptBuilder().systemInstruction(AiTask.OPS_ANALYSIS);
+        assertTrue(instruction.contains("\"recommendations\": [ID]"), instruction);
+        assertTrue(instruction.contains("tuyệt đối không viết câu văn"), instruction);
+    }
 }

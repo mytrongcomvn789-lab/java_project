@@ -72,3 +72,38 @@
 .orders-table .badge {
   white-space: nowrap;
 }
+
+/* ---- Panel AI (7.6): ETA, tóm tắt ---- */
+.ai-panel-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+.ai-source {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 12.5px;
+  background: var(--hero);
+  color: var(--dark);
+}
+.ai-source-mock {
+  background: #fff3cd;
+  color: #664d03;
+}
+.ai-source-fallback {
+  background: #ffe5d0;
+  color: #7a3300;
+}
+.ai-source-formula {
+  background: #e7eefc;
+  color: #1a3a7a;
+}
+.ai-limits,
+.ai-timeline {
+  margin: 4px 0 0;
+  padding-left: 20px;
+  font-size: 13.5px;
+}

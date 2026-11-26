@@ -46,8 +46,11 @@ public class OperationsAnalyticsService {
             blocks.add(new AiDataBlock("report_scope", "from=" + data.summary().from()
                     + "; to=" + data.summary().to() + "; timezone=" + data.summary().timezone()
                     + "; basis=" + data.summary().dateBasis() + "; stationScope=AUTHORIZED_ONLY; warnings=" + findings.warnings()));
+            // Chỉ gửi id/text/source. KHÔNG gửi câu khuyến nghị: server tự dựng khuyến nghị từ ID, và nếu model thấy câu văn
+            // thì nó chép vào "recommendations" thay vì trả ID, khiến cả phản hồi bị loại (AI_RESPONSE_INVALID).
             findings.evidence().forEach(e -> blocks.add(new AiDataBlock("evidence_" + e.id().toLowerCase(java.util.Locale.ROOT),
-                    json.writeValueAsString(e))));
+                    json.writeValueAsString(json.createObjectNode()
+                            .put("id", e.id()).put("text", e.text()).put("source", e.source())))));
             try {
                 generated = ai.run(actor, role, AiTask.OPS_ANALYSIS, blocks);
                 if (generated.degraded()) fallbackReason = generated.fallbackReason();

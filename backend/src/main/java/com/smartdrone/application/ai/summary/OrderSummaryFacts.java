@@ -2,6 +2,8 @@ package com.smartdrone.application.ai.summary;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -20,6 +22,13 @@ import com.smartdrone.domain.enums.RoleName;
  */
 public record OrderSummaryFacts(UUID orderId, OrderStatus status, Instant createdAt, Instant updatedAt, Instant now,
                                 List<Step> steps) {
+    /** Múi giờ hiển thị cho người dùng. Mốc trong prompt cũng dùng múi này để văn bản AI khớp với timeline và bản dự phòng. */
+    static final ZoneId ZONE = ZoneId.of("Asia/Ho_Chi_Minh");
+    private static final DateTimeFormatter TIME = DateTimeFormatter.ofPattern("HH:mm dd/MM/yyyy").withZone(ZONE);
+
+    private static String fmt(Instant t) {
+        return t == null ? "không rõ" : TIME.format(t);
+    }
 
     /** Một bước của timeline; minutesSincePrevious = null ở bước đầu. */
     public record Step(OrderStatus status, Instant at, Long minutesSincePrevious, RoleName actorRole,
@@ -49,15 +58,17 @@ public record OrderSummaryFacts(UUID orderId, OrderStatus status, Instant create
     public String toPromptText() {
         StringBuilder sb = new StringBuilder();
         sb.append("status: ").append(status).append(" (").append(status.label()).append(")\n");
-        sb.append("createdAt: ").append(createdAt).append('\n');
-        sb.append("updatedAt: ").append(updatedAt).append('\n');
-        sb.append("now: ").append(now).append('\n');
+        // Giờ Việt Nam (UTC+7), không phải UTC: nếu đưa Instant ISO thì mô hình sẽ viết giờ UTC, lệch 7 tiếng so với timeline.
+        sb.append("timezone: Asia/Ho_Chi_Minh (UTC+7); mọi mốc thời gian dưới đây theo múi giờ này\n");
+        sb.append("createdAt: ").append(fmt(createdAt)).append('\n');
+        sb.append("updatedAt: ").append(fmt(updatedAt)).append('\n');
+        sb.append("now: ").append(fmt(now)).append('\n');
         sb.append("stepCount: ").append(steps.size()).append('\n');
         if (totalMinutes() != null) sb.append("totalMinutes: ").append(totalMinutes()).append('\n');
         sb.append("timeline:\n");
         int i = 1;
         for (Step s : steps) {
-            sb.append(i++).append(". ").append(s.at()).append(" | ").append(s.status()).append(" (")
+            sb.append(i++).append(". ").append(fmt(s.at())).append(" | ").append(s.status()).append(" (")
                     .append(s.status().label()).append(')');
             if (s.minutesSincePrevious() != null) sb.append(" | minutesSincePrevious=").append(s.minutesSincePrevious());
             if (s.actorRole() != null) sb.append(" | actor=").append(s.actorRole());
