@@ -63,6 +63,13 @@ public class AiDataAccessGuard {
         return List.of(new AiDataBlock("order", sb.toString()));
     }
 
+    /** 7.3: chi tiết MỘT đơn (kèm timeline) mà người dùng được xem; ngoài phạm vi -> 404. Chỉ service tóm tắt dùng, nó tự lọc trường trước khi tạo prompt. */
+    @PreAuthorize("hasAnyRole('CUSTOMER','DISPATCHER','STATION_OPERATOR')")
+    public OrderDetail orderForSummary(UUID userId, RoleName role, UUID orderId) {
+        requireTask(AiTask.ORDER_SUMMARY, role);
+        return orders.get(userId, role, orderId);
+    }
+
     /** Số liệu tổng hợp theo bộ lọc thống kê 5.1 (chỉ LOGISTICS_MANAGER, phạm vi trạm do StatisticsService áp). */
     @PreAuthorize("hasRole('LOGISTICS_MANAGER')")
     public List<AiDataBlock> analyticsBlocks(UUID userId, RoleName role, java.time.LocalDate from,

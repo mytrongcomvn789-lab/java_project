@@ -1,6 +1,6 @@
 # AI Service (task 7.1, APDDMP-51)
 
-Trạng thái: thiết kế + khung code. ETA (7.2) đã có bản công thức, không qua AiService/provider (`source=FORMULA`), xem [eta-api.md](../05-api/eta-api.md). Chat đã có ở 7.4. Tóm tắt/phân tích thật thuộc 7.3, 7.5–7.6.
+Trạng thái: thiết kế + khung code. ETA (7.2) đã có bản công thức, không qua AiService/provider (`source=FORMULA`), xem [eta-api.md](../05-api/eta-api.md). Chat đã có ở 7.4. Tóm tắt đơn đã có ở 7.3 (`application/ai/summary`: dữ kiện timeline xác định, kiểm chứng số liệu, fallback xác định; xem [ai-api.md](../05-api/ai-api.md) mục 3.2). Phân tích thật thuộc 7.5–7.6.
 
 ## 1. Quyết định kiến trúc
 
