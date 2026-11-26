@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:smartdrone_mobile/core/network/api_failure.dart';
+import 'package:smartdrone_mobile/core/ui/app_widgets.dart';
 import 'package:smartdrone_mobile/features/operator/confirmation_photo_controller.dart';
 import 'package:smartdrone_mobile/features/operator/operator_api.dart';
 import 'package:smartdrone_mobile/features/operator/operator_controllers.dart';
@@ -431,6 +432,41 @@ void main() {
       await tester.tap(find.byKey(const Key('fake-scan-valid')));
       await tester.pumpAndSettle();
       expect(find.byKey(const Key('qr-scanned')), findsOneWidget);
+    });
+
+    testWidgets('màn quét: có nút quay lại và đèn flash, bấm flash đổi trạng thái', (tester) async {
+      await mount(tester);
+      await tester.tap(find.byKey(const Key('scan-button')));
+      await tester.pumpAndSettle();
+      expect(find.text('Quét mã nhận hàng'), findsOneWidget);
+      // Thanh nút phải ở mép TRÊN màn hình (từng bị đẩy xuống giữa do Stack kéo giãn SafeArea).
+      expect(tester.getTopLeft(find.byKey(const Key('scan-close'))).dy, lessThan(120));
+      expect(tester.getTopLeft(find.byKey(const Key('scan-torch'))).dy, lessThan(120));
+      expect(find.byTooltip('Bật đèn flash'), findsOneWidget);
+      final scope = ProviderScope.containerOf(tester.element(find.byType(QrScanScreen)));
+      expect(scope.read(scanTorchProvider), isFalse);
+      await tester.tap(find.byKey(const Key('scan-torch')));
+      await tester.pump();
+      expect(scope.read(scanTorchProvider), isTrue);
+      expect(find.byTooltip('Tắt đèn flash'), findsOneWidget);
+      // Quay lại không trả mã nào về màn xác nhận.
+      await tester.tap(find.byKey(const Key('scan-close')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('scan-button')), findsOneWidget);
+      expect(find.byKey(const Key('qr-scanned')), findsNothing);
+    });
+
+    testWidgets('nút xác nhận nằm trong thanh hành động cố định ở đáy', (tester) async {
+      await mount(tester);
+      expect(
+          find.descendant(
+              of: find.byType(BottomActionBar), matching: find.byKey(const Key('confirm-button'))),
+          findsOneWidget);
+      // Dòng nhắc thiếu gì cũng nằm trong thanh đó.
+      expect(
+          find.descendant(
+              of: find.byType(BottomActionBar), matching: find.byKey(const Key('confirm-missing'))),
+          findsOneWidget);
     });
 
     testWidgets('camera bị từ chối quyền: hướng dẫn và quay lại để nhập OTP', (tester) async {

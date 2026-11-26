@@ -5,8 +5,11 @@ import '../auth/screens.dart' show signOut;
 import '../auth/session.dart';
 import '../orders/customer_order_models.dart' show OrderSummary, Station;
 import '../orders/order_detail_controller.dart' show stationsProvider;
-import '../orders/order_screens.dart' show StatusChip, formatTime;
+import '../orders/order_screens.dart' show OrderListCard, StatusChip, formatTime;
+import '../../core/theme/app_theme.dart';
+import '../../core/ui/app_widgets.dart';
 import 'operator_controllers.dart';
+import 'operator_models.dart' show AssignedStation, PickupCredential;
 import 'return_controller.dart';
 import 'sync_widgets.dart';
 
@@ -17,108 +20,333 @@ String _stationName(List<Station>? stations, String id) {
   return 'Trạm ${id.length >= 8 ? id.substring(0, 8) : id}';
 }
 
-/// Màn chính của nhân viên trạm: các trạm được phân công, đơn chờ nhận kiện và đơn chờ
-/// khách nhận. Phạm vi đơn do server quyết định, không liệt kê mọi trạm.
+/// Màn chính của nhân viên trạm: header tối (trạm, kết nối, thống kê, sức chứa), ba tab đơn
+/// (chờ nhận kiện, chờ giao khách, thất bại/hoàn về) và thanh điều hướng dưới có nút Quét QR.
+/// Phạm vi đơn do server quyết định theo các trạm được phân công.
 class OperatorHomeScreen extends ConsumerWidget {
   const OperatorHomeScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final user = ref.watch(sessionProvider).user!;
+    // Giữ provider mã vừa quét sống khi màn chính còn mở (nó tự hủy khi không ai nghe).
+    ref.watch(scannedCredentialProvider);
+    return const DefaultTabController(length: 3, child: _OperatorScaffold());
+  }
+}
+
+class _OperatorScaffold extends ConsumerWidget {
+  const _OperatorScaffold();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
     final receipts = ref.watch(receiptListProvider);
     final pickups = ref.watch(pickupListProvider);
     final returns = ref.watch(returnListProvider);
     String count(OperatorListState s) =>
         s.loading || s.error != null ? '' : ' (${s.total})';
-    return DefaultTabController(
-        length: 3,
-        child: Scaffold(
-            appBar: AppBar(
-                title: const Text('Vận hành trạm'),
-                actions: [
-                  IconButton(
-                      tooltip: 'Hồ sơ',
-                      onPressed: () => context.go('/profile'),
-                      icon: const Icon(Icons.account_circle_outlined)),
-                  IconButton(
-                      key: const Key('logout'),
-                      tooltip: 'Đăng xuất',
-                      onPressed: () => signOut(ref),
-                      icon: const Icon(Icons.logout)),
-                ],
-                bottom: TabBar(tabs: [
-                  Tab(
-                      key: const Key('tab-receipts'),
-                      text: 'Chờ nhận kiện${count(receipts)}'),
-                  Tab(
-                      key: const Key('tab-pickups'),
-                      text: 'Chờ giao khách${count(pickups)}'),
-                  Tab(
-                      key: const Key('tab-returns'),
-                      text: 'Chờ nhận hoàn${count(returns)}'),
-                ])),
-            body: Column(children: [
-              _StationsBanner(
-                  name: user.name.isEmpty ? user.email : user.name),
-              const SyncBanner(),
-              Expanded(
-                  child: TabBarView(children: [
-                _PagedOrders(
-                    key: const Key('list-receipts'),
-                    state: receipts,
-                    emptyText: 'Không có đơn nào đang chờ nhận kiện tại trạm của bạn.',
-                    onRefresh: ref.read(receiptListProvider.notifier).reload,
-                    onLoadMore: ref.read(receiptListProvider.notifier).loadMore,
-                    onTap: (o) => context.push('/operator/receipts/${o.id}')),
-                _PagedOrders(
-                    key: const Key('list-pickups'),
-                    state: pickups,
-                    emptyText: 'Không có đơn nào đang chờ khách nhận tại trạm của bạn.',
-                    onRefresh: ref.read(pickupListProvider.notifier).reload,
-                    onLoadMore: () async {},
-                    onTap: (o) => context.push('/operator/pickups/${o.id}')),
-                _PagedOrders(
-                    key: const Key('list-returns'),
-                    state: returns,
-                    emptyText: 'Không có đơn nào đang hoàn về trạm gửi của bạn.',
-                    onRefresh: ref.read(returnListProvider.notifier).reload,
-                    onLoadMore: () async {},
-                    onTap: (o) => context.push('/operator/returns/${o.id}')),
-              ])),
+    return Scaffold(
+        backgroundColor: AppColors.background,
+        body: Column(children: [
+          _OperatorHeader(receipts: receipts, pickups: pickups, returns: returns),
+          const SyncBanner(),
+          Container(
+              margin: const EdgeInsets.fromLTRB(16, 14, 16, 6),
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(AppRadii.pill),
+                  border: Border.all(color: AppColors.border)),
+              child: TabBar(
+                  indicatorSize: TabBarIndicatorSize.tab,
+                  indicator: BoxDecoration(
+                      color: AppColors.primary,
+                      borderRadius: BorderRadius.circular(AppRadii.pill)),
+                  dividerColor: Colors.transparent,
+                  labelColor: Colors.white,
+                  unselectedLabelColor: AppColors.textMuted,
+                  labelStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+                  tabs: [
+                    Tab(
+                        key: const Key('tab-receipts'),
+                        height: 40,
+                        text: 'Chờ nhận${count(receipts)}'),
+                    Tab(
+                        key: const Key('tab-pickups'),
+                        height: 40,
+                        text: 'Chờ giao${count(pickups)}'),
+                    Tab(
+                        key: const Key('tab-returns'),
+                        height: 40,
+                        text: 'Thất bại${count(returns)}'),
+                  ])),
+          Expanded(
+              child: TabBarView(children: [
+            _PagedOrders(
+                key: const Key('list-receipts'),
+                state: receipts,
+                emptyText: 'Không có đơn nào đang chờ nhận kiện tại trạm của bạn.',
+                actionLabel: 'Nhận kiện',
+                onRefresh: ref.read(receiptListProvider.notifier).reload,
+                onLoadMore: ref.read(receiptListProvider.notifier).loadMore,
+                onTap: (o) => context.push('/operator/receipts/${o.id}')),
+            _PagedOrders(
+                key: const Key('list-pickups'),
+                state: pickups,
+                emptyText: 'Không có đơn nào đang chờ khách nhận tại trạm của bạn.',
+                actionLabel: 'Xác nhận giao',
+                onRefresh: ref.read(pickupListProvider.notifier).reload,
+                onLoadMore: () async {},
+                onTap: (o) => context.push('/operator/pickups/${o.id}')),
+            _PagedOrders(
+                key: const Key('list-returns'),
+                state: returns,
+                emptyText: 'Không có đơn nào đang hoàn về trạm gửi của bạn.',
+                actionLabel: 'Nhận hàng hoàn',
+                onRefresh: ref.read(returnListProvider.notifier).reload,
+                onLoadMore: () async {},
+                onTap: (o) => context.push('/operator/returns/${o.id}')),
+          ])),
+        ]),
+        bottomNavigationBar: AppBottomNav(
+            selectedIndex: 0,
+            centerIndex: 1,
+            items: const [
+              NavItem(Icons.inbox_outlined, 'Đơn cần xử lý', key: Key('nav-orders')),
+              NavItem(Icons.qr_code_scanner, 'Quét QR', key: Key('nav-scan')),
+              NavItem(Icons.warehouse_outlined, 'Trạm', key: Key('nav-stations')),
+              NavItem(Icons.person_outline, 'Hồ sơ', key: Key('nav-profile')),
+            ],
+            onTap: (i) => _onNav(context, ref, i)));
+  }
+
+  Future<void> _onNav(BuildContext context, WidgetRef ref, int i) async {
+    switch (i) {
+      case 1:
+        // Mã khách đưa không cho biết đơn nào, nên quét trước rồi chọn đơn ở tab Chờ giao.
+        final credential = await context.push<PickupCredential>('/operator/scan');
+        if (credential == null || !context.mounted) return;
+        ref.read(scannedCredentialProvider.notifier).state = credential;
+        DefaultTabController.of(context).animateTo(1);
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text('Đã quét mã nhận hàng. Chọn đơn trong "Chờ giao" để xác nhận.')));
+      case 2:
+        await showModalBottomSheet<void>(
+            context: context,
+            isScrollControlled: true,
+            builder: (_) => const _StationsSheet());
+      case 3:
+        context.go('/profile');
+    }
+  }
+}
+
+class _OperatorHeader extends ConsumerWidget {
+  const _OperatorHeader(
+      {required this.receipts, required this.pickups, required this.returns});
+  final OperatorListState receipts, pickups, returns;
+
+  String _n(OperatorListState s) => s.loading || s.error != null ? '' : '${s.total}';
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final user = ref.watch(sessionProvider).user!;
+    final stations = ref.watch(assignedStationsProvider);
+    final list = stations.valueOrNull ?? const <AssignedStation>[];
+    return Column(children: [
+      Container(
+          width: double.infinity,
+          decoration: const BoxDecoration(
+              color: AppColors.dark,
+              borderRadius: BorderRadius.vertical(bottom: Radius.circular(28))),
+          child: SafeArea(
+              bottom: false,
+              child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 12, 8, 20),
+                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    Row(children: [
+                      Expanded(child: _stationSelector(context, ref, stations, list)),
+                      _ConnectionChip(list),
+                      IconButton(
+                          key: const Key('logout'),
+                          tooltip: 'Đăng xuất',
+                          onPressed: () => signOut(ref),
+                          icon: const Icon(Icons.logout, color: Colors.white)),
+                    ]),
+                    const SizedBox(height: 16),
+                    Padding(
+                        padding: const EdgeInsets.only(right: 12),
+                        child: Column(children: [
+                          Row(children: [
+                            Expanded(child: StatTile(value: _n(receipts), label: 'Chờ nhận')),
+                            const SizedBox(width: 10),
+                            Expanded(child: StatTile(value: _n(pickups), label: 'Chờ giao')),
+                            const SizedBox(width: 10),
+                            Expanded(child: StatTile(value: _n(returns), label: 'Thất bại')),
+                          ]),
+                          const SizedBox(height: 16),
+                          StationCapacityBar(
+                              used: list.fold(0, (a, s) => a + s.slotUsed),
+                              capacity: list.fold(0, (a, s) => a + s.capacity)),
+                        ])),
+                  ])))),
+      if (stations.hasValue && list.isEmpty)
+        Container(
+            key: const Key('stations-banner'),
+            width: double.infinity,
+            margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+                color: StatusPalette.pending.background,
+                borderRadius: BorderRadius.circular(14)),
+            child: Text(
+                'Tài khoản ${user.name.isEmpty ? user.email : user.name} chưa được phân công trạm nào. Liên hệ quản lý để được phân công.',
+                style: TextStyle(color: StatusPalette.pending.foreground))),
+    ]);
+  }
+
+  Widget _stationSelector(BuildContext context, WidgetRef ref,
+      AsyncValue<List<AssignedStation>> stations, List<AssignedStation> list) {
+    const label = Text('Trạm làm việc',
+        style: TextStyle(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.w500));
+    if (stations.hasError && !stations.hasValue) {
+      return Column(
+          key: const Key('stations-error'),
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            label,
+            Wrap(crossAxisAlignment: WrapCrossAlignment.center, children: [
+              const Text('Chưa tải được trạm',
+                  style: TextStyle(
+                      color: Colors.white, fontSize: 16, fontWeight: FontWeight.w700)),
+              TextButton(
+                  onPressed: () => ref.invalidate(assignedStationsProvider),
+                  style: TextButton.styleFrom(foregroundColor: AppColors.amber),
+                  child: const Text('Thử lại')),
+            ]),
+          ]);
+    }
+    final title = stations.isLoading && !stations.hasValue
+        ? 'Đang tải trạm…'
+        : list.isEmpty
+            ? 'Chưa có trạm'
+            : list.length == 1
+                ? list.first.name
+                : '${list.length} trạm';
+    return InkWell(
+        key: const Key('station-selector'),
+        borderRadius: BorderRadius.circular(12),
+        onTap: list.isEmpty
+            ? null
+            : () => showModalBottomSheet<void>(
+                context: context,
+                isScrollControlled: true,
+                builder: (_) => const _StationsSheet()),
+        child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              label,
+              Row(children: [
+                const Icon(Icons.warehouse_outlined, color: AppColors.amber, size: 20),
+                const SizedBox(width: 8),
+                Flexible(
+                    child: Text(title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                            color: Colors.white, fontSize: 20, fontWeight: FontWeight.w800))),
+                if (list.isNotEmpty)
+                  const Icon(Icons.keyboard_arrow_down, color: Colors.white70),
+              ]),
             ])));
   }
 }
 
-class _StationsBanner extends ConsumerWidget {
-  const _StationsBanner({required this.name});
-  final String name;
+/// Tình trạng kết nối của trạm do server báo. Backend chưa có nguồn heartbeat nên thường là
+/// "Chưa có dữ liệu"; app không được giả là Online.
+class _ConnectionChip extends StatelessWidget {
+  const _ConnectionChip(this.stations);
+  final List<AssignedStation> stations;
+
+  @override
+  Widget build(BuildContext context) {
+    final states = [for (final s in stations) s.connection];
+    final (text, color) = states.isEmpty
+        ? ('Chưa có dữ liệu', Colors.white54)
+        : states.contains('OFFLINE')
+            ? ('Offline', const Color(0xffff8a8f))
+            : states.every((s) => s == 'ONLINE')
+                ? ('Online', AppColors.tealBright)
+                : ('Chưa có dữ liệu', Colors.white54);
+    return Semantics(
+        label: 'Kết nối trạm: $text',
+        excludeSemantics: true,
+        child: Container(
+            key: const Key('connection-chip'),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(AppRadii.pill)),
+            child: Row(mainAxisSize: MainAxisSize.min, children: [
+              Container(
+                  width: 8,
+                  height: 8,
+                  decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+              const SizedBox(width: 6),
+              Text(text,
+                  style: const TextStyle(
+                      color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600)),
+            ])));
+  }
+}
+
+/// Danh sách các trạm được phân công: địa chỉ, tình trạng và sức chứa khung giờ hiện tại.
+class _StationsSheet extends ConsumerWidget {
+  const _StationsSheet();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final stations = ref.watch(assignedStationsProvider);
-    final scheme = Theme.of(context).colorScheme;
-    return stations.when(
-        loading: () => const SizedBox(height: 4, child: LinearProgressIndicator()),
-        error: (e, _) => Container(
-            key: const Key('stations-error'),
-            width: double.infinity,
-            color: scheme.errorContainer,
-            padding: const EdgeInsets.all(8),
-            child: Row(children: [
-              const Expanded(
-                  child: Text('Chưa tải được danh sách trạm của bạn.')),
-              TextButton(
-                  onPressed: () => ref.invalidate(assignedStationsProvider),
-                  child: const Text('Thử lại')),
-            ])),
-        data: (list) => Container(
-            key: const Key('stations-banner'),
-            width: double.infinity,
-            color: list.isEmpty ? scheme.tertiaryContainer : scheme.surfaceContainerHighest,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Text(list.isEmpty
-                ? 'Tài khoản $name chưa được phân công trạm nào. Liên hệ quản lý để được phân công.'
-                : 'Trạm của bạn: ${list.map((s) => s.name).join(' · ')}')));
+    final stations = ref.watch(assignedStationsProvider).valueOrNull ?? const [];
+    return SafeArea(
+        child: ConstrainedBox(
+            constraints: BoxConstraints(maxHeight: MediaQuery.sizeOf(context).height * 0.7),
+            child: ListView(shrinkWrap: true, padding: const EdgeInsets.all(20), children: [
+              Text('Trạm của bạn',
+                  style: Theme.of(context)
+                      .textTheme
+                      .titleLarge
+                      ?.copyWith(fontWeight: FontWeight.w800)),
+              const SizedBox(height: 12),
+              for (final s in stations)
+                Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: Card(
+                        child: Padding(
+                            padding: const EdgeInsets.all(14),
+                            child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(children: [
+                                    Expanded(
+                                        child: Text(s.name,
+                                            style: const TextStyle(
+                                                fontSize: 16, fontWeight: FontWeight.w700))),
+                                    Text(s.isActive ? 'Hoạt động' : 'Không hoạt động',
+                                        style: TextStyle(
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w700,
+                                            color: s.isActive
+                                                ? StatusPalette.done.foreground
+                                                : StatusPalette.failed.foreground)),
+                                  ]),
+                                  if ((s.address ?? '').isNotEmpty)
+                                    Padding(
+                                        padding: const EdgeInsets.only(top: 4, bottom: 10),
+                                        child: Text(s.address!,
+                                            style: const TextStyle(color: AppColors.textMuted))),
+                                  StationCapacityBar(
+                                      used: s.slotUsed, capacity: s.capacity, onDark: false),
+                                ])))),
+            ])));
   }
 }
 
@@ -130,9 +358,11 @@ class _PagedOrders extends ConsumerStatefulWidget {
       required this.emptyText,
       required this.onRefresh,
       required this.onLoadMore,
-      this.onTap});
+      this.onTap,
+      this.actionLabel});
   final OperatorListState state;
   final String emptyText;
+  final String? actionLabel;
   final Future<void> Function() onRefresh;
   final Future<void> Function() onLoadMore;
   final void Function(OrderSummary)? onTap;
@@ -194,7 +424,7 @@ class _PagedOrdersState extends ConsumerState<_PagedOrders> {
           separatorBuilder: (_, __) => const SizedBox(height: 8),
           itemBuilder: (context, i) {
             if (i < s.items.length) {
-              return _OrderCard(s.items[i], stations, widget.onTap);
+              return _OrderCard(s.items[i], stations, widget.onTap, widget.actionLabel);
             }
             if (s.moreError != null) {
               return Center(
@@ -224,30 +454,38 @@ class _PagedOrdersState extends ConsumerState<_PagedOrders> {
 }
 
 class _OrderCard extends StatelessWidget {
-  const _OrderCard(this.order, this.stations, this.onTap);
+  const _OrderCard(this.order, this.stations, this.onTap, this.actionLabel);
   final OrderSummary order;
   final List<Station>? stations;
   final void Function(OrderSummary)? onTap;
+  final String? actionLabel;
 
   @override
   Widget build(BuildContext context) {
     final weight = order.packageWeightGrams;
-    return Card(
-        child: ListTile(
-            key: Key('order-${order.id}'),
-            title: Text('Đơn ${order.shortCode}'),
-            subtitle: Text([
-              [
-                if (order.packageDescription != null) order.packageDescription!,
-                if (weight != null) '$weight g',
-              ].join(' · '),
-              '${_stationName(stations, order.pickupStationId)} → ${_stationName(stations, order.dropoffStationId)}',
-              'Người nhận: ${order.recipientName}',
-              formatTime(order.updatedAt ?? order.createdAt),
-            ].where((e) => e.isNotEmpty).join('\n')),
-            isThreeLine: true,
-            trailing: StatusChip(order.status, order.statusLabel),
-            onTap: onTap == null ? null : () => onTap!(order)));
+    return OrderListCard(
+        key: Key('order-${order.id}'),
+        title: 'Đơn ${order.shortCode}',
+        status: order.status,
+        statusLabel: order.statusLabel,
+        lines: [
+          (
+            Icons.route_outlined,
+            '${_stationName(stations, order.pickupStationId)} → ${_stationName(stations, order.dropoffStationId)}'
+          ),
+          (
+            Icons.inventory_2_outlined,
+            [
+              if (order.packageDescription != null) order.packageDescription!,
+              if (weight != null) '$weight g',
+            ].join(' · ')
+          ),
+          (Icons.person_outline, 'Người nhận: ${order.recipientName}'),
+        ],
+        time: formatTime(order.updatedAt ?? order.createdAt),
+        actionLabel: actionLabel,
+        actionKey: Key('action-${order.id}'),
+        onTap: onTap == null ? null : () => onTap!(order));
   }
 }
 
@@ -315,7 +553,6 @@ class _ReceiptDetailScreenState extends ConsumerState<ReceiptDetailScreen> {
     final controller = ref.read(receiptDetailProvider(widget.orderId).notifier);
     final stations = ref.watch(stationsProvider).valueOrNull;
     final ctx = state.context;
-    final scheme = Theme.of(context).colorScheme;
     return Scaffold(
         appBar: AppBar(
             title: Text(ctx == null ? 'Nhận kiện' : 'Đơn ${ctx.order.shortCode}'),
@@ -327,19 +564,34 @@ class _ReceiptDetailScreenState extends ConsumerState<ReceiptDetailScreen> {
             ]),
         body: Column(children: [
           if (state.notice != null)
-            _Banner(
+            MessageBanner(
                 key: const Key('receipt-notice'),
                 text: state.notice!,
-                color: scheme.tertiaryContainer,
+                color: StatusPalette.pending.background,
                 onClose: controller.dismissNotice),
           if (state.actionError != null)
-            _Banner(
+            MessageBanner(
                 key: const Key('receipt-action-error'),
                 text: state.actionError!.message,
-                color: scheme.errorContainer,
+                color: StatusPalette.failed.background,
                 onClose: controller.dismissNotice),
           Expanded(child: _body(context, state, controller, stations)),
-        ]));
+        ]),
+        // Nút chính luôn nằm cố định ở đáy màn hình, trong tầm ngón tay cái.
+        bottomNavigationBar: ctx != null && state.canReceive
+            ? BottomActionBar(
+                child: FilledButton(
+                    key: const Key('receive-button'),
+                    // Vô hiệu hóa khi đang gửi hoặc chưa tích kiểm tra: chặn bấm đúp.
+                    onPressed: state.receiving || !_checked ? null : _confirm,
+                    child: state.receiving
+                        ? const SizedBox(
+                            width: 22,
+                            height: 22,
+                            child: CircularProgressIndicator(
+                                strokeWidth: 2, color: Colors.white))
+                        : const Text('Nhận kiện')))
+            : null);
   }
 
   Widget _body(BuildContext context, ReceiptDetailState state,
@@ -382,27 +634,27 @@ class _ReceiptDetailScreenState extends ConsumerState<ReceiptDetailScreen> {
         StatusChip(o.status, o.statusLabel),
       ]),
       const SizedBox(height: 16),
-      _Section('Lộ trình', [
-        _Row('Trạm gửi', _stationName(stations, o.pickupStationId)),
-        _Row('Trạm nhận', _stationName(stations, o.dropoffStationId)),
+      InfoCard('Lộ trình', [
+        InfoRow('Trạm gửi', _stationName(stations, o.pickupStationId)),
+        InfoRow('Trạm nhận', _stationName(stations, o.dropoffStationId)),
       ]),
-      _Section('Người gửi và người nhận', [
-        _Row('Người gửi', ctx.senderName),
-        _Row('Người nhận', o.recipient.name),
-        _Row('Điện thoại', o.recipient.phone),
-        _Row('Địa chỉ', o.recipient.addressLine),
+      InfoCard('Người gửi và người nhận', [
+        InfoRow('Người gửi', ctx.senderName),
+        InfoRow('Người nhận', o.recipient.name),
+        InfoRow('Điện thoại', o.recipient.phone),
+        InfoRow('Địa chỉ', o.recipient.addressLine),
       ]),
-      _Section('Kiện hàng', [
-        _Row('Mô tả', p.description),
-        _Row('Khối lượng', '${p.weightGrams} g'),
-        _Row('Kích thước',
+      InfoCard('Kiện hàng', [
+        InfoRow('Mô tả', p.description),
+        InfoRow('Khối lượng', '${p.weightGrams} g'),
+        InfoRow('Kích thước',
             '${_n(p.lengthCm)} × ${_n(p.widthCm)} × ${_n(p.heightCm)} cm'),
-        _Row('Ảnh', p.photoFileIds.isEmpty ? 'Không có' : '${p.photoFileIds.length} ảnh'),
-        _Row('Mã kiện', ctx.packageId.substring(0, ctx.packageId.length >= 8 ? 8 : ctx.packageId.length).toUpperCase()),
+        InfoRow('Ảnh', p.photoFileIds.isEmpty ? 'Không có' : '${p.photoFileIds.length} ảnh'),
+        InfoRow('Mã kiện', ctx.packageId.substring(0, ctx.packageId.length >= 8 ? 8 : ctx.packageId.length).toUpperCase()),
       ]),
-      _Section('Lần giao', [
-        _Row('Lần', '${ctx.attempt.attemptNo}'),
-        _Row('Khung giờ',
+      InfoCard('Lần giao', [
+        InfoRow('Lần', '${ctx.attempt.attemptNo}'),
+        InfoRow('Khung giờ',
             '${formatTime(ctx.attempt.slotStart)} → ${formatTime(ctx.attempt.slotEnd)}'),
       ]),
       if (state.queued)
@@ -420,35 +672,25 @@ class _ReceiptDetailScreenState extends ConsumerState<ReceiptDetailScreen> {
             child: Text(state.gone
                 ? 'Đơn không còn trong phạm vi của bạn.'
                 : 'Đơn không còn chờ nhận kiện (trạng thái: ${o.statusLabel}).'))
-      else ...[
-        TextField(
-            key: const Key('receipt-note'),
-            controller: _note,
-            maxLength: 500,
-            maxLines: 2,
-            decoration: const InputDecoration(
-                labelText: 'Ghi chú (tùy chọn)', border: OutlineInputBorder())),
-        CheckboxListTile(
-            key: const Key('receipt-checked'),
-            contentPadding: EdgeInsets.zero,
-            controlAffinity: ListTileControlAffinity.leading,
-            title: const Text('Tôi đã đối chiếu mã kiện và kiểm tra bao bì thực tế'),
-            value: _checked,
-            onChanged: state.receiving
-                ? null
-                : (v) => setState(() => _checked = v ?? false)),
-        const SizedBox(height: 8),
-        FilledButton(
-            key: const Key('receive-button'),
-            // Vô hiệu hóa khi đang gửi hoặc chưa tích kiểm tra: chặn bấm đúp.
-            onPressed: state.receiving || !_checked ? null : _confirm,
-            child: state.receiving
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2))
-                : const Text('Nhận kiện')),
-      ],
+      else
+        InfoCard('Đối chiếu kiện', [
+          CheckboxListTile(
+              key: const Key('receipt-checked'),
+              contentPadding: EdgeInsets.zero,
+              controlAffinity: ListTileControlAffinity.leading,
+              title: const Text('Tôi đã đối chiếu mã kiện và kiểm tra bao bì thực tế'),
+              value: _checked,
+              onChanged: state.receiving
+                  ? null
+                  : (v) => setState(() => _checked = v ?? false)),
+          const SizedBox(height: 8),
+          TextField(
+              key: const Key('receipt-note'),
+              controller: _note,
+              maxLength: 500,
+              maxLines: 2,
+              decoration: const InputDecoration(labelText: 'Ghi chú (tùy chọn)')),
+        ]),
     ]);
   }
 }
@@ -518,7 +760,6 @@ class _ReturnDetailScreenState extends ConsumerState<ReturnDetailScreen> {
     final controller = ref.read(returnDetailProvider(widget.orderId).notifier);
     final stations = ref.watch(stationsProvider).valueOrNull;
     final order = state.order;
-    final scheme = Theme.of(context).colorScheme;
     return Scaffold(
         appBar: AppBar(
             title: Text(order == null ? 'Nhận hàng hoàn' : 'Đơn ${order.shortCode}'),
@@ -530,19 +771,32 @@ class _ReturnDetailScreenState extends ConsumerState<ReturnDetailScreen> {
             ]),
         body: Column(children: [
           if (state.notice != null)
-            _Banner(
+            MessageBanner(
                 key: const Key('return-notice'),
                 text: state.notice!,
-                color: scheme.tertiaryContainer,
+                color: StatusPalette.pending.background,
                 onClose: controller.dismissNotice),
           if (state.actionError != null)
-            _Banner(
+            MessageBanner(
                 key: const Key('return-action-error'),
                 text: state.actionError!.message,
-                color: scheme.errorContainer,
+                color: StatusPalette.failed.background,
                 onClose: controller.dismissNotice),
           Expanded(child: _body(context, state, controller, stations)),
-        ]));
+        ]),
+        bottomNavigationBar: order != null && state.canComplete
+            ? BottomActionBar(
+                child: FilledButton(
+                    key: const Key('return-button'),
+                    onPressed: state.completing || !_checked ? null : _complete,
+                    child: state.completing
+                        ? const SizedBox(
+                            width: 22,
+                            height: 22,
+                            child: CircularProgressIndicator(
+                                strokeWidth: 2, color: Colors.white))
+                        : const Text('Đã nhận hàng hoàn')))
+            : null);
   }
 
   Widget _body(BuildContext context, ReturnDetailState state,
@@ -579,19 +833,19 @@ class _ReturnDetailScreenState extends ConsumerState<ReturnDetailScreen> {
         StatusChip(o.status, o.statusLabel),
       ]),
       const SizedBox(height: 16),
-      _Section('Lộ trình', [
-        _Row('Trạm gửi (nhận lại)', _stationName(stations, o.pickupStationId)),
-        _Row('Trạm nhận', _stationName(stations, o.dropoffStationId)),
+      InfoCard('Lộ trình', [
+        InfoRow('Trạm gửi', _stationName(stations, o.pickupStationId)),
+        InfoRow('Trạm nhận', _stationName(stations, o.dropoffStationId)),
       ]),
-      _Section('Kiện hàng', [
-        _Row('Mô tả', o.package.description),
-        _Row('Khối lượng', '${o.package.weightGrams} g'),
-        _Row('Người nhận', o.recipient.name),
+      InfoCard('Kiện hàng', [
+        InfoRow('Mô tả', o.package.description),
+        InfoRow('Khối lượng', '${o.package.weightGrams} g'),
+        InfoRow('Người nhận', o.recipient.name),
       ]),
       if (state.failures.isNotEmpty)
-        _Section('Lý do hoàn hàng', [
+        InfoCard('Lý do hoàn hàng', [
           for (final h in state.failures)
-            _Row(h.toLabel,
+            InfoRow(h.toLabel,
                 '${h.reason ?? 'Không ghi lý do'}\n${formatTime(h.occurredAt)}'),
         ]),
       if (state.done)
@@ -613,82 +867,27 @@ class _ReturnDetailScreenState extends ConsumerState<ReturnDetailScreen> {
             child: Text(state.gone
                 ? 'Đơn không còn trong phạm vi của bạn.'
                 : 'Đơn không còn chờ nhận hàng hoàn (trạng thái: ${o.statusLabel}).'))
-      else ...[
-        TextField(
-            key: const Key('return-note'),
-            controller: _note,
-            maxLength: 500,
-            maxLines: 2,
-            decoration: const InputDecoration(
-                labelText: 'Ghi chú (tùy chọn)', border: OutlineInputBorder())),
-        CheckboxListTile(
-            key: const Key('return-checked'),
-            contentPadding: EdgeInsets.zero,
-            controlAffinity: ListTileControlAffinity.leading,
-            title: const Text('Tôi đã nhận kiện hoàn về và kiểm tra tình trạng kiện'),
-            value: _checked,
-            onChanged: state.completing
-                ? null
-                : (v) => setState(() => _checked = v ?? false)),
-        const SizedBox(height: 8),
-        FilledButton(
-            key: const Key('return-button'),
-            onPressed: state.completing || !_checked ? null : _complete,
-            child: state.completing
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2))
-                : const Text('Đã nhận hàng hoàn')),
-      ],
+      else
+        InfoCard('Xác nhận nhận hàng hoàn', [
+          CheckboxListTile(
+              key: const Key('return-checked'),
+              contentPadding: EdgeInsets.zero,
+              controlAffinity: ListTileControlAffinity.leading,
+              title: const Text('Tôi đã nhận kiện hoàn về và kiểm tra tình trạng kiện'),
+              value: _checked,
+              onChanged: state.completing
+                  ? null
+                  : (v) => setState(() => _checked = v ?? false)),
+          const SizedBox(height: 8),
+          TextField(
+              key: const Key('return-note'),
+              controller: _note,
+              maxLength: 500,
+              maxLines: 2,
+              decoration: const InputDecoration(labelText: 'Ghi chú (tùy chọn)')),
+        ]),
     ]);
   }
 }
 
 String _n(double v) => v == v.roundToDouble() ? v.toInt().toString() : v.toString();
-
-class _Banner extends StatelessWidget {
-  const _Banner(
-      {super.key, required this.text, required this.color, required this.onClose});
-  final String text;
-  final Color color;
-  final VoidCallback onClose;
-  @override
-  Widget build(BuildContext context) => Container(
-      width: double.infinity,
-      color: color,
-      padding: const EdgeInsets.only(left: 12, top: 4, bottom: 4),
-      child: Row(children: [
-        Expanded(child: Text(text)),
-        IconButton(
-            tooltip: 'Đóng', onPressed: onClose, icon: const Icon(Icons.close)),
-      ]));
-}
-
-class _Section extends StatelessWidget {
-  const _Section(this.title, this.rows);
-  final String title;
-  final List<Widget> rows;
-  @override
-  Widget build(BuildContext context) => Padding(
-      padding: const EdgeInsets.only(bottom: 16),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text(title, style: Theme.of(context).textTheme.titleMedium),
-        const SizedBox(height: 8),
-        ...rows,
-      ]));
-}
-
-class _Row extends StatelessWidget {
-  const _Row(this.label, this.value);
-  final String label, value;
-  @override
-  Widget build(BuildContext context) => Padding(
-      padding: const EdgeInsets.symmetric(vertical: 2),
-      child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        SizedBox(
-            width: 100,
-            child: Text(label, style: Theme.of(context).textTheme.bodySmall)),
-        Expanded(child: Text(value)),
-      ]));
-}

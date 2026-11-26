@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/router/app_router.dart';
+import 'core/theme/app_theme.dart';
 import 'features/auth/screens.dart';
 import 'features/notifications/realtime_host.dart';
 
@@ -13,11 +14,7 @@ class MyApp extends ConsumerWidget {
         title: 'SmartDroneDelivery',
         scaffoldMessengerKey: appMessengerKey,
         debugShowCheckedModeBanner: false,
-        theme: ThemeData(
-            useMaterial3: true,
-            colorSchemeSeed: const Color(0xff087e8b),
-            inputDecorationTheme:
-                const InputDecorationTheme(border: OutlineInputBorder())),
+        theme: buildAppTheme(),
         routerConfig: ref.watch(routerProvider),
         builder: (context, child) => RealtimeHost(child: child ?? const SizedBox()),
       );

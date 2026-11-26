@@ -3,6 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/network/api_failure.dart';
+import '../../core/theme/app_theme.dart';
+import '../../core/ui/app_widgets.dart';
 import '../orders/customer_order_models.dart' show Station;
 import '../orders/order_detail_controller.dart' show stationsProvider;
 import '../orders/order_screens.dart' show StatusChip;
@@ -50,19 +52,20 @@ class _QrScanScreenState extends ConsumerState<QrScanScreen> {
       child: Padding(
           padding: const EdgeInsets.all(24),
           child: Column(mainAxisSize: MainAxisSize.min, children: [
-            const Icon(Icons.no_photography_outlined, size: 48),
+            const Icon(Icons.no_photography_outlined, size: 48, color: Colors.white),
             const SizedBox(height: 12),
             Text(
                 switch (problem) {
                   ScanProblem.permissionDenied =>
-                    'Ứng dụng chưa được cấp quyền camera. Vào Cài đặt > Ứng dụng > SmartDroneDelivery > Quyền để cho phép, rồi mở lại màn này. Hoặc quay lại và nhập mã OTP.',
+                    'Ứng dụng chưa được cấp quyền camera. Vào Cài đặt > Ứng dụng > SmartDrone > Quyền để cho phép, rồi mở lại màn này. Hoặc quay lại và nhập mã OTP.',
                   ScanProblem.unsupported =>
                     'Thiết bị này không hỗ trợ quét mã. Quay lại và nhập mã OTP.',
                   ScanProblem.other =>
                     'Không mở được camera. Quay lại và nhập mã OTP, hoặc thử lại sau.',
                 },
                 key: const Key('scan-problem'),
-                textAlign: TextAlign.center),
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: Colors.white, height: 1.4)),
             const SizedBox(height: 16),
             FilledButton(
                 key: const Key('scan-back'),
@@ -73,27 +76,139 @@ class _QrScanScreenState extends ConsumerState<QrScanScreen> {
   @override
   Widget build(BuildContext context) {
     final builder = ref.watch(qrScannerBuilderProvider);
+    final torch = ref.watch(scanTorchProvider);
     return Scaffold(
-        appBar: AppBar(title: const Text('Quét mã nhận hàng')),
+        backgroundColor: AppColors.dark,
         body: Stack(fit: StackFit.expand, children: [
           builder(context, onCode: _onCode, errorView: _problem),
+          // Khung ngắm và vạch quét chỉ để trang trí, không chặn thao tác chạm.
+          const IgnorePointer(child: _ScanOverlay()),
+          // Phải gắn vào mép trên bằng Positioned: Stack(expand) sẽ kéo giãn một con thường ra toàn
+          // màn hình và đẩy thanh này xuống giữa.
+          Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              child: SafeArea(
+                  bottom: false,
+                  child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Row(children: [
+                    _RoundButton(
+                        key: const Key('scan-close'),
+                        icon: Icons.arrow_back,
+                        tooltip: 'Quay lại',
+                        onTap: () => _leave(context)),
+                    const Expanded(
+                        child: Text('Quét mã nhận hàng',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w700))),
+                    _RoundButton(
+                        key: const Key('scan-torch'),
+                        icon: torch ? Icons.flash_on : Icons.flash_off,
+                        tooltip: torch ? 'Tắt đèn flash' : 'Bật đèn flash',
+                        onTap: () =>
+                            ref.read(scanTorchProvider.notifier).state = !torch),
+                  ])))),
           Positioned(
               left: 16,
               right: 16,
-              bottom: 24,
-              child: Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                      color: Colors.black54, borderRadius: BorderRadius.circular(8)),
-                  child: Text(
-                      _unrelated
-                          ? 'Mã QR này không phải mã nhận hàng. Hãy quét mã trong ứng dụng của khách.'
-                          : 'Hướng camera vào mã QR nhận hàng trên điện thoại của khách.',
-                      key: const Key('scan-hint'),
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(color: Colors.white)))),
+              bottom: 24 + MediaQuery.paddingOf(context).bottom,
+              child: IgnorePointer(
+                  child: Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                          color: _unrelated
+                              ? StatusPalette.failed.background
+                              : Colors.black54,
+                          borderRadius: BorderRadius.circular(16)),
+                      child: Text(
+                          _unrelated
+                              ? 'Mã QR này không phải mã nhận hàng. Hãy quét mã trong ứng dụng của khách.'
+                              : 'Hướng camera vào mã QR nhận hàng trên điện thoại của khách.',
+                          key: const Key('scan-hint'),
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                              color: _unrelated
+                                  ? StatusPalette.failed.foreground
+                                  : Colors.white))))),
         ]));
   }
+}
+
+/// Nút tròn nổi trên camera (quay lại, đèn flash). Vùng chạm 48dp.
+class _RoundButton extends StatelessWidget {
+  const _RoundButton(
+      {super.key, required this.icon, required this.tooltip, required this.onTap});
+  final IconData icon;
+  final String tooltip;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) => Material(
+      color: Colors.black45,
+      shape: const CircleBorder(),
+      child: IconButton(
+          tooltip: tooltip,
+          onPressed: onTap,
+          constraints: const BoxConstraints.tightFor(width: 48, height: 48),
+          icon: Icon(icon, color: Colors.white)));
+}
+
+/// Làm tối vùng ngoài khung ngắm, vẽ 4 góc teal và vạch quét vàng.
+class _ScanOverlay extends StatelessWidget {
+  const _ScanOverlay();
+  @override
+  Widget build(BuildContext context) =>
+      ExcludeSemantics(child: SizedBox.expand(child: CustomPaint(painter: _OverlayPainter())));
+}
+
+class _OverlayPainter extends CustomPainter {
+  const _OverlayPainter();
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final side = (size.shortestSide * 0.62).clamp(180.0, 320.0);
+    final frame = Rect.fromCenter(
+        center: Offset(size.width / 2, size.height * 0.42), width: side, height: side);
+    final hole = RRect.fromRectAndRadius(frame, const Radius.circular(24));
+    canvas.drawPath(
+        Path.combine(PathOperation.difference, Path()..addRect(Offset.zero & size),
+            Path()..addRRect(hole)),
+        Paint()..color = Colors.black.withValues(alpha: 0.45));
+
+    final corner = Paint()
+      ..color = AppColors.tealBright
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 5
+      ..strokeCap = StrokeCap.round;
+    const len = 34.0;
+    for (final (cx, cy, dx, dy) in [
+      (frame.left, frame.top, 1.0, 1.0),
+      (frame.right, frame.top, -1.0, 1.0),
+      (frame.left, frame.bottom, 1.0, -1.0),
+      (frame.right, frame.bottom, -1.0, -1.0),
+    ]) {
+      canvas.drawPath(
+          Path()
+            ..moveTo(cx, cy + dy * len)
+            ..lineTo(cx, cy)
+            ..lineTo(cx + dx * len, cy),
+          corner);
+    }
+    final line = Paint()
+      ..color = AppColors.amber
+      ..strokeWidth = 3
+      ..strokeCap = StrokeCap.round;
+    canvas.drawLine(Offset(frame.left + 14, frame.center.dy),
+        Offset(frame.right - 14, frame.center.dy), line);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
 /// Xác nhận giao hàng cho khách tại trạm nhận. Route `/operator/pickups/:id`.
@@ -199,15 +314,16 @@ class _PickupConfirmScreenState extends ConsumerState<PickupConfirmScreen> {
             ]),
         body: Column(children: [
           if (state.notice != null)
-            _Banner(
+            MessageBanner(
                 key: const Key('confirm-notice'),
                 text: state.notice!,
-                color: Theme.of(context).colorScheme.tertiaryContainer,
+                color: StatusPalette.pending.background,
                 onClose: _controller.dismissMessages),
           if (state.failure != null)
             _FailureBanner(state.failure!, _controller.dismissMessages),
           Expanded(child: _body(context, state, photo, stations)),
-        ]));
+        ]),
+        bottomNavigationBar: _bottomBar(state, photo));
   }
 
   Widget _body(BuildContext context, PickupConfirmState state,
@@ -260,13 +376,6 @@ class _PickupConfirmScreenState extends ConsumerState<PickupConfirmScreen> {
             child: const Text('Về danh sách')),
       ]);
     }
-    final ready = state.credential != null &&
-        photo.fileId != null &&
-        !state.submitting &&
-        state.awaitingPickup;
-    final retry = state.failure?.outcomeUnknown == true ||
-        state.failure?.kind == FailureKind.offline ||
-        state.failure?.kind == FailureKind.server;
     return ListView(padding: const EdgeInsets.all(16), children: [
       Row(children: [
         Expanded(
@@ -276,12 +385,12 @@ class _PickupConfirmScreenState extends ConsumerState<PickupConfirmScreen> {
         StatusChip(order.status, order.statusLabel),
       ]),
       const SizedBox(height: 12),
-      _Section('Đơn hàng', [
-        _Row('Trạm gửi', name(order.pickupStationId)),
-        _Row('Trạm nhận', name(order.dropoffStationId)),
-        _Row('Người nhận', order.recipient.name),
-        _Row('Điện thoại', order.recipient.phone),
-        _Row('Kiện', '${order.package.description} · ${order.package.weightGrams} g'),
+      InfoCard('Đơn hàng', [
+        InfoRow('Trạm gửi', name(order.pickupStationId)),
+        InfoRow('Trạm nhận', name(order.dropoffStationId)),
+        InfoRow('Người nhận', order.recipient.name),
+        InfoRow('Điện thoại', order.recipient.phone),
+        InfoRow('Kiện', '${order.package.description} · ${order.package.weightGrams} g'),
       ]),
       if (!state.awaitingPickup)
         Container(
@@ -289,98 +398,110 @@ class _PickupConfirmScreenState extends ConsumerState<PickupConfirmScreen> {
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
                 color: theme.colorScheme.surfaceContainerHighest,
-                borderRadius: BorderRadius.circular(8)),
+                borderRadius: BorderRadius.circular(14)),
             child: Text(
                 'Đơn không còn chờ khách nhận (trạng thái: ${order.statusLabel}).'))
       else ...[
-        Text('Mã nhận hàng của khách', style: theme.textTheme.titleMedium),
-        const SizedBox(height: 8),
-        SegmentedButton<CredentialKind>(
-            key: const Key('mode'),
-            segments: const [
-              ButtonSegment(
-                  value: CredentialKind.qr,
-                  icon: Icon(Icons.qr_code_scanner),
-                  label: Text('Quét QR')),
-              ButtonSegment(
-                  value: CredentialKind.otp,
-                  icon: Icon(Icons.pin_outlined),
-                  label: Text('Nhập OTP')),
-            ],
-            selected: {_mode},
-            onSelectionChanged:
-                state.submitting ? null : (s) => _setMode(s.first)),
-        const SizedBox(height: 12),
-        if (_mode == CredentialKind.qr)
-          state.credential?.kind == CredentialKind.qr
-              ? Row(children: [
-                  const Icon(Icons.check_circle, color: Colors.green),
-                  const SizedBox(width: 8),
-                  const Expanded(
-                      child: Text('Đã quét mã QR', key: Key('qr-scanned'))),
-                  TextButton(
-                      key: const Key('rescan'),
-                      onPressed: state.submitting ? null : _scan,
-                      child: const Text('Quét lại')),
-                ])
-              : FilledButton.icon(
-                  key: const Key('scan-button'),
-                  onPressed: state.submitting ? null : _scan,
-                  icon: const Icon(Icons.qr_code_scanner),
-                  label: const Text('Quét mã QR'))
-        else
+        InfoCard('Mã nhận hàng của khách', [
+          SegmentedButton<CredentialKind>(
+              key: const Key('mode'),
+              segments: const [
+                ButtonSegment(
+                    value: CredentialKind.qr,
+                    icon: Icon(Icons.qr_code_scanner),
+                    label: Text('Quét QR')),
+                ButtonSegment(
+                    value: CredentialKind.otp,
+                    icon: Icon(Icons.pin_outlined),
+                    label: Text('Nhập OTP')),
+              ],
+              selected: {_mode},
+              onSelectionChanged:
+                  state.submitting ? null : (s) => _setMode(s.first)),
+          const SizedBox(height: 12),
+          if (_mode == CredentialKind.qr)
+            state.credential?.kind == CredentialKind.qr
+                ? Row(children: [
+                    Icon(Icons.check_circle, color: StatusPalette.done.foreground),
+                    const SizedBox(width: 8),
+                    const Expanded(
+                        child: Text('Đã quét mã QR', key: Key('qr-scanned'))),
+                    TextButton(
+                        key: const Key('rescan'),
+                        onPressed: state.submitting ? null : _scan,
+                        child: const Text('Quét lại')),
+                  ])
+                : FilledButton.icon(
+                    key: const Key('scan-button'),
+                    onPressed: state.submitting ? null : _scan,
+                    icon: const Icon(Icons.qr_code_scanner),
+                    label: const Text('Quét mã QR'))
+          else
+            TextField(
+                key: const Key('otp-field'),
+                controller: _otp,
+                enabled: !state.submitting,
+                keyboardType: TextInputType.number,
+                maxLength: 16,
+                obscureText: false,
+                enableSuggestions: false,
+                autocorrect: false,
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                decoration:
+                    InputDecoration(labelText: 'Mã OTP', errorText: _otpError),
+                onChanged: _onOtpChanged),
+        ]),
+        InfoCard('Ảnh xác nhận (bắt buộc)',
+            [ConfirmationPhotoPicker(orderId: widget.orderId)]),
+        InfoCard('Ghi chú', [
           TextField(
-              key: const Key('otp-field'),
-              controller: _otp,
-              enabled: !state.submitting,
-              keyboardType: TextInputType.number,
-              maxLength: 16,
-              obscureText: false,
-              enableSuggestions: false,
-              autocorrect: false,
-              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-              decoration: InputDecoration(
-                  labelText: 'Mã OTP',
-                  errorText: _otpError,
-                  border: const OutlineInputBorder()),
-              onChanged: _onOtpChanged),
-        const SizedBox(height: 16),
-        Text('Ảnh xác nhận (bắt buộc)', style: theme.textTheme.titleMedium),
-        const SizedBox(height: 8),
-        ConfirmationPhotoPicker(orderId: widget.orderId),
-        const SizedBox(height: 16),
-        TextField(
-            key: const Key('confirm-note'),
-            controller: _note,
-            maxLength: 500,
-            maxLines: 2,
-            decoration: const InputDecoration(
-                labelText: 'Ghi chú (tùy chọn)', border: OutlineInputBorder())),
-        const SizedBox(height: 8),
-        if (!ready && !state.submitting)
-          Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: Text(
-                  [
-                    if (state.credential == null)
-                      _mode == CredentialKind.qr ? 'Chưa quét mã QR.' : 'Chưa nhập mã OTP.',
-                    if (photo.fileId == null)
-                      photo.uploading ? 'Ảnh đang tải lên…' : 'Chưa có ảnh xác nhận đã tải lên.',
-                  ].join(' '),
-                  key: const Key('confirm-missing'),
-                  style: theme.textTheme.bodySmall)),
-        FilledButton(
+              key: const Key('confirm-note'),
+              controller: _note,
+              maxLength: 500,
+              maxLines: 2,
+              decoration: const InputDecoration(labelText: 'Ghi chú (tùy chọn)')),
+        ]),
+      ],
+    ]);
+  }
+
+  /// Nút chính cố định ở đáy màn hình, kèm dòng nhắc còn thiếu gì (mã, ảnh).
+  Widget? _bottomBar(PickupConfirmState state, ConfirmationPhotoState photo) {
+    if (state.order == null ||
+        state.result != null ||
+        state.queued ||
+        !state.awaitingPickup) {
+      return null;
+    }
+    final ready = state.credential != null &&
+        photo.fileId != null &&
+        !state.submitting &&
+        state.awaitingPickup;
+    final retry = state.failure?.outcomeUnknown == true ||
+        state.failure?.kind == FailureKind.offline ||
+        state.failure?.kind == FailureKind.server;
+    return BottomActionBar(
+        hint: !ready && !state.submitting
+            ? Text(
+                [
+                  if (state.credential == null)
+                    _mode == CredentialKind.qr ? 'Chưa quét mã QR.' : 'Chưa nhập mã OTP.',
+                  if (photo.fileId == null)
+                    photo.uploading ? 'Ảnh đang tải lên…' : 'Chưa có ảnh xác nhận đã tải lên.',
+                ].join(' '),
+                key: const Key('confirm-missing'),
+                style: const TextStyle(color: AppColors.textMuted, fontSize: 12))
+            : null,
+        child: FilledButton(
             key: const Key('confirm-button'),
             // Vô hiệu hóa khi đang gửi hoặc thiếu mã/ảnh: chặn bấm đúp.
             onPressed: ready ? _submit : null,
             child: state.submitting
                 ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2))
-                : Text(retry ? 'Gửi lại' : 'Xác nhận đã giao')),
-      ],
-    ]);
+                    width: 22,
+                    height: 22,
+                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                : Text(retry ? 'Gửi lại' : 'Xác nhận đã giao')));
   }
 }
 
@@ -431,56 +552,10 @@ class _FailureBanner extends StatelessWidget {
         'Chưa rõ đơn đã được xác nhận chưa. "Gửi lại" là an toàn (không giao hai lần).',
       _ => null,
     };
-    return _Banner(
+    return MessageBanner(
         key: const Key('confirm-failure'),
         text: hint == null ? failure.message : '${failure.message}\n$hint',
-        color: Theme.of(context).colorScheme.errorContainer,
+        color: StatusPalette.failed.background,
         onClose: onClose);
   }
-}
-
-class _Banner extends StatelessWidget {
-  const _Banner(
-      {super.key, required this.text, required this.color, required this.onClose});
-  final String text;
-  final Color color;
-  final VoidCallback onClose;
-  @override
-  Widget build(BuildContext context) => Container(
-      width: double.infinity,
-      color: color,
-      padding: const EdgeInsets.only(left: 12, top: 4, bottom: 4),
-      child: Row(children: [
-        Expanded(child: Text(text)),
-        IconButton(
-            tooltip: 'Đóng', onPressed: onClose, icon: const Icon(Icons.close)),
-      ]));
-}
-
-class _Section extends StatelessWidget {
-  const _Section(this.title, this.rows);
-  final String title;
-  final List<Widget> rows;
-  @override
-  Widget build(BuildContext context) => Padding(
-      padding: const EdgeInsets.only(bottom: 16),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text(title, style: Theme.of(context).textTheme.titleMedium),
-        const SizedBox(height: 8),
-        ...rows,
-      ]));
-}
-
-class _Row extends StatelessWidget {
-  const _Row(this.label, this.value);
-  final String label, value;
-  @override
-  Widget build(BuildContext context) => Padding(
-      padding: const EdgeInsets.symmetric(vertical: 2),
-      child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        SizedBox(
-            width: 100,
-            child: Text(label, style: Theme.of(context).textTheme.bodySmall)),
-        Expanded(child: Text(value)),
-      ]));
 }

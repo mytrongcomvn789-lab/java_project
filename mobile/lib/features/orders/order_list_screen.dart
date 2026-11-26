@@ -1,22 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../auth/screens.dart';
+import '../../core/theme/app_theme.dart';
+import '../../core/ui/app_widgets.dart';
 import '../auth/session.dart';
-import '../notifications/notifications_controller.dart';
+import 'customer_nav.dart';
 import 'customer_order_models.dart';
 import 'order_list_controller.dart';
 import 'order_models.dart' show statusLabels;
 import 'order_screens.dart';
 
 /// Màn chính của khách: danh sách đơn của tôi, lọc theo trạng thái, phân trang.
-class CustomerHomeScreen extends ConsumerStatefulWidget {
-  const CustomerHomeScreen({super.key});
+class OrderListScreen extends ConsumerStatefulWidget {
+  const OrderListScreen({super.key});
   @override
-  ConsumerState<CustomerHomeScreen> createState() => _CustomerHomeScreenState();
+  ConsumerState<OrderListScreen> createState() => _OrderListScreenState();
 }
 
-class _CustomerHomeScreenState extends ConsumerState<CustomerHomeScreen> {
+class _OrderListScreenState extends ConsumerState<OrderListScreen> {
   final _scroll = ScrollController();
 
   @override
@@ -41,47 +42,18 @@ class _CustomerHomeScreenState extends ConsumerState<CustomerHomeScreen> {
     final user = ref.watch(sessionProvider).user!;
     final state = ref.watch(orderListProvider);
     final controller = ref.read(orderListProvider.notifier);
-    final unread = ref.watch(notificationsProvider.select((s) => s.unread));
     return Scaffold(
-        appBar: AppBar(title: const Text('Đơn hàng của tôi'), actions: [
-          IconButton(
-              key: const Key('open-notifications'),
-              tooltip: 'Thông báo',
-              onPressed: () => context.go('/customer/notifications'),
-              icon: Badge(
-                  isLabelVisible: unread > 0,
-                  label: Text('$unread', key: const Key('unread-count')),
-                  child: const Icon(Icons.notifications_outlined))),
-          IconButton(
-              key: const Key('open-addresses'),
-              tooltip: 'Địa chỉ của tôi',
-              onPressed: () => context.push('/customer/addresses'),
-              icon: const Icon(Icons.location_on_outlined)),
-          IconButton(
-              tooltip: 'Hồ sơ',
-              onPressed: () => context.go('/profile'),
-              icon: const Icon(Icons.account_circle_outlined)),
-          IconButton(
-              key: const Key('logout'),
-              tooltip: 'Đăng xuất',
-              onPressed: () => signOut(ref),
-              icon: const Icon(Icons.logout)),
-        ]),
-        floatingActionButton: FloatingActionButton.extended(
-            key: const Key('new-order'),
-            onPressed: () => context.push('/customer/new-order'),
-            icon: const Icon(Icons.add),
-            label: const Text('Tạo đơn')),
+        appBar: AppBar(title: const Text('Đơn hàng của tôi')),
+        bottomNavigationBar: const CustomerBottomNav(selectedIndex: 1),
         body: Column(children: [
           const ConnectionBanner(),
           StatusFilterBar(selected: state.status, onSelected: controller.setStatus),
           if (state.moreError != null && state.items.isNotEmpty && !state.loadingMore)
-            Container(
+            MessageBanner(
                 key: const Key('list-error-banner'),
-                width: double.infinity,
-                color: Theme.of(context).colorScheme.errorContainer,
-                padding: const EdgeInsets.all(8),
-                child: Text('Chưa cập nhật được: ${state.moreError!.message}')),
+                text: 'Chưa cập nhật được: ${state.moreError!.message}',
+                color: StatusPalette.failed.background,
+                onClose: controller.reload),
           Expanded(
               child: RefreshIndicator(
                   onRefresh: controller.reload,
@@ -172,13 +144,15 @@ class OrderCard extends StatelessWidget {
   const OrderCard(this.order, {super.key});
   final OrderSummary order;
   @override
-  Widget build(BuildContext context) => Card(
-      child: ListTile(
-          key: Key('order-${order.id}'),
-          title: Text('Đơn ${order.shortCode}'),
-          subtitle: Text(
-              'Người nhận: ${order.recipientName}\n${order.packageDescription ?? ''}\n${formatTime(order.createdAt)}'),
-          isThreeLine: true,
-          trailing: StatusChip(order.status, order.statusLabel),
-          onTap: () => context.go('/customer/orders/${order.id}/detail')));
+  Widget build(BuildContext context) => OrderListCard(
+      key: Key('order-${order.id}'),
+      title: 'Đơn ${order.shortCode}',
+      status: order.status,
+      statusLabel: order.statusLabel,
+      lines: [
+        (Icons.person_outline, 'Người nhận: ${order.recipientName}'),
+        (Icons.inventory_2_outlined, order.packageDescription ?? ''),
+      ],
+      time: formatTime(order.createdAt),
+      onTap: () => context.go('/customer/orders/${order.id}/detail'));
 }

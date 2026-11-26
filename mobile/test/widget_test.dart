@@ -4,12 +4,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:dio/dio.dart';
 import 'package:smartdrone_mobile/core/realtime/realtime_provider.dart';
+import 'package:smartdrone_mobile/features/auth/drone_hero.dart';
 import 'package:smartdrone_mobile/features/auth/session.dart';
 import 'package:smartdrone_mobile/main.dart';
 import 'support/fakes.dart';
 
 void main() {
   Future<void> mount(WidgetTester tester, Session session) async {
+    // Khung điện thoại 390 × 844 dp theo đặc tả giao diện (mặc định của test là 800 × 600).
+    tester.view.physicalSize = const Size(1170, 2532);
+    tester.view.devicePixelRatio = 3;
+    addTearDown(tester.view.reset);
     await session.restore();
     await tester.pumpWidget(ProviderScope(overrides: [
       sessionProvider.overrideWith((ref) => session),
@@ -50,8 +55,20 @@ void main() {
     expect(auth.requests.length, 1);
     gate.complete(jsonResponse(tokenResponse()));
     await tester.pumpAndSettle();
-    expect(find.text('Đơn hàng của tôi'), findsOneWidget);
+    expect(find.text('Đơn gần đây'), findsOneWidget); // trang chủ mới của khách
     expect(find.byKey(const Key('open-notifications')), findsOneWidget);
+  });
+
+  testWidgets('hình nền đăng nhập giữ nguyên kích thước khi bàn phím mở (không đè lên logo)',
+      (tester) async {
+    final auth = FakeAdapter((_) => jsonResponse({}));
+    await mount(
+        tester, makeSession(store: MemoryTokens(), api: auth, auth: auth));
+    final before = tester.getSize(find.byType(DroneHero));
+    tester.view.viewInsets = const FakeViewPadding(bottom: 1000);
+    addTearDown(tester.view.resetViewInsets);
+    await tester.pumpAndSettle();
+    expect(tester.getSize(find.byType(DroneHero)), before);
   });
 
   testWidgets('wrong password displays error and allows retry', (tester) async {

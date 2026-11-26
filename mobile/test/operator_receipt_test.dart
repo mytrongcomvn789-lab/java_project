@@ -427,9 +427,9 @@ void main() {
       api.receiptTotal = 3;
       api.pickups = [summary(9, status: 'AWAITING_PICKUP', dropoff: myStation)];
       await mount(tester, const OperatorHomeScreen());
-      expect(find.text('Trạm của bạn: Trạm Của Tôi'), findsOneWidget);
-      expect(find.text('Chờ nhận kiện (3)'), findsOneWidget);
-      expect(find.text('Chờ giao khách (1)'), findsOneWidget);
+      expect(find.descendant(of: find.byKey(const Key('station-selector')), matching: find.text('Trạm Của Tôi')), findsOneWidget);
+      expect(find.text('Chờ nhận (3)'), findsOneWidget);
+      expect(find.text('Chờ giao (1)'), findsOneWidget);
       expect(find.textContaining('Trạm Của Tôi → Trạm Khác'), findsWidgets);
       await tester.tap(find.byKey(Key('order-${summary(1).id}')));
       await tester.pumpAndSettle();
