@@ -342,6 +342,8 @@ export const PLACEHOLDER_PATHS: string[] = Array.from(
           "/admin/settings",
           "/admin/audit-log",
           "/dashboard",
+          "/assistant",
+          "/ai-analytics",
         ].includes(p),
     ),
   ),

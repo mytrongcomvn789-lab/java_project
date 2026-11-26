@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import PageHeader from "../../components/ui/PageHeader";
 import { stationService, type Station } from "../../lib/stationService";
 import { reportService, type DailyOrderStats, type OrderStatsSummary, type ReportFilters } from "../../lib/reportService";
@@ -63,6 +64,7 @@ export default function ReportsPage() {
   return (
     <div>
       <PageHeader title="Thống kê & báo cáo" subtitle="Báo cáo theo bộ lọc chung của thống kê; dữ liệu do backend tổng hợp." crumbs={["Trang chủ", "Thống kê & báo cáo"]} code="FR-09" />
+      <p><Link to="/ai-analytics">Phân tích vận hành bằng AI →</Link></p>
       <section className="card report-filters">
         <div className="report-filter-grid">
           <label>Từ ngày<input type="date" value={from} max={to} onChange={(e) => setFrom(e.target.value)} /></label>

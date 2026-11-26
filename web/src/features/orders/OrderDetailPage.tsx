@@ -16,10 +16,14 @@ import OrderReviewActions from "./OrderReviewActions";
 import OrderCustomerActions from "./OrderCustomerActions";
 import OrderScheduleActions from "./OrderScheduleActions";
 import OrderTrackingPanel from "./OrderTrackingPanel";
+import OrderEtaPanel from "./OrderEtaPanel";
+import OrderSummaryPanel from "./OrderSummaryPanel";
 import OrderFailurePanel from "./OrderFailurePanel";
 import PickupCodePanel from "./PickupCodePanel";
 import ConfirmDeliveryPanel from "./ConfirmDeliveryPanel";
 import DeliveryEvidencePanel from "./DeliveryEvidencePanel";
+
+const AI_ORDER_ROLES = ["CUSTOMER", "DISPATCHER", "STATION_OPERATOR"];
 
 const when = (v: string) => new Date(v).toLocaleString("vi-VN");
 
@@ -178,6 +182,21 @@ export default function OrderDetailPage() {
               orderId={order.id}
               onVersionChange={() => setRetry((n) => n + 1)}
             />
+            {/* 7.6: backend chỉ cho CUSTOMER/DISPATCHER/STATION_OPERATOR dùng ETA và tóm tắt (vai trò khác nhận 403). */}
+            {user && AI_ORDER_ROLES.includes(user.role) && (
+              <>
+                <OrderEtaPanel
+                  orderId={order.id}
+                  status={order.status}
+                  version={order.version}
+                />
+                <OrderSummaryPanel
+                  orderId={order.id}
+                  status={order.status}
+                  version={order.version}
+                />
+              </>
+            )}
             <section className="card customer-panel order-info">
               <header className="order-info-head">
                 <div>
