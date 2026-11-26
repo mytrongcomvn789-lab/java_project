@@ -88,6 +88,23 @@ class OrderSummaryServiceTest {
     }
 
     @Test
+    void promptTimesAreVietnamLocalNotUtc() throws Exception {
+        when(guard.orderForSummary(user, RoleName.CUSTOMER, orderId)).thenReturn(delivered());
+        when(ai.run(eq(user), eq(RoleName.CUSTOMER), eq(AiTask.ORDER_SUMMARY), any()))
+                .thenReturn(aiResult("{\"summary\":\"Đơn đã giao sau 20 phút.\",\"highlights\":[]}", false));
+        service.summarize(user, RoleName.CUSTOMER, orderId);
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<List<AiDataBlock>> blocks = ArgumentCaptor.forClass(List.class);
+        verify(ai).run(eq(user), eq(RoleName.CUSTOMER), eq(AiTask.ORDER_SUMMARY), blocks.capture());
+        String text = blocks.getValue().get(0).value();
+        // T0 = 03:00 UTC = 10:00 giờ Việt Nam (UTC+7). Prompt phải mang giờ địa phương để văn bản AI khớp timeline.
+        assertTrue(text.contains("timezone: Asia/Ho_Chi_Minh"), text);
+        assertTrue(text.contains("10:00 25/11/2026"), text);
+        assertTrue(text.contains("10:20 25/11/2026"), text);
+        assertFalse(text.contains("2026-11-25T03:"), "không đưa Instant UTC vào prompt: " + text);
+    }
+
+    @Test
     void verifiedAiTextIsReturnedWithDeterministicTimeline() throws Exception {
         when(guard.orderForSummary(user, RoleName.CUSTOMER, orderId)).thenReturn(delivered());
         when(ai.run(any(), any(), any(), any())).thenReturn(aiResult(
@@ -174,9 +191,9 @@ class OrderSummaryServiceTest {
     void verifierAllowsReformattedTimesButRejectsOtherNumbers() {
         var facts = OrderSummaryFacts.from(delivered(), T0.plusSeconds(3600));
         var v = new OrderSummaryVerifier();
-        // 03:00 trong dữ kiện có thể bị viết thành "3 giờ" (03 và 3 là cùng một số).
+        // Dữ kiện theo giờ Việt Nam: 10:00 có thể bị viết thành "10 giờ"; "00" và "0" là cùng một số.
         assertDoesNotThrow(() -> v.verify(json.readTree(
-                "{\"summary\":\"Duyệt lúc 3 giờ, 20 phút sau thì giao xong.\",\"highlights\":[]}"), facts));
+                "{\"summary\":\"Duyệt lúc 10 giờ, 20 phút sau thì giao xong.\",\"highlights\":[]}"), facts));
         assertThrows(ApiException.class, () -> v.verify(json.readTree(
                 "{\"summary\":\"Giao trong 99 phút.\",\"highlights\":[]}"), facts));
         assertThrows(ApiException.class, () -> v.verify(json.readTree(
