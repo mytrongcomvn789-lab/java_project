@@ -5,6 +5,7 @@ import 'confirmation_photo_controller.dart';
 import 'operator_api.dart';
 import 'operator_controllers.dart';
 import 'operator_models.dart';
+import 'operator_sync.dart';
 
 class PickupConfirmState {
   const PickupConfirmState(
@@ -15,9 +16,14 @@ class PickupConfirmState {
       this.submitting = false,
       this.result,
       this.failure,
-      this.notice});
+      this.notice,
+      this.queued = false});
   final OrderDetail? order;
   final bool loading, submitting;
+
+  /// Mất mạng nên yêu cầu xác nhận (kèm mã và ảnh đã tải) được lưu và sẽ tự gửi lại: đơn CHƯA
+  /// được giao trên server cho tới khi hàng đợi gửi thành công.
+  final bool queued;
 
   /// Lỗi tải đơn khi chưa có dữ liệu để hiện.
   final ApiFailure? error;
@@ -35,12 +41,14 @@ class PickupConfirmState {
   final String? notice;
 
   /// Đơn còn chờ khách nhận (chỉ để quyết định hiện form; server vẫn kiểm tra).
-  bool get awaitingPickup => order?.status == 'AWAITING_PICKUP' && result == null;
+  bool get awaitingPickup =>
+      order?.status == 'AWAITING_PICKUP' && result == null && !queued;
 
   PickupConfirmState copyWith(
           {OrderDetail? order,
           bool? loading,
           bool? submitting,
+          bool? queued,
           ApiFailure? error,
           PickupCredential? credential,
           ConfirmResult? result,
@@ -58,7 +66,8 @@ class PickupConfirmState {
           credential: clearCredential ? null : credential ?? this.credential,
           result: result ?? this.result,
           failure: clearFailure ? null : failure ?? this.failure,
-          notice: clearNotice ? null : notice ?? this.notice);
+          notice: clearNotice ? null : notice ?? this.notice,
+          queued: queued ?? this.queued);
 }
 
 /// Xác nhận giao hàng cho khách (4.7). Server xác minh mã, ảnh, quyền ở trạm nhận và tự chuyển
@@ -119,20 +128,33 @@ class PickupConfirmController
       return false;
     }
     state = state.copyWith(submitting: true, clearFailure: true, clearNotice: true);
+    final request = ConfirmRequest(
+        orderId: order.id,
+        version: order.version,
+        photoFileId: photoId,
+        credential: credential,
+        note: note);
     try {
-      final result = await _api.confirm(ConfirmRequest(
-          orderId: order.id,
-          version: order.version,
-          photoFileId: photoId,
-          credential: credential,
-          note: note));
+      final result = await _api.confirm(request);
       _generation++; // bỏ phản hồi tải lại đang chờ (nếu có)
       ref.invalidate(pickupListProvider); // đơn rời danh sách chờ giao
       state = state.copyWith(submitting: false, result: result);
       return true;
     } catch (e) {
       final failure = toApiFailure(e);
-      if (failure.isPickupCodeProblem) {
+      if (failure.kind == FailureKind.offline || failure.outcomeUnknown) {
+        // Mất mạng (6.5): lưu yêu cầu vào hàng đợi mã hóa với ĐÚNG phiên bản, ảnh và mã này.
+        // Gửi lại y nguyên là an toàn vì server trả lại kết quả cũ nếu lần trước đã xử lý.
+        final user = ref.read(operatorUserProvider);
+        final saved = user != null &&
+            await ref
+                .read(operatorSyncProvider.notifier)
+                .enqueue(pendingConfirm(user, request));
+        state = saved
+            ? state.copyWith(
+                submitting: false, queued: true, clearCredential: true)
+            : state.copyWith(submitting: false, failure: failure);
+      } else if (failure.isPickupCodeProblem) {
         // Mã không dùng được: bỏ mã để nhập hoặc quét lại (giữ ảnh đã tải).
         state = state.copyWith(
             submitting: false, failure: failure, clearCredential: true);

@@ -14,7 +14,11 @@ import 'package:smartdrone_mobile/features/operator/operator_screens.dart';
 import 'package:smartdrone_mobile/features/orders/customer_order_models.dart';
 import 'package:smartdrone_mobile/features/orders/order_detail_controller.dart';
 
+import 'package:smartdrone_mobile/core/offline/pending_action.dart';
+import 'package:smartdrone_mobile/features/operator/operator_sync.dart';
+
 import 'support/fakes.dart';
+import 'support/pending_fakes.dart';
 
 const myStation = 'st-mine';
 const otherStation = 'st-other';
@@ -31,7 +35,9 @@ OrderSummary summary(int i, {String status = 'SCHEDULED', String dropoff = other
         packageDescription: 'Gói $i',
         packageWeightGrams: 100 + i);
 
-OrderDetail detail(String id, String status, int version) => OrderDetail.fromJson({
+OrderDetail detail(String id, String status, int version,
+        {List<Map<String, dynamic>> history = const []}) =>
+    OrderDetail.fromJson({
       'id': id,
       'version': version,
       'status': status,
@@ -53,7 +59,7 @@ OrderDetail detail(String id, String status, int version) => OrderDetail.fromJso
         'heightCm': 10,
         'photoFileIds': ['f1']
       },
-      'history': [],
+      'history': history,
     });
 
 DioException http(int status, String code) => DioException(
@@ -82,6 +88,7 @@ class FakeOperatorApi extends OperatorApi {
   String status = 'SCHEDULED';
   int version = 2;
   final received = <ReceiveRequest>[];
+  List<Map<String, dynamic>> history = [];
   Object? receiveError;
   Completer<void>? receiveGate;
 
@@ -130,6 +137,10 @@ class FakeOperatorApi extends OperatorApi {
   }
 
   @override
+  Future<OrderDetail> orderDetail(String id) async =>
+      detail(orderId, status, version, history: history);
+
+  @override
   Future<OrderDetail> receive(ReceiveRequest r) async {
     received.add(r);
     final g = receiveGate;
@@ -151,11 +162,14 @@ void main() {
   late FakeOperatorApi api;
   late StateProvider<String?> user;
   late ProviderContainer container;
+  late MemoryPendingStore store;
 
   setUp(() {
     api = FakeOperatorApi();
+    store = MemoryPendingStore();
     user = StateProvider<String?>((ref) => 'op-1');
     container = ProviderContainer(overrides: [
+      ...pendingOverrides(store),
       operatorApiProvider.overrideWithValue(api),
       operatorUserProvider.overrideWith((ref) => ref.watch(user)),
     ]);
@@ -316,26 +330,48 @@ void main() {
       expect(read().actionError?.kind, FailureKind.notFound);
     });
 
-    test('mất mạng: không báo thành công, giữ đơn để thử lại', () async {
+    test('mất mạng: không báo thành công, xếp vào hàng đợi, không nhận lần hai', () async {
       await boot();
       api.receiveError = DioException.connectionError(
           requestOptions: RequestOptions(), reason: 'off');
-      expect(await ctl().receive(null), isFalse);
-      expect(read().actionError?.kind, FailureKind.offline);
-      expect(read().canReceive, isTrue);
+      expect(await ctl().receive('ghi chú'), isFalse);
+      expect(read().queued, isTrue);
+      expect(read().actionError, isNull);
+      expect(read().canReceive, isFalse);
       expect(read().receiving, isFalse);
+      final saved = store.data['op-1']!.single;
+      expect(saved.kind, PendingKind.receive);
+      expect(saved.payload['version'], 2);
+      expect(await ctl().receive(null), isFalse); // đã xếp hàng: không gửi thêm
+      expect(api.received.length, 1);
     });
 
-    test('hết thời gian chờ: chưa rõ kết quả nên tải lại trạng thái thật', () async {
+    test('mất mạng nhưng không lưu được hàng đợi: báo lỗi và vẫn nhận lại được', () async {
       await boot();
-      api.status = 'PREPARING'; // thực tế server đã nhận
-      api.version = 3;
+      store.failWrites = true;
+      api.receiveError = DioException.connectionError(
+          requestOptions: RequestOptions(), reason: 'off');
+      expect(await ctl().receive(null), isFalse);
+      expect(read().queued, isFalse);
+      expect(read().actionError?.kind, FailureKind.offline);
+      expect(read().canReceive, isTrue);
+    });
+
+    test('hết thời gian chờ: chưa rõ kết quả nên xếp hàng, đồng bộ sẽ kiểm tra đơn trước', () async {
+      await boot();
       api.receiveError = DioException(
           requestOptions: RequestOptions(), type: DioExceptionType.receiveTimeout);
       expect(await ctl().receive(null), isFalse);
-      expect(read().notice, contains('Chưa rõ'));
-      expect(read().order?.status, 'PREPARING');
-      expect(read().canReceive, isFalse);
+      expect(read().queued, isTrue);
+      // Thực tế lần gửi trước đã tới server: đơn đã PREPARING và lịch sử có bước đó.
+      api.status = 'PREPARING';
+      api.version = 3;
+      api.history = [
+        {'eventId': 'e1', 'orderVersion': 3, 'fromStatus': 'SCHEDULED', 'toStatus': 'PREPARING'}
+      ];
+      await container.read(operatorSyncProvider.notifier).syncNow();
+      expect(api.received.length, 1); // không gửi lại lần hai
+      expect(container.read(operatorSyncProvider).isEmpty, isTrue);
     });
 
     test('đơn không còn SCHEDULED thì không gọi API nhận', () async {
@@ -357,9 +393,9 @@ void main() {
     late Session session;
 
     Future<void> mount(WidgetTester tester, Widget home) async {
-      final store = MemoryTokens()..value = const Tokens('a', 'r');
+      final tokens = MemoryTokens()..value = const Tokens('a', 'r');
       session = makeSession(
-          store: store,
+          store: tokens,
           api: FakeAdapter((_) => jsonResponse(profile(role: 'STATION_OPERATOR', name: 'Vận Hành'))),
           auth: FakeAdapter((_) => jsonResponse({})));
       await tester.runAsync(session.restore);
@@ -372,6 +408,7 @@ void main() {
       ]);
       await tester.pumpWidget(ProviderScope(
           overrides: [
+            ...pendingOverrides(store),
             sessionProvider.overrideWith((ref) => session),
             operatorApiProvider.overrideWithValue(api),
             stationsProvider.overrideWith((ref) async => const [
@@ -450,7 +487,7 @@ void main() {
       expect(api.received.single.note, 'Bao bì tốt');
     });
 
-    testWidgets('mất mạng khi nhận: hiện lỗi, đơn vẫn chờ nhận, không báo thành công', (tester) async {
+    testWidgets('mất mạng khi nhận: báo đã lưu, đơn CHƯA được nhận, không báo thành công', (tester) async {
       tester.view.physicalSize = const Size(800, 2400);
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.reset);
@@ -463,9 +500,12 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('receive-confirm')));
       await tester.pumpAndSettle();
-      expect(find.byKey(const Key('receipt-action-error')), findsOneWidget);
+      expect(find.byKey(const Key('receipt-queued')), findsOneWidget);
+      expect(find.textContaining('CHƯA được nhận'), findsOneWidget);
       expect(find.text('Đã nhận kiện.'), findsNothing);
-      expect(find.byKey(const Key('receive-button')), findsOneWidget);
+      expect(find.byKey(const Key('receive-button')), findsNothing);
+      // Tài khoản trong test màn hình là "a" (do phiên đăng nhập giả cấp).
+      expect(store.data['a']!.single.kind, PendingKind.receive);
     });
 
     testWidgets('đơn đã được nhận: không còn nút nhận', (tester) async {

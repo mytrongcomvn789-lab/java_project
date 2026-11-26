@@ -178,6 +178,25 @@ class ConfirmRequest {
       'ConfirmRequest(order=$orderId, v=$version, photo=$photoFileId, credential=***)';
 }
 
+/// Yêu cầu xác nhận đã nhận hàng hoàn (`POST /v1/orders/{id}/complete-return`, 4.8):
+/// RETURNING → RETURNED, chỉ operator trạm GỬI. Không replay được: gửi lại sau khi đã thành
+/// công trả 412 hoặc 409, nên khi mất kết quả phải tải lại đơn để biết trạng thái thật.
+class CompleteReturnRequest {
+  const CompleteReturnRequest(
+      {required this.orderId, required this.version, this.note});
+  final String orderId;
+  final int version;
+  final String? note;
+
+  String get ifMatch => '"$version"';
+
+  /// Body tùy chọn: chỉ có `note` (server từ chối trường lạ). Ghi chú trống thì không gửi body.
+  Map<String, dynamic>? toBody() {
+    final n = note?.trim();
+    return n == null || n.isEmpty ? null : {'note': n};
+  }
+}
+
 /// Bằng chứng giao hàng (`DeliveryConfirmationView`).
 class DeliveryConfirmation {
   const DeliveryConfirmation(

@@ -72,6 +72,10 @@ final routerProvider = Provider<GoRouter>((ref) {
                 path: 'pickups/:id',
                 builder: (_, state) =>
                     PickupConfirmScreen(orderId: state.pathParameters['id']!)),
+            GoRoute(
+                path: 'returns/:id',
+                builder: (_, state) =>
+                    ReturnDetailScreen(orderId: state.pathParameters['id']!)),
             GoRoute(path: 'scan', builder: (_, __) => const QrScanScreen()),
           ]),
       GoRoute(path: '/profile', builder: (_, __) => const ProfileScreen()),
