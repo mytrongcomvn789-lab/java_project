@@ -376,13 +376,6 @@ class _PickupConfirmScreenState extends ConsumerState<PickupConfirmScreen> {
             child: const Text('Về danh sách')),
       ]);
     }
-    final ready = state.credential != null &&
-        photo.fileId != null &&
-        !state.submitting &&
-        state.awaitingPickup;
-    final retry = state.failure?.outcomeUnknown == true ||
-        state.failure?.kind == FailureKind.offline ||
-        state.failure?.kind == FailureKind.server;
     return ListView(padding: const EdgeInsets.all(16), children: [
       Row(children: [
         Expanded(

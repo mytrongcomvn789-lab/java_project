@@ -598,13 +598,11 @@ void main() {
     }
 
     testWidgets('dải đồng bộ: hiện số việc chờ, bấm "Thử lại" thì gửi và biến mất', (tester) async {
-    testWidgets('dải đồng bộ: hiện số việc chờ, bấm "Đồng bộ ngay" thì gửi và biến mất', (tester) async {
       store.data['op-1'] = [receiveAction()];
       api.detailError = offline();
       await mount(tester, const Scaffold(body: SyncBanner()));
       expect(find.byKey(const Key('sync-waiting')), findsOneWidget);
       expect(find.textContaining('1 thao tác chờ đồng bộ khi có mạng'), findsOneWidget);
-      expect(find.textContaining('1 thao tác đang chờ gửi'), findsOneWidget);
       api.detailError = null;
       await tester.tap(find.byKey(const Key('sync-now')));
       await tester.pumpAndSettle();

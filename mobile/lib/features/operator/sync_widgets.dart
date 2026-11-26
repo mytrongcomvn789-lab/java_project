@@ -23,17 +23,6 @@ class QueuedNotice extends StatelessWidget {
           Icon(Icons.cloud_off_outlined, color: warn.foreground),
           const SizedBox(width: 10),
           Expanded(child: Text(text, style: TextStyle(color: warn.foreground))),
-    final scheme = Theme.of(context).colorScheme;
-    return Container(
-        padding: const EdgeInsets.all(12),
-        margin: const EdgeInsets.only(bottom: 12),
-        decoration: BoxDecoration(
-            color: scheme.tertiaryContainer,
-            borderRadius: BorderRadius.circular(8)),
-        child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          const Icon(Icons.cloud_off_outlined),
-          const SizedBox(width: 8),
-          Expanded(child: Text(text)),
         ]));
   }
 }
@@ -82,7 +71,6 @@ class _SyncBannerState extends ConsumerState<SyncBanner>
   Widget build(BuildContext context) {
     final sync = ref.watch(operatorSyncProvider);
     if (sync.isEmpty) return const SizedBox.shrink();
-    final scheme = Theme.of(context).colorScheme;
     final controller = ref.read(operatorSyncProvider.notifier);
     final stuck = [
       for (final a in sync.actions)
@@ -92,7 +80,6 @@ class _SyncBannerState extends ConsumerState<SyncBanner>
     final bad = StatusPalette.failed;
     return Column(children: [
       // Banner vàng khi còn thao tác chưa gửi được (mất mạng): tự gửi lại, hoặc bấm Thử lại.
-    return Column(children: [
       if (sync.waiting > 0)
         Container(
             key: const Key('sync-waiting'),
@@ -115,26 +102,12 @@ class _SyncBannerState extends ConsumerState<SyncBanner>
                         width: 18,
                         height: 18,
                         child: CircularProgressIndicator(strokeWidth: 2)))
-            color: scheme.tertiaryContainer,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-            child: Row(children: [
-              const Icon(Icons.cloud_off_outlined, size: 18),
-              const SizedBox(width: 8),
-              Expanded(
-                  child: Text(
-                      '${sync.waiting} thao tác đang chờ gửi (chưa có mạng). App sẽ tự gửi lại.')),
-              if (sync.syncing)
-                const SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2))
               else
                 TextButton(
                     key: const Key('sync-now'),
                     onPressed: controller.syncNow,
                     style: TextButton.styleFrom(foregroundColor: warn.foreground),
                     child: const Text('Thử lại')),
-                    child: const Text('Đồng bộ ngay')),
             ])),
       for (final a in stuck)
         Container(
@@ -151,12 +124,6 @@ class _SyncBannerState extends ConsumerState<SyncBanner>
               const SizedBox(height: 2),
               Text(a.message ?? 'Server từ chối yêu cầu này.',
                   style: TextStyle(color: bad.foreground)),
-            color: scheme.errorContainer,
-            padding: const EdgeInsets.fromLTRB(16, 8, 8, 8),
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text('${a.kindLabel} đơn ${_short(a.orderId)} chưa được thực hiện',
-                  style: Theme.of(context).textTheme.titleSmall),
-              Text(a.message ?? 'Server từ chối yêu cầu này.'),
               Row(mainAxisAlignment: MainAxisAlignment.end, children: [
                 TextButton(
                     key: Key('sync-open-${a.id}'),
