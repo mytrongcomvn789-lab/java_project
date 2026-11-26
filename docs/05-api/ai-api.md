@@ -1,3 +1,5 @@
+> **7.6 (26/11/2026):** giao diện web và Flutter dùng các endpoint này; xem [ai-ui-integration.md](ai-ui-integration.md) (màn hình, nhãn nguồn, lỗi/thử lại, giới hạn đã biết).
+
 > **7.5 đã triển khai:** hợp đồng analytics hiện hành ở [operations-ai-analytics.md](operations-ai-analytics.md). Phần analytics khung 7.1 bên dưới chỉ là lịch sử; dùng report/analysis, evidence IDs và fallback của 7.5.
 
 > Cập nhật 7.4 (25/11/2026): hợp đồng CHAT đã được triển khai và thay thế phần chat nháp bên dưới. Xem [customer-ai-chat.md](customer-ai-chat.md): chỉ CUSTOMER, hội thoại theo chủ sở hữu, fallback chat có result. ETA/summary/analytics không thay đổi.
@@ -64,6 +66,8 @@ Không tính được: `computed=false`, `reason` là `COORDINATES_MISSING` | `S
 ### 3.2 Tóm tắt đơn — `POST /v1/ai/orders/{id}/summary` (7.3)
 
 Không có body. Quyền như bảng mục 2 (đơn ngoài phạm vi và không tồn tại → 404, không gọi AI). Chỉ đọc.
+
+Mọi mốc thời gian trong dữ kiện gửi cho model dùng **giờ Việt Nam (Asia/Ho_Chi_Minh, UTC+7)** dạng `HH:mm dd/MM/yyyy` (cập nhật 26/11/2026, trước đó là UTC nên văn bản AI lệch 7 tiếng so với timeline); `timeline[].at` trong API vẫn là ISO-8601 UTC.
 
 Luồng: Java dựng **dữ kiện timeline** của đúng một đơn (trạng thái, mốc thời gian, số phút giữa các bước, vai trò thực hiện, mã lý do thất bại; **không** có ghi chú tự do, tên, SĐT, địa chỉ) → gọi LLM chỉ với khối `order_timeline` đó → kiểm chứng đầu ra → nếu AI tắt/lỗi/không qua kiểm chứng thì dùng bản tóm tắt xác định (không AI).
 

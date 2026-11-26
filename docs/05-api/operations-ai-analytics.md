@@ -75,6 +75,7 @@ UNDEFINED_STATION_UTILIZATION, TREND_REQUIRES_TWO_DAYS, TREND_ZERO_BASELINE.
 AI chỉ **chọn/sắp xếp ID nhận định có căn cứ** từ những evidence do Java tạo.
 Hợp đồng nội bộ provider vẫn có insights/recommendations là mảng chuỗi nhưng chuỗi phải là ID hiện có, ví dụ ORDER_VOLUME.
 Phản hồi API bên ngoài là văn bản tiếng Việt do server render theo ID.
+Khối `evidence_*` gửi cho model chỉ có `id`, `text`, `source` (không có câu khuyến nghị: server tự dựng khuyến nghị từ ID). Chỉ dẫn hệ thống nêu rõ cả `insights` và `recommendations` chỉ chứa ID. Cập nhật 26/11/2026 (7.6): thử với Gemini thật `gemini-3.5-flash-lite` thấy model chép câu khuyến nghị vào `recommendations` nên phản hồi bị loại 6/6 lần; đã sửa theo hai điểm trên, cần nghiệm thu lại với khóa thật.
 Không nhận văn xuôi tùy ý hoặc quan hệ nhân quả từ provider. ID không thuộc báo cáo, insights rỗng hoặc sai schema => fallback.
 Trường extra (action, total, summary...) bị bỏ; model không có tool sửa dữ liệu.
 
