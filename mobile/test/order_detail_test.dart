@@ -6,6 +6,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:smartdrone_mobile/core/network/api_failure.dart';
 import 'package:smartdrone_mobile/core/realtime/realtime_provider.dart';
 import 'package:smartdrone_mobile/core/storage/storage_service.dart';
+import 'package:smartdrone_mobile/features/ai/ai_api.dart';
+import 'package:smartdrone_mobile/features/ai/ai_models.dart';
 import 'package:smartdrone_mobile/features/auth/session.dart';
 import 'package:smartdrone_mobile/features/orders/customer_order_models.dart';
 import 'package:smartdrone_mobile/features/orders/customer_orders_api.dart';
@@ -78,6 +80,14 @@ class FakeDetailApi extends CustomerOrdersApi {
         Station(id: 's1', name: 'Trạm Bắc', latitude: 0, longitude: 0, status: 'ACTIVE'),
         Station(id: 's2', name: 'Trạm Nam', latitude: 0, longitude: 0, status: 'ACTIVE'),
       ];
+}
+
+/// 7.6: chi tiết đơn có thêm panel AI; các test cũ không kiểm tra AI nên dùng bản giả không gọi mạng.
+class NoAiApi extends AiApi {
+  NoAiApi() : super(Dio());
+  @override
+  Future<AiEnvelope<EtaResult>> eta(String orderId, {CancelToken? cancel}) =>
+      Completer<AiEnvelope<EtaResult>>().future; // không bao giờ trả lời
 }
 
 Future<void> settle() => Future<void>.delayed(const Duration(milliseconds: 10));
@@ -213,13 +223,16 @@ void main() {
         overrides: [
           sessionProvider.overrideWith((ref) => session),
           customerOrdersApiProvider.overrideWithValue(api),
+          aiApiProvider.overrideWithValue(NoAiApi()),
           realtimeClientProvider.overrideWith((ref) => null),
         ],
         child: const MaterialApp(home: OrderDetailScreen(orderId: id))));
     await mount();
     await tester.pumpAndSettle();
     expect(find.text('Trạm Bắc'), findsOneWidget); // tên trạm, không phải UUID
+    await tester.scrollUntilVisible(find.text('2 ảnh'), 200); // panel AI (7.6) nằm phía trên
     expect(find.text('2 ảnh'), findsOneWidget);
+    await tester.scrollUntilVisible(find.byKey(const Key('cancel-order')), -200);
     await tester.tap(find.byKey(const Key('cancel-order')));
     await tester.pumpAndSettle();
     expect(find.text('Hủy đơn hàng?'), findsOneWidget);
@@ -256,6 +269,7 @@ void main() {
         overrides: [
           sessionProvider.overrideWith((ref) => session),
           customerOrdersApiProvider.overrideWithValue(api),
+          aiApiProvider.overrideWithValue(NoAiApi()),
           realtimeClientProvider.overrideWith((ref) => null),
         ],
         child: const MaterialApp(home: OrderDetailScreen(orderId: id))));
