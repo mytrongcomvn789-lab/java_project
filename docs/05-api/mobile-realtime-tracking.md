@@ -53,6 +53,8 @@ Thủ công trên emulator + backend thật:
 | Không rò subscription | Chẩn đoán trong app và log proxy: vào đơn → `subs=2`; thoát → `UNSUBSCRIBE`, `subs=1`; sang đơn khác → đúng kênh đơn mới; đăng xuất → `DISCONNECT`, không còn socket |
 | Lỗi tìm ra và đã sửa | Banner thông báo của A vẫn hiện sau khi đăng xuất và đăng nhập B. Đã xóa snackbar khi đổi người dùng và kiểm lại: B không thấy |
 
+Ngày 27/11/2026, thêm một ca: khi nhân viên trạm đẩy đơn sang "Chờ nhận hàng" bằng API, tài khoản khách đang mở app (ở màn tạo đơn) nhận **thông báo foreground** "Đơn hàng đã đến điểm nhận" ngay lập tức, kèm nút Xem.
+
 Chưa kiểm chứng trên thiết bị: ca "token bị từ chối ở CONNECT" (có unit test), tắt Wi-Fi thật của máy (chỉ mô phỏng bằng proxy).
 
 ## Hướng dẫn demo

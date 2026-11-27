@@ -85,6 +85,9 @@ Chạy trên emulator Android 37 (`Medium_Phone_API_37.0`) với backend Spring 
 |---|---|
 | Đăng nhập khách hàng `customer@demo.local` | Vào trang chủ khách, hiển thị đơn thật |
 | Đăng nhập nhân viên trạm `operator@demo.local` | Vào trang vận hành, danh sách đơn theo trạm được phân công |
+| Mở app lại khi đã có phiên | Khôi phục phiên, vào thẳng trang chủ không cần đăng nhập |
+| **Hồ sơ → Đăng xuất** | Về màn đăng nhập; đăng nhập tài khoản khác không còn dữ liệu của người trước |
+| Đăng nhập điều phối viên `dispatcher@demo.local` | Màn "Vai trò này chưa dùng được trên điện thoại", ghi rõ "Điều phối viên", có nút Đăng xuất |
 | Backend tắt khi mở app | Hiện "Không kết nối được máy chủ" với nút **Thử lại** (đã quan sát) |
 
-**Chưa kiểm chứng trên thiết bị** (mới có unit/widget test): màn "Vai trò chưa được hỗ trợ" với tài khoản điều phối viên, quản lý, quản trị; hồi phục sau khi bật lại backend; làm mới token khi access token hết hạn thật; sửa hồ sơ. Cũng chưa test điện thoại Android thật và iOS (repo chưa có thư mục iOS).
+**Chưa kiểm chứng trên thiết bị** (mới có unit/widget test): tài khoản quản lý và quản trị; làm mới token khi access token hết hạn thật; sửa và lưu hồ sơ trên máy; hồi phục bằng nút Thử lại sau khi bật lại backend. Cũng chưa test điện thoại Android thật và iOS (repo chưa có thư mục iOS).

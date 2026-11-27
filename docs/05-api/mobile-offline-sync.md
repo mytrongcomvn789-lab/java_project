@@ -77,11 +77,14 @@ Môi trường: emulator Android 37, backend Spring Boot với SQL Server local 
 | Bật lại mạng, bấm **Thử lại** | Server chuyển `SCHEDULED → PREPARING` (phiên bản 3), đúng một lần; banner biến mất, số "Chờ nhận" giảm 3 → 2, đơn rời danh sách. |
 | **Nhận hàng hoàn** khi mất mạng | Cùng hành vi xếp hàng như trên. Khi có mạng, server từ chối (xem lưu ý dữ liệu demo), thao tác chuyển sang "cần xem lại" kèm lý do của server và **không tự thử lại**; "Bỏ yêu cầu" xóa được. |
 | Tắt hẳn app rồi mở lại | Thao tác trong hàng đợi (kể cả loại "cần xem lại") **còn nguyên** vì lưu trong kho mã hóa. |
+| **Xác nhận giao** khi mất mạng (27/11/2026) | Đơn `C8791B24` ở `AWAITING_PICKUP`, ảnh đã tải lên, OTP đúng, bật chế độ máy bay rồi xác nhận: màn hình ghi "Đơn CHƯA được giao trên hệ thống; app sẽ tự gửi khi có mạng", có nhắc mã chỉ hiệu lực 30 phút. Server vẫn `AWAITING_PICKUP`, log không có `confirmations` thành công. Danh sách hiện banner "1 thao tác chờ đồng bộ khi có mạng". |
+| Bật lại mạng (không thao tác gì thêm) | Sau khoảng 40 giây app **tự gửi**: server ghi `POST .../confirmations -> 200` **đúng 1 lần**, đơn thành `DELIVERED` (phiên bản 6, phương thức `OTP`); banner biến mất, "Chờ giao" giảm 3 → 2, đơn rời danh sách. |
+| Nhập sai OTP khi đang có mạng | Server trả `422`; app báo "Mã nhận hàng không đúng. Còn 4 lần thử", xoá ô OTP, đơn vẫn `AWAITING_PICKUP`. |
 
 **Lưu ý dữ liệu demo:** `DemoDataSeeder` tạo các đơn đã qua trạng thái PENDING với lịch sử tới phiên bản 2 nhưng đơn chỉ ở phiên bản 1, nên mọi chuyển trạng thái tiếp theo bị backend từ chối (`412`, log: `Violation of UNIQUE KEY constraint 'uq_order_status_history_version'`). Đó là lỗi của dữ liệu seed, không phải của mobile (gọi thẳng `complete-return` bằng `curl` cũng `412`). Để thử đầy đủ, dùng đơn PENDING của seeder rồi đưa qua quy trình thật: điều phối viên `approve` (`If-Match: "0"`) và `schedules`.
 
 ### Chưa kiểm chứng
 
-- **Xác nhận giao** khi mất mạng trên thiết bị (cần đơn `AWAITING_PICKUP` nhất quán, ảnh và OTP của khách); chỉ có test với API giả. Nhận hàng hoàn thành công sau khi có mạng cũng chưa thử trên máy thật vì lỗi dữ liệu demo ở trên.
+- Nhận hàng hoàn thành công sau khi có mạng lại (bị chặn bởi lỗi dữ liệu seeder, xem lưu ý trên). Xác nhận giao offline đã được kiểm chứng ngày 27/11/2026 (xem bảng trên).
 - Hẹn giờ tự thử lại chỉ chạy khi app đang mở; app bị đóng thì đồng bộ ở lần mở sau (không có đồng bộ nền). Chưa đo thời điểm tự thử lại trên máy thật, đã thử bằng nút "Thử lại".
 - Tab "Chờ nhận hoàn" (hiện nhãn "Thất bại") hiển thị đúng đơn RETURNING của trạm gửi; phần "Lý do hoàn hàng" chỉ có khi lịch sử đơn có bước `FAILED` kèm lý do, mà dữ liệu seed không có.
