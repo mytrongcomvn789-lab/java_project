@@ -11,6 +11,7 @@ import 'package:smartdrone_mobile/core/ui/app_widgets.dart';
 import 'package:smartdrone_mobile/core/ui/async_state_view.dart';
 import 'package:smartdrone_mobile/core/ui/demo_badge.dart';
 import 'package:smartdrone_mobile/features/auth/session.dart';
+import 'package:smartdrone_mobile/features/ai/ai_models.dart';
 import 'package:smartdrone_mobile/features/flight/flight_api.dart';
 import 'package:smartdrone_mobile/features/orders/customer_dashboard.dart';
 import 'package:smartdrone_mobile/features/orders/customer_order_models.dart';
@@ -36,11 +37,6 @@ class FakeFlightApi extends FlightApi {
   final bool demo;
 
   @override
-  Future<Sourced<OrderEta>> eta(String orderId) async => Sourced(
-      OrderEta(etaAt: DateTime(2026, 11, 25, 14, 20), remainingSeconds: 12 * 60),
-      isDemo: demo);
-
-  @override
   Future<Sourced<Flight>> flight(String orderId) async => Sourced(
       const Flight(
           progress: 0.5,
@@ -62,31 +58,16 @@ void main() {
       expect(a.telemetry.batteryPercent, inInclusiveRange(60, 95));
       expect(a.telemetry.speedKmh, inInclusiveRange(40, 60));
       expect(a.progress, inInclusiveRange(0.3, 0.8));
-      final e = DemoFlightData.eta(id, now: DateTime(2026, 11, 25, 10));
-      expect(e.remainingMinutes, inInclusiveRange(6, 20));
-      expect(e.etaAt.isAfter(DateTime(2026, 11, 25, 10)), isTrue);
     });
 
     test('backend trả đúng hợp đồng: dùng dữ liệu thật, KHÔNG gắn nhãn Demo', () async {
       final dio = Dio()
-        ..httpClientAdapter = FakeAdapter((o) => o.path.endsWith('/eta')
-            ? jsonResponse({
-                'etaAt': '2026-11-25T07:20:00Z',
-                'remainingSeconds': 720,
-                'remainingKm': 9.5,
-                'source': 'AI'
-              })
-            : jsonResponse({
+        ..httpClientAdapter = FakeAdapter((o) => jsonResponse({
                 'progressPercent': 40,
                 'telemetry': {'speedKmh': 55.5, 'altitudeM': 100, 'batteryPercent': 81},
                 'droneId': 'D-1'
               }));
       final api = FlightApi(dio);
-      final eta = await api.eta('x');
-      expect(eta.isDemo, isFalse);
-      expect(eta.data.remainingMinutes, 12);
-      expect(eta.data.remainingKm, 9.5);
-      expect(eta.data.source, 'AI');
       final f = await api.flight('x');
       expect(f.isDemo, isFalse);
       expect(f.data.progress, 0.4);
@@ -98,7 +79,6 @@ void main() {
       test('tuyến chưa cài ($code): dùng dữ liệu mẫu có nhãn Demo', () async {
         final api = FlightApi(
             Dio()..httpClientAdapter = FakeAdapter((_) => jsonResponse({}, code)));
-        expect((await api.eta('x')).isDemo, isTrue);
         expect((await api.flight('x')).isDemo, isTrue);
       });
     }
@@ -106,7 +86,7 @@ void main() {
     test('lỗi thật (500, mất mạng) KHÔNG bị che bằng dữ liệu mẫu', () async {
       final api = FlightApi(
           Dio()..httpClientAdapter = FakeAdapter((_) => jsonResponse({}, 500)));
-      await expectLater(api.eta('x'), throwsA(isA<ApiFailure>()));
+      await expectLater(api.flight('x'), throwsA(isA<ApiFailure>()));
       final off = FlightApi(Dio()
         ..httpClientAdapter = FakeAdapter((o) => throw DioException.connectionError(
             requestOptions: o, reason: 'off')));
@@ -117,7 +97,7 @@ void main() {
       final api = FlightApi(
           Dio()..httpClientAdapter = FakeAdapter((_) => jsonResponse({}, 404)),
           demoFallback: false);
-      await expectLater(api.eta('x'), throwsA(isA<ApiFailure>()));
+      await expectLater(api.flight('x'), throwsA(isA<ApiFailure>()));
     });
   });
 
@@ -219,6 +199,12 @@ void main() {
             realtimeClientProvider.overrideWith((ref) => null),
             recentOrdersProvider.overrideWith((ref) => orders()),
             flightApiProvider.overrideWithValue(FakeFlightApi(demo: demo)),
+            dashboardEtaProvider.overrideWith((ref, id) async => const EtaResult(
+                orderId: 'x',
+                status: 'IN_TRANSIT',
+                applicable: true,
+                computed: true,
+                etaMinutes: 12)),
             stationsProvider.overrideWith((ref) async => const [
                   Station(id: 'st-a', name: 'Trạm Gửi', latitude: 0, longitude: 0, status: 'ACTIVE'),
                   Station(id: 'st-b', name: 'Trạm Nhận', latitude: 0, longitude: 0, status: 'ACTIVE'),

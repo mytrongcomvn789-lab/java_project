@@ -197,9 +197,12 @@ class AppBottomNav extends StatelessWidget {
 
 /// Thẻ thông tin có tiêu đề (Lộ trình, Kiện hàng…): nền trắng, bo góc, bóng nhẹ.
 class InfoCard extends StatelessWidget {
-  const InfoCard(this.title, this.rows, {super.key});
+  const InfoCard(this.title, this.rows, {super.key, this.trailing});
   final String title;
   final List<Widget> rows;
+
+  /// Phần phụ bên phải tiêu đề (ví dụ nhãn Demo).
+  final Widget? trailing;
 
   @override
   Widget build(BuildContext context) => Padding(
@@ -215,9 +218,13 @@ class InfoCard extends StatelessWidget {
               child: Padding(
                   padding: const EdgeInsets.all(16),
                   child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Text(title,
-                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                            fontWeight: FontWeight.w700, color: AppColors.primary)),
+                    Row(children: [
+                      Expanded(
+                          child: Text(title,
+                              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                                  fontWeight: FontWeight.w700, color: AppColors.primary))),
+                      if (trailing != null) trailing!,
+                    ]),
                     const SizedBox(height: 10),
                     ...rows,
                   ])))));

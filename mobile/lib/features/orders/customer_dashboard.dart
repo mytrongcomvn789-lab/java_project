@@ -7,6 +7,8 @@ import '../../core/theme/app_theme.dart';
 import '../../core/ui/async_state_view.dart';
 import '../../core/ui/demo_badge.dart';
 import '../auth/session.dart';
+import '../ai/ai_api.dart';
+import '../ai/ai_models.dart' show EtaResult;
 import '../flight/flight_api.dart';
 import '../notifications/notifications_controller.dart';
 import 'customer_nav.dart';
@@ -22,6 +24,14 @@ final recentOrdersProvider = FutureProvider.autoDispose<List<OrderSummary>>((ref
   ref.listen(notificationsProvider.select((s) => s.incomingSeq), (_, __) => ref.invalidateSelf());
   final page = await ref.read(customerOrdersApiProvider).listOrders(page: 1, pageSize: 20);
   return page.items;
+});
+
+/// ETA thật của một đơn (bản công thức 7.2, `GET /v1/ai/orders/{id}/eta`). null khi chưa tính được
+/// hoặc lỗi: thẻ hiện "—" chứ không bịa số.
+final dashboardEtaProvider =
+    FutureProvider.autoDispose.family<EtaResult?, String>((ref, orderId) async {
+  final result = (await ref.read(aiApiProvider).eta(orderId)).result;
+  return result != null && result.computed ? result : null;
 });
 
 String _shortTime(DateTime? t) {
@@ -196,11 +206,12 @@ class _ActiveOrderCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final eta = ref.watch(etaProvider(order.id)).valueOrNull;
+    final eta = ref.watch(dashboardEtaProvider(order.id)).valueOrNull;
     final flight = ref.watch(flightProvider(order.id)).valueOrNull;
     final stations = ref.watch(stationsProvider).valueOrNull;
-    final isDemo = (eta?.isDemo ?? false) || (flight?.isDemo ?? false);
-    final minutes = eta?.data.remainingMinutes;
+    // Chỉ số đo của drone (tốc độ, pin, tiến độ) là Demo; ETA là số thật từ backend.
+    final isDemo = flight?.isDemo ?? false;
+    final minutes = eta?.etaMinutes;
     final t = flight?.data.telemetry;
     return Container(
         key: const Key('active-order-card'),

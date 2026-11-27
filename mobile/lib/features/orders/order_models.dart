@@ -111,10 +111,28 @@ class TimelineEntry {
 }
 
 class StationPoint {
-  const StationPoint(this.name);
+  const StationPoint(this.name, {this.latitude, this.longitude});
   final String name;
+
+  /// null nghĩa là backend thiếu hoặc coi toạ độ không hợp lệ: màn hình phải hiện "chưa có toạ độ".
+  final double? latitude, longitude;
+  bool get hasCoordinates => latitude != null && longitude != null;
   static StationPoint? from(Object? json) => json is Map<String, dynamic>
-      ? StationPoint(json['name'] as String? ?? '')
+      ? StationPoint(json['name'] as String? ?? '',
+          latitude: (json['latitude'] as num?)?.toDouble(),
+          longitude: (json['longitude'] as num?)?.toDouble())
+      : null;
+}
+
+/// Vị trí của đơn SUY RA từ trạng thái (không phải GPS). [simulated] = true khi đang bay:
+/// điểm giữa tuyến chỉ để minh hoạ và PHẢI được ghi rõ "mô phỏng".
+class OrderPosition {
+  const OrderPosition(this.phase, {this.simulated = false});
+  final String phase;
+  final bool simulated;
+  static OrderPosition? from(Object? json) => json is Map<String, dynamic>
+      ? OrderPosition(json['phase'] as String? ?? 'UNKNOWN',
+          simulated: json['simulated'] == true)
       : null;
 }
 
@@ -128,12 +146,22 @@ class TrackingSnapshot {
       required this.terminal,
       required this.timeline,
       this.pickup,
-      this.dropoff});
+      this.dropoff,
+      this.position,
+      this.liveGpsAvailable = false,
+      this.allowedActions = const []});
   final String orderId, status, statusLabel;
   final int version;
   final bool terminal;
   final List<TimelineEntry> timeline;
   final StationPoint? pickup, dropoff;
+  final OrderPosition? position;
+
+  /// Backend hiện luôn trả false: không có GPS drone thật.
+  final bool liveGpsAvailable;
+
+  /// Thao tác server cho phép với người xem này (ví dụ CANCEL).
+  final List<String> allowedActions;
 
   factory TrackingSnapshot.fromJson(Map<String, dynamic> json) =>
       TrackingSnapshot(
@@ -145,6 +173,13 @@ class TrackingSnapshot {
           terminal: json['terminal'] as bool? ?? false,
           pickup: StationPoint.from(json['pickup']),
           dropoff: StationPoint.from(json['dropoff']),
+          position: OrderPosition.from(json['position']),
+          liveGpsAvailable: (json['map'] is Map<String, dynamic>) &&
+              (json['map'] as Map<String, dynamic>)['liveGpsAvailable'] == true,
+          allowedActions: [
+            for (final a in (json['allowedActions'] as List<dynamic>? ?? const []))
+              '$a'
+          ],
           timeline: [
             for (final e in (json['timeline'] as List<dynamic>? ?? const []))
               TimelineEntry.fromJson(e as Map<String, dynamic>)
