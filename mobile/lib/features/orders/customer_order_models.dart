@@ -245,19 +245,15 @@ class AddressInput {
       {required this.label,
       required this.recipientName,
       required this.phone,
-      required this.addressLine,
-      required this.latitude,
-      required this.longitude});
+      required this.addressLine});
   final String label, recipientName, phone, addressLine;
-  final double latitude, longitude;
 
+  // Không gửi tọa độ: server tự tìm vị trí từ addressLine.
   Map<String, dynamic> toJson() => {
         'label': label,
         'recipientName': recipientName,
         'phone': phone,
         'addressLine': addressLine,
-        'latitude': latitude,
-        'longitude': longitude,
       };
 }
 

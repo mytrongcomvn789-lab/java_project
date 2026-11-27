@@ -18,9 +18,10 @@ public class AddressService {
     private final AddressRepository addresses;
     private final UserRepository users;
     private final Clock clock;
+    private final Geocoder geocoder;
 
-    public AddressService(AddressRepository addresses, UserRepository users, Clock clock) {
-        this.addresses = addresses; this.users = users; this.clock = clock;
+    public AddressService(AddressRepository addresses, UserRepository users, Clock clock, Geocoder geocoder) {
+        this.addresses = addresses; this.users = users; this.clock = clock; this.geocoder = geocoder;
     }
 
     @Transactional(readOnly = true)
@@ -37,14 +38,14 @@ public class AddressService {
     public AddressView create(UUID ownerId, AddressInput input) {
         var owner = users.findById(ownerId).orElseThrow(AddressService::notFound);
         var address = new Address(owner, clock.instant());
-        apply(address, input);
+        apply(address, input, null);
         return AddressView.from(addresses.saveAndFlush(address));
     }
 
     @Transactional
     public AddressView update(UUID ownerId, UUID addressId, AddressInput input) {
         var address = addresses.findActiveForUpdate(addressId, ownerId).orElseThrow(AddressService::notFound);
-        apply(address, input);
+        apply(address, input, address);
         return AddressView.from(addresses.saveAndFlush(address));
     }
 
@@ -62,9 +63,19 @@ public class AddressService {
                 .orElseThrow(AddressService::notFound));
     }
 
-    private void apply(Address address, AddressInput input) {
+    /** previous != null khi sửa: nếu địa chỉ không đổi thì giữ tọa độ cũ, không gọi lại geocoder. */
+    private void apply(Address address, AddressInput input, Address previous) {
+        double lat, lng;
+        if (input.latitude() != null) {
+            lat = input.latitude(); lng = input.longitude();
+        } else if (previous != null && previous.getAddressLine().equals(input.addressLine())) {
+            lat = previous.getLatitude(); lng = previous.getLongitude();
+        } else {
+            var point = geocoder.geocode(input.addressLine());
+            lat = point.latitude(); lng = point.longitude();
+        }
         address.update(input.label(), input.recipientName(), input.phone(), input.addressLine(),
-                input.latitude(), input.longitude(), clock.instant());
+                lat, lng, clock.instant());
     }
     private static ApiException notFound() { return new ApiException(ErrorCode.RESOURCE_NOT_FOUND); }
 }

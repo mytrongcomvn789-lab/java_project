@@ -117,13 +117,4 @@ class AddressValidation {
     if (!_phone.hasMatch(t)) return 'Số điện thoại gồm 9–15 chữ số, có thể bắt đầu bằng +.';
     return null;
   }
-
-  static String? coordinate(String? v, {required double min, required double max, required String name}) {
-    final t = v?.trim().replaceAll(',', '.') ?? '';
-    if (t.isEmpty) return 'Cần nhập $name.';
-    final n = double.tryParse(t);
-    if (n == null || n.isNaN || n.isInfinite) return '$name phải là số.';
-    if (n < min || n > max) return '$name phải từ $min đến $max.';
-    return null;
-  }
 }

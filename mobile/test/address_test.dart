@@ -69,8 +69,8 @@ class FakeAddressApi extends CustomerOrdersApi {
         recipientName: input.recipientName,
         phone: input.phone,
         addressLine: input.addressLine,
-        latitude: input.latitude,
-        longitude: input.longitude);
+        latitude: 10.77,
+        longitude: 106.7);
   }
 
   @override
@@ -80,8 +80,8 @@ class FakeAddressApi extends CustomerOrdersApi {
       recipientName: input.recipientName,
       phone: input.phone,
       addressLine: input.addressLine,
-      latitude: input.latitude,
-      longitude: input.longitude);
+      latitude: 10.77,
+      longitude: 106.7);
 
   @override
   Future<void> deleteAddress(String id) async {
@@ -104,11 +104,10 @@ void main() {
       expect(AddressValidation.phone('  '), isNotNull);
       expect(AddressValidation.required('  ', name: 'Nhãn'), contains('Nhãn'));
       expect(AddressValidation.required('a' * 501), isNotNull);
-      expect(AddressValidation.coordinate('10,5', min: -90, max: 90, name: 'Vĩ độ'), isNull);
-      expect(AddressValidation.coordinate('91', min: -90, max: 90, name: 'Vĩ độ'), isNotNull);
-      expect(AddressValidation.coordinate('abc', min: -90, max: 90, name: 'Vĩ độ'), isNotNull);
-      expect(AddressValidation.coordinate('NaN', min: -90, max: 90, name: 'Vĩ độ'), isNotNull);
-      expect(AddressValidation.coordinate('', min: -90, max: 90, name: 'Vĩ độ'), isNotNull);
+
+
+
+
     });
   });
 
@@ -148,9 +147,7 @@ void main() {
           label: 'Mới',
           recipientName: 'X',
           phone: '0901234567',
-          addressLine: 'Y',
-          latitude: 1,
-          longitude: 2));
+          addressLine: 'Y'));
       expect(read().items.first.id, 'new');
       expect(read().items.length, 4);
       await ctl().update(
@@ -159,9 +156,7 @@ void main() {
               label: 'Đã sửa',
               recipientName: 'X',
               phone: '0901234567',
-              addressLine: 'Y',
-              latitude: 1,
-              longitude: 2));
+              addressLine: 'Y'));
       expect(read().items.firstWhere((a) => a.id == 'a1').label, 'Đã sửa');
       expect(await ctl().remove('a2'), isTrue);
       expect(read().items.any((a) => a.id == 'a2'), isFalse);
@@ -238,8 +233,6 @@ void main() {
       await tester.enterText(find.byKey(const Key('address-name')), 'An');
       await tester.enterText(find.byKey(const Key('address-phone')), '0901234567');
       await tester.enterText(find.byKey(const Key('address-line')), '1 Lê Lợi');
-      await tester.enterText(find.byKey(const Key('address-lat')), '10.77');
-      await tester.enterText(find.byKey(const Key('address-lng')), '106.7');
     }
 
     testWidgets('chế độ chọn: chạm một địa chỉ trả nó về màn trước', (tester) async {
@@ -297,7 +290,7 @@ void main() {
       api.gate!.complete();
       await tester.pumpAndSettle();
       expect(api.created.length, 1);
-      expect(api.created.single.latitude, 10.77);
+      expect(api.created.single.addressLine, isNotEmpty);
       expect(picked?.id, 'new');
     });
 
