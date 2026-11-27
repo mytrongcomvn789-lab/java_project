@@ -7,7 +7,7 @@
 | **Khách hàng** (`CUSTOMER`) | Trang chủ, tạo/xem/hủy đơn, theo dõi đơn thời gian thực (bản đồ, ETA, mã nhận hàng), thông báo, trợ lý AI, sổ địa chỉ, hồ sơ |
 | **Nhân viên trạm** (`STATION_OPERATOR`) | Nhận kiện, chụp ảnh và xác nhận giao bằng OTP/QR, nhận hàng hoàn, hàng đợi offline tự đồng bộ |
 
-Vai trò khác (điều phối viên, quản lý, quản trị) vào màn "Vai trò chưa được hỗ trợ" và dùng ứng dụng web.
+Điều phối viên (`DISPATCHER`) cũng dùng được trên mobile. Vai trò khác (quản lý, quản trị) vào màn "Vai trò chưa được hỗ trợ" và dùng ứng dụng web.
 Quyền luôn do backend quyết định; ẩn nút trên giao diện không phải biện pháp bảo vệ.
 
 ## Chạy ứng dụng
