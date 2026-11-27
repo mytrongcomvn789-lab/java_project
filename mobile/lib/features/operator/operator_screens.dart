@@ -68,22 +68,10 @@ class _OperatorScaffold extends ConsumerWidget {
                   unselectedLabelColor: AppColors.textMuted,
                   labelStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
                   tabs: [
-                    Tab(
-                        key: const Key('tab-receipts'),
-                        height: 40,
-                        text: 'Chờ nhận${count(receipts)}'),
-                    Tab(
-                        key: const Key('tab-transit'),
-                        height: 40,
-                        text: 'Đang giao${count(transit)}'),
-                    Tab(
-                        key: const Key('tab-pickups'),
-                        height: 40,
-                        text: 'Chờ giao${count(pickups)}'),
-                    Tab(
-                        key: const Key('tab-returns'),
-                        height: 40,
-                        text: 'Thất bại${count(returns)}'),
+                    _tab(const Key('tab-receipts'), 'Chờ nhận${count(receipts)}'),
+                    _tab(const Key('tab-transit'), 'Đang giao${count(transit)}'),
+                    _tab(const Key('tab-pickups'), 'Chờ giao${count(pickups)}'),
+                    _tab(const Key('tab-returns'), 'Thất bại${count(returns)}'),
                   ])),
           Expanded(
               child: TabBarView(children: [
@@ -184,6 +172,14 @@ class _OperatorScaffold extends ConsumerWidget {
     }
   }
 }
+
+/// Tab của thanh chuyển nhóm đơn. Chữ tự co để vừa bề rộng tab (4 tab trên màn 390dp), không bị cắt.
+Tab _tab(Key key, String text) => Tab(
+    key: key,
+    height: 40,
+    child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 4),
+        child: FittedBox(fit: BoxFit.scaleDown, child: Text(text, maxLines: 1))));
 
 class _OperatorHeader extends ConsumerWidget {
   const _OperatorHeader(
