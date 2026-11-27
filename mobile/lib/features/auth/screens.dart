@@ -551,6 +551,21 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                             onTap: () => context.go('/customer/addresses')))),
                   ],
                   const SizedBox(height: 12),
+                  DecoratedBox(
+                      decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(AppRadii.card), boxShadow: cardShadow),
+                      child: Material(
+                          color: AppColors.surface,
+                          borderRadius: BorderRadius.circular(AppRadii.card),
+                          clipBehavior: Clip.antiAlias,
+                          child: ListTile(
+                              key: const Key('profile-password'),
+                              leading: const Icon(Icons.lock_outline, color: AppColors.primary),
+                              title: const Text('Đổi mật khẩu'),
+                              subtitle: const Text('Cần đăng nhập lại sau khi đổi'),
+                              trailing: const Icon(Icons.chevron_right),
+                              onTap: () => context.go('/profile/password')))),
+                  const SizedBox(height: 12),
                   TextButton.icon(
                       key: const Key('profile-logout'),
                       onPressed: _busy ? null : () => signOut(ref),

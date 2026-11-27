@@ -5,6 +5,7 @@ import '../../features/addresses/address_screens.dart';
 import '../../features/auth/session.dart';
 import '../../features/assistant/assistant_screen.dart';
 import '../../features/auth/screens.dart';
+import '../../features/auth/password_screen.dart';
 import '../../features/dispatcher/dispatcher_screens.dart';
 import '../../features/manager/manager_screens.dart';
 import '../../features/notifications/notification_screens.dart';
@@ -26,7 +27,7 @@ String? sessionRedirect(Session session, String path) {
   }
   final user = session.user!;
   if (!user.supported) return path == '/unsupported' ? null : '/unsupported';
-  if (path == '/profile') return null;
+  if (path == '/profile' || path.startsWith('/profile/')) return null;
   if (path == user.home || path.startsWith('${user.home}/')) return null;
   return user.home;
 }
@@ -94,7 +95,10 @@ final routerProvider = Provider<GoRouter>((ref) {
                     DispatcherOrderScreen(orderId: state.pathParameters['id']!)),
           ]),
       GoRoute(path: '/manager', builder: (_, __) => const ManagerHomeScreen()),
-      GoRoute(path: '/profile', builder: (_, __) => const ProfileScreen()),
+      GoRoute(
+          path: '/profile',
+          builder: (_, __) => const ProfileScreen(),
+          routes: [GoRoute(path: 'password', builder: (_, __) => const ChangePasswordScreen())]),
       GoRoute(
           path: '/unsupported', builder: (_, __) => const UnsupportedScreen()),
     ],

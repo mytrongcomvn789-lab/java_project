@@ -13,6 +13,7 @@ import '../ai/ai_panels.dart';
 import '../ai/ai_task_controller.dart';
 import '../flight/flight_api.dart';
 import 'customer_orders_api.dart';
+import 'delivery_evidence.dart';
 import 'order_models.dart';
 import 'order_screens.dart';
 import 'pickup_code.dart';
@@ -124,6 +125,10 @@ class _Content extends ConsumerWidget {
                 padding: EdgeInsets.only(top: 8),
                 child: Text('Không có quyền nhận cập nhật trực tuyến cho đơn này.')),
           const SizedBox(height: 14),
+          if (s.status == 'DELIVERED') ...[
+            DeliveryEvidenceCard(orderId: orderId),
+            const SizedBox(height: 14),
+          ],
           if (s.status == 'AWAITING_PICKUP') ...[
             PickupCodeCard(orderId: orderId),
             const SizedBox(height: 14),

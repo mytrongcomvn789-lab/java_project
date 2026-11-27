@@ -244,6 +244,16 @@ class Session extends ChangeNotifier {
     _emit();
   }
 
+  /// Đổi mật khẩu. Máy chủ thu hồi MỌI phiên của tài khoản khi đổi thành công, nên app đăng xuất
+  /// luôn (xóa token cục bộ) và người dùng đăng nhập lại bằng mật khẩu mới.
+  Future<void> changePassword(String current, String next) async {
+    final epoch = _epoch;
+    await api.post<void>('/v1/me/password',
+        data: {'currentPassword': current, 'newPassword': next});
+    if (epoch != _epoch) return;
+    await _invalidate();
+  }
+
   @override
   void dispose() {
     _disposed = true;
