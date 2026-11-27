@@ -1,6 +1,6 @@
 # Mobile: điều phối viên (DISPATCHER)
 
-Nhánh `feature/mobile-ui-staff`. Backend không đổi: mobile dùng lại API đã có cho web (xem [order-state-machine](../03-architecture) và các trang `DispatchRequests`, `DispatchSchedule`, `DispatchFailures` của web).
+Nhánh `feature/mobile-ui-staff`. Backend không đổi: mobile dùng lại API đã có cho web (xem các trang `DispatchRequests`, `DispatchSchedule`, `DispatchFailures` của web).
 Quyền do backend quyết định (RBAC trả 403); app chỉ hiện nút theo trạng thái đơn.
 
 ## 1. Màn hình
