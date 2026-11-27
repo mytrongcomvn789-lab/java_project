@@ -316,21 +316,54 @@ class WorkspaceScreen extends ConsumerWidget {
   }
 }
 
+/// Tên vai trò hiển thị cho người dùng (mã vai trò của backend không đưa thẳng lên giao diện).
+String roleLabel(String role) => switch (role) {
+      'CUSTOMER' => 'Khách hàng',
+      'STATION_OPERATOR' => 'Nhân viên trạm',
+      'DISPATCHER' => 'Điều phối viên',
+      'LOGISTICS_MANAGER' => 'Quản lý logistics',
+      'SYSTEM_ADMIN' => 'Quản trị hệ thống',
+      _ => role,
+    };
+
+/// Màn "Vai trò chưa được hỗ trợ": ứng dụng chỉ dành cho khách hàng và nhân viên trạm.
 class UnsupportedScreen extends ConsumerWidget {
   const UnsupportedScreen({super.key});
   @override
-  Widget build(BuildContext context, WidgetRef ref) => Scaffold(
-      appBar: AppBar(title: const Text('Vai trò chưa được hỗ trợ')),
-      body: Padding(
-          padding: const EdgeInsets.all(24),
-          child:
-              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            const Text('Ứng dụng này dành cho CUSTOMER và STATION_OPERATOR. '
-                'Vui lòng dùng ứng dụng web cho vai trò quản trị/điều phối.'),
-            const SizedBox(height: 16),
-            FilledButton(
-                onPressed: () => signOut(ref), child: const Text('Đăng xuất')),
-          ])));
+  Widget build(BuildContext context, WidgetRef ref) {
+    final user = ref.watch(sessionProvider).user;
+    return Scaffold(
+        appBar: AppBar(title: const Text('Vai trò chưa được hỗ trợ')),
+        body: Center(
+            child: Padding(
+                padding: const EdgeInsets.all(28),
+                child: Column(mainAxisSize: MainAxisSize.min, children: [
+                  Container(
+                      width: 88,
+                      height: 88,
+                      decoration: BoxDecoration(
+                          color: StatusPalette.pending.background, shape: BoxShape.circle),
+                      child: Icon(Icons.desktop_windows_outlined,
+                          size: 40, color: StatusPalette.pending.foreground)),
+                  const SizedBox(height: 20),
+                  const Text('Vai trò này chưa dùng được trên điện thoại',
+                      key: Key('unsupported-title'),
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
+                  const SizedBox(height: 8),
+                  Text(
+                      '${user == null ? '' : 'Tài khoản của bạn là ${roleLabel(user.role)}. '}'
+                      'Ứng dụng này dành cho khách hàng và nhân viên trạm. '
+                      'Vui lòng dùng ứng dụng web cho vai trò quản trị, điều phối hoặc quản lý.',
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(color: AppColors.textMuted, height: 1.4)),
+                  const SizedBox(height: 24),
+                  FilledButton(
+                      key: const Key('unsupported-logout'),
+                      onPressed: () => signOut(ref),
+                      child: const Text('Đăng xuất')),
+                ]))));
+  }
 }
 
 class ProfileScreen extends ConsumerStatefulWidget {
@@ -344,6 +377,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   late final TextEditingController _name, _phone;
   bool _busy = false;
   String? _message;
+  bool _messageIsError = false;
   @override
   void initState() {
     super.initState();
@@ -367,9 +401,19 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     });
     try {
       await ref.read(sessionProvider).updateProfile(_name.text, _phone.text);
-      if (mounted) setState(() => _message = 'Đã lưu hồ sơ.');
+      if (mounted) {
+        setState(() {
+          _message = 'Đã lưu hồ sơ.';
+          _messageIsError = false;
+        });
+      }
     } catch (error) {
-      if (mounted) setState(() => _message = apiError(error));
+      if (mounted) {
+        setState(() {
+          _message = apiError(error);
+          _messageIsError = true;
+        });
+      }
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -381,6 +425,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     if (user == null) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
+    final display = user.name.isEmpty ? user.email : user.name;
+    final isCustomer = user.role == 'CUSTOMER';
     return Scaffold(
         appBar: AppBar(
             title: const Text('Hồ sơ của tôi'),
@@ -389,49 +435,127 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 icon: const Icon(Icons.arrow_back),
                 onPressed: () => context.go(user.home))),
         body: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.all(16),
             child: Form(
                 key: _form,
-                child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Text(user.email,
-                          style: Theme.of(context).textTheme.titleMedium),
-                      Text('Vai trò: ${user.role}'),
-                      const SizedBox(height: 24),
-                      TextFormField(
-                          controller: _name,
-                          enabled: !_busy,
-                          maxLength: 150,
-                          decoration:
-                              const InputDecoration(labelText: 'Họ tên'),
-                          validator: (v) => (v?.trim().length ?? 0) > 150
-                              ? 'Tối đa 150 ký tự.'
-                              : null),
-                      const SizedBox(height: 16),
-                      TextFormField(
-                          controller: _phone,
-                          enabled: !_busy,
-                          keyboardType: TextInputType.phone,
-                          decoration:
-                              const InputDecoration(labelText: 'Số điện thoại'),
-                          validator: (v) => v != null &&
-                                  v.trim().isNotEmpty &&
-                                  !RegExp(r'^\+?[0-9]{9,15}$')
-                                      .hasMatch(v.trim())
-                              ? 'Nhập 9–15 chữ số, có thể bắt đầu bằng +.'
-                              : null),
-                      const SizedBox(height: 20),
-                      if (_message != null)
-                        Padding(
-                            padding: const EdgeInsets.only(bottom: 16),
-                            child: Text(_message!)),
-                      FilledButton(
-                          onPressed: _busy ? null : _save,
-                          child: Text(_busy ? 'Đang lưu…' : 'Lưu hồ sơ')),
-                      TextButton(
-                          onPressed: _busy ? null : () => signOut(ref),
-                          child: const Text('Đăng xuất')),
-                    ]))));
+                child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+                  Container(
+                      key: const Key('profile-header'),
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                          color: AppColors.dark,
+                          borderRadius: BorderRadius.circular(AppRadii.card)),
+                      child: Row(children: [
+                        CircleAvatar(
+                            radius: 28,
+                            backgroundColor: AppColors.tealBright,
+                            child: Text(display.characters.first.toUpperCase(),
+                                style: const TextStyle(
+                                    color: AppColors.dark,
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.w800))),
+                        const SizedBox(width: 16),
+                        Expanded(
+                            child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                              Text(display,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w800)),
+                              Text(user.email,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(color: Colors.white70)),
+                              const SizedBox(height: 6),
+                              Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 10, vertical: 3),
+                                  decoration: BoxDecoration(
+                                      color: Colors.white.withValues(alpha: 0.14),
+                                      borderRadius: BorderRadius.circular(AppRadii.pill)),
+                                  child: Text(roleLabel(user.role),
+                                      key: const Key('profile-role'),
+                                      style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w600))),
+                            ])),
+                      ])),
+                  const SizedBox(height: 16),
+                  Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                          color: AppColors.surface,
+                          borderRadius: BorderRadius.circular(AppRadii.card),
+                          boxShadow: cardShadow),
+                      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+                        TextFormField(
+                            key: const Key('profile-name'),
+                            controller: _name,
+                            enabled: !_busy,
+                            maxLength: 150,
+                            decoration: const InputDecoration(labelText: 'Họ tên'),
+                            validator: (v) => (v?.trim().length ?? 0) > 150
+                                ? 'Tối đa 150 ký tự.'
+                                : null),
+                        const SizedBox(height: 8),
+                        TextFormField(
+                            key: const Key('profile-phone'),
+                            controller: _phone,
+                            enabled: !_busy,
+                            keyboardType: TextInputType.phone,
+                            decoration: const InputDecoration(labelText: 'Số điện thoại'),
+                            validator: (v) => v != null &&
+                                    v.trim().isNotEmpty &&
+                                    !RegExp(r'^\+?[0-9]{9,15}$').hasMatch(v.trim())
+                                ? 'Nhập 9–15 chữ số, có thể bắt đầu bằng +.'
+                                : null),
+                        const SizedBox(height: 16),
+                        if (_message != null)
+                          Container(
+                              key: const Key('profile-message'),
+                              margin: const EdgeInsets.only(bottom: 12),
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                  color: _messageIsError
+                                      ? StatusPalette.failed.background
+                                      : StatusPalette.done.background,
+                                  borderRadius: BorderRadius.circular(AppRadii.button)),
+                              child: Text(_message!)),
+                        FilledButton(
+                            key: const Key('profile-save'),
+                            onPressed: _busy ? null : _save,
+                            child: Text(_busy ? 'Đang lưu…' : 'Lưu hồ sơ')),
+                      ])),
+                  if (isCustomer) ...[
+                    const SizedBox(height: 12),
+                    DecoratedBox(
+                        decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(AppRadii.card),
+                            boxShadow: cardShadow),
+                        child: Material(
+                            color: AppColors.surface,
+                            borderRadius: BorderRadius.circular(AppRadii.card),
+                            clipBehavior: Clip.antiAlias,
+                            child: ListTile(
+                            key: const Key('profile-addresses'),
+                            leading: const Icon(Icons.location_on_outlined,
+                                color: AppColors.primary),
+                            title: const Text('Sổ địa chỉ'),
+                            subtitle: const Text('Địa chỉ người nhận đã lưu'),
+                            trailing: const Icon(Icons.chevron_right),
+                            onTap: () => context.go('/customer/addresses')))),
+                  ],
+                  const SizedBox(height: 12),
+                  TextButton.icon(
+                      key: const Key('profile-logout'),
+                      onPressed: _busy ? null : () => signOut(ref),
+                      icon: const Icon(Icons.logout),
+                      label: const Text('Đăng xuất')),
+                ]))));
   }
 }
