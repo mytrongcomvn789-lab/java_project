@@ -37,6 +37,8 @@ public final class RbacPolicy {
             rule(GET, "/v1/me", RoleName.values()),
             rule(PATCH, "/v1/me", RoleName.values()),
             rule(POST, "/v1/me/password", RoleName.values()),
+            rule(GET, "/v1/customers", DISPATCHER),
+            rule(PATCH, "/v1/customers/{id}", DISPATCHER),
             rule(GET, "/v1/roles", SYSTEM_ADMIN),
             rule(GET, "/v1/users", SYSTEM_ADMIN),
             rule(PATCH, "/v1/users/{id}/access", SYSTEM_ADMIN),
