@@ -310,6 +310,15 @@ void main() {
       expect(api.received.map((e) => e.version), [2, 5]);
     });
 
+    test('412 mà đơn vẫn chờ nhận ở đúng phiên bản cũ: nói rõ CHƯA được nhận', () async {
+      await boot();
+      api.receiveError = http(412, 'VERSION_CONFLICT'); // phiên bản server vẫn là 2 như đã xem
+      expect(await ctl().receive(null), isFalse);
+      expect(read().canReceive, isTrue);
+      expect(read().notice, contains('CHƯA được nhận'));
+      expect(read().notice, isNot(contains('có thể đã được nhận')));
+    });
+
     test('đơn đã được nhận (409): tải lại và không cho nhận nữa', () async {
       await boot();
       api.status = 'PREPARING';
