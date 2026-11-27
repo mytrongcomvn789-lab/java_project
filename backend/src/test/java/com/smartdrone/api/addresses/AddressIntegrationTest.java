@@ -130,7 +130,7 @@ class AddressIntegrationTest {
                 Arguments.of("phone", "123"), Arguments.of("phone", "+1234567890123456"),
                 Arguments.of("latitude", 91), Arguments.of("latitude", -91),
                 Arguments.of("longitude", 181), Arguments.of("longitude", -181),
-                Arguments.of("latitude", null), Arguments.of("longitude", null),
+                Arguments.of("latitude", null), Arguments.of("longitude", null), // chỉ gửi một nửa cặp tọa độ
                 Arguments.of("phone", null), Arguments.of("addressLine", null));
     }
     @ParameterizedTest @MethodSource("invalidFields")

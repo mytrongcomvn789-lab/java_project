@@ -149,23 +149,16 @@ class _AddressFormScreenState extends ConsumerState<AddressFormScreen> {
   late final _name = TextEditingController(text: widget.existing?.recipientName);
   late final _phone = TextEditingController(text: widget.existing?.phone);
   late final _line = TextEditingController(text: widget.existing?.addressLine);
-  late final _lat = TextEditingController(
-      text: widget.existing == null ? '' : '${widget.existing!.latitude}');
-  late final _lng = TextEditingController(
-      text: widget.existing == null ? '' : '${widget.existing!.longitude}');
   bool _saving = false;
   String? _error;
 
   @override
   void dispose() {
-    for (final c in [_label, _name, _phone, _line, _lat, _lng]) {
+    for (final c in [_label, _name, _phone, _line]) {
       c.dispose();
     }
     super.dispose();
   }
-
-  double _parse(TextEditingController c) =>
-      double.parse(c.text.trim().replaceAll(',', '.'));
 
   Future<void> _save() async {
     if (_saving) return; // chặn bấm đúp
@@ -174,9 +167,7 @@ class _AddressFormScreenState extends ConsumerState<AddressFormScreen> {
         label: _label.text.trim(),
         recipientName: _name.text.trim(),
         phone: _phone.text.trim(),
-        addressLine: _line.text.trim(),
-        latitude: _parse(_lat),
-        longitude: _parse(_lng));
+        addressLine: _line.text.trim());
     setState(() {
       _saving = true;
       _error = null;
@@ -217,24 +208,8 @@ class _AddressFormScreenState extends ConsumerState<AddressFormScreen> {
                 (v) => AddressValidation.required(v, name: 'Tên người nhận')),
             _field(_phone, 'Số điện thoại', 'address-phone', AddressValidation.phone,
                 keyboard: TextInputType.phone),
-            _field(_line, 'Địa chỉ', 'address-line',
+            _field(_line, 'Địa chỉ đầy đủ (số nhà, đường, phường, quận, tỉnh/thành)', 'address-line',
                 (v) => AddressValidation.required(v, name: 'Địa chỉ')),
-            _field(
-                _lat,
-                'Vĩ độ (-90 đến 90)',
-                'address-lat',
-                (v) => AddressValidation.coordinate(v,
-                    min: -90, max: 90, name: 'Vĩ độ'),
-                keyboard: const TextInputType.numberWithOptions(
-                    decimal: true, signed: true)),
-            _field(
-                _lng,
-                'Kinh độ (-180 đến 180)',
-                'address-lng',
-                (v) => AddressValidation.coordinate(v,
-                    min: -180, max: 180, name: 'Kinh độ'),
-                keyboard: const TextInputType.numberWithOptions(
-                    decimal: true, signed: true)),
             const SizedBox(height: 8),
             FilledButton(
                 key: const Key('save-address'),

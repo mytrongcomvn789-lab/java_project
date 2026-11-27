@@ -5,10 +5,8 @@ export interface AddressInput {
   recipientName: string;
   phone: string;
   addressLine: string;
-  latitude: number;
-  longitude: number;
 }
-export interface Address extends AddressInput { id: string }
+export interface Address extends AddressInput { id: string; latitude: number; longitude: number }
 export interface AddressPage {
   items: Address[];
   page: number;

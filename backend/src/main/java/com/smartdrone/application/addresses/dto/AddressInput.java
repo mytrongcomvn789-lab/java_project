@@ -13,9 +13,13 @@ public record AddressInput(
         String phone,
         @NotBlank(message = "Địa chỉ không được để trống")
         @Size(max = 500, message = "Địa chỉ tối đa 500 ký tự") String addressLine,
-        @NotNull(message = "Cần nhập vĩ độ") @DecimalMin("-90") @DecimalMax("90") Double latitude,
-        @NotNull(message = "Cần nhập kinh độ") @DecimalMin("-180") @DecimalMax("180") Double longitude) {
+        @DecimalMin("-90") @DecimalMax("90") Double latitude,
+        @DecimalMin("-180") @DecimalMax("180") Double longitude) {
     public AddressInput {
+        // Tọa độ là tùy chọn: bỏ trống thì server tự tìm từ addressLine; nếu gửi thì phải đủ cả hai.
+        if ((latitude == null) != (longitude == null)) {
+            throw new IllegalArgumentException("Vĩ độ và kinh độ phải được gửi cùng nhau");
+        }
         label = trim(label); recipientName = trim(recipientName);
         phone = trim(phone); addressLine = trim(addressLine);
     }

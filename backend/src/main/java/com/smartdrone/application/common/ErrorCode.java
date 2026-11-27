@@ -45,6 +45,8 @@ public enum ErrorCode {
     AI_RATE_LIMITED(HttpStatus.TOO_MANY_REQUESTS, "Bạn gửi yêu cầu AI quá nhanh, vui lòng thử lại sau"),
     AI_BUDGET_EXCEEDED(HttpStatus.TOO_MANY_REQUESTS, "Đã hết hạn mức sử dụng AI trong ngày"),
     AI_RESPONSE_INVALID(HttpStatus.BAD_GATEWAY, "Dịch vụ AI trả về kết quả không hợp lệ"),
+    ADDRESS_NOT_GEOCODABLE(HttpStatus.UNPROCESSABLE_ENTITY, "Không tìm thấy vị trí của địa chỉ này, vui lòng nhập địa chỉ đầy đủ và cụ thể hơn"),
+    GEOCODING_UNAVAILABLE(HttpStatus.SERVICE_UNAVAILABLE, "Dịch vụ tìm vị trí tạm thời không khả dụng, vui lòng thử lại sau"),
     INTERNAL_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "Lỗi hệ thống, vui lòng thử lại sau");
     
     private final HttpStatus status;

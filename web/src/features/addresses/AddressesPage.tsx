@@ -5,8 +5,8 @@ import { ApiRequestError } from "../../lib/apiClient";
 import { addressService, type Address, type AddressInput, type AddressPage } from "../../lib/addressService";
 import CustomerGate from "./CustomerGate";
 
-type FormValues = Record<keyof AddressInput, string>;
-const EMPTY: FormValues = { label: "", recipientName: "", phone: "", addressLine: "", latitude: "", longitude: "" };
+type FormValues = Record<"label" | "recipientName" | "phone" | "addressLine", string>;
+const EMPTY: FormValues = { label: "", recipientName: "", phone: "", addressLine: "" };
 
 export default function AddressesPage() {
   return <><PageHeader title="Địa chỉ giao hàng" subtitle="Lưu thông tin người nhận để sử dụng khi tạo yêu cầu giao hàng."
@@ -40,7 +40,7 @@ function AddressBook() {
     setEditing(address); setDeleting(null); setMessage(""); setFormError(""); setFieldErrors({});
     setValues(address ? {
       label: address.label, recipientName: address.recipientName, phone: address.phone,
-      addressLine: address.addressLine, latitude: String(address.latitude), longitude: String(address.longitude),
+      addressLine: address.addressLine,
     } : { ...EMPTY });
     setShowForm(true);
   }
@@ -49,8 +49,8 @@ function AddressBook() {
     setBusy(true); setFormError(""); setFieldErrors({}); setMessage("");
     const input: AddressInput = {
       label: values.label.trim(), recipientName: values.recipientName.trim(), phone: values.phone.trim(),
-      addressLine: values.addressLine.trim(), latitude: Number(values.latitude), longitude: Number(values.longitude),
-    };
+      addressLine: values.addressLine.trim(),
+    }; // Tọa độ do server tự tìm từ địa chỉ đầy đủ.
     try {
       if (editing) await addressService.update(editing.id, input);
       else await addressService.create(input);
@@ -93,10 +93,7 @@ function AddressBook() {
         {field("recipientName", "Tên người nhận", "text", { maxLength: 500, autoComplete: "name" })}
         {field("phone", "Số điện thoại", "tel", { maxLength: 16, pattern: "\\+?[0-9]{9,15}", autoComplete: "tel", title: "9–15 chữ số, có thể bắt đầu bằng +" })}
         {field("addressLine", "Địa chỉ đầy đủ", "text", { maxLength: 500, autoComplete: "street-address" })}
-        {field("latitude", "Vĩ độ", "number", { min: -90, max: 90, step: "any", placeholder: "10.762622" })}
-        {field("longitude", "Kinh độ", "number", { min: -180, max: 180, step: "any", placeholder: "106.660172" })}
       </div>
-      <p className="muted">Vĩ độ từ −90 đến 90, kinh độ từ −180 đến 180. Có thể lấy tọa độ tại vị trí trên bản đồ của bạn.</p>
       {formError && <p role="alert" className="customer-error">{formError}</p>}
       <div className="customer-actions">
         <button className="customer-primary" disabled={busy}>{busy ? "Đang lưu…" : "Lưu địa chỉ"}</button>
@@ -123,7 +120,6 @@ function AddressBook() {
             <h3>{address.label}</h3>
             <p><strong>{address.recipientName}</strong> · {address.phone}</p>
             <p>{address.addressLine}</p>
-            <p className="muted">Tọa độ: {address.latitude}, {address.longitude}</p>
             <div className="customer-actions">
               <button type="button" disabled={busy} aria-label={`Sửa ${address.label}`} onClick={() => openForm(address)}>Sửa</button>
               <button type="button" disabled={busy} aria-label={`Xóa ${address.label}`} onClick={() => {
