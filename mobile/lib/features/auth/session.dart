@@ -20,8 +20,12 @@ class UserProfile {
       name: json['fullName'] as String? ?? '',
       phone: json['phone'] as String? ?? '',
       role: json['role'] as String);
-  bool get supported => role == 'CUSTOMER' || role == 'STATION_OPERATOR';
-  String get home => role == 'CUSTOMER' ? '/customer' : '/operator';
+  bool get supported => const {'CUSTOMER', 'STATION_OPERATOR', 'DISPATCHER'}.contains(role);
+  String get home => switch (role) {
+        'CUSTOMER' => '/customer',
+        'DISPATCHER' => '/dispatcher',
+        _ => '/operator',
+      };
 }
 
 enum SessionPhase { restoring, signedOut, signedIn, unavailable }

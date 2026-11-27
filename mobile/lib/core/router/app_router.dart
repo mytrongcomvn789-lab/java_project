@@ -5,6 +5,7 @@ import '../../features/addresses/address_screens.dart';
 import '../../features/auth/session.dart';
 import '../../features/assistant/assistant_screen.dart';
 import '../../features/auth/screens.dart';
+import '../../features/dispatcher/dispatcher_screens.dart';
 import '../../features/notifications/notification_screens.dart';
 import '../../features/operator/operator_screens.dart';
 import '../../features/operator/pickup_screens.dart';
@@ -81,6 +82,15 @@ final routerProvider = Provider<GoRouter>((ref) {
                 builder: (_, state) =>
                     ReturnDetailScreen(orderId: state.pathParameters['id']!)),
             GoRoute(path: 'scan', builder: (_, __) => const QrScanScreen()),
+          ]),
+      GoRoute(
+          path: '/dispatcher',
+          builder: (_, __) => const DispatcherHomeScreen(),
+          routes: [
+            GoRoute(
+                path: 'orders/:id',
+                builder: (_, state) =>
+                    DispatcherOrderScreen(orderId: state.pathParameters['id']!)),
           ]),
       GoRoute(path: '/profile', builder: (_, __) => const ProfileScreen()),
       GoRoute(

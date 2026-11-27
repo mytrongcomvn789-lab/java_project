@@ -41,9 +41,9 @@ void main() {
   });
 
   testWidgets('vai trò chưa hỗ trợ: nói rõ vai trò hiện tại và chỉ cho đăng xuất', (tester) async {
-    await mount(tester, const UnsupportedScreen(), role: 'DISPATCHER');
+    await mount(tester, const UnsupportedScreen(), role: 'SYSTEM_ADMIN');
     expect(find.byKey(const Key('unsupported-title')), findsOneWidget);
-    expect(find.textContaining('Điều phối viên'), findsOneWidget);
+    expect(find.textContaining('Quản trị hệ thống'), findsOneWidget);
     expect(find.textContaining('ứng dụng web'), findsOneWidget);
     expect(find.byKey(const Key('unsupported-logout')), findsOneWidget);
   });
