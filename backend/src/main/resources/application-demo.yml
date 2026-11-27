@@ -7,3 +7,5 @@ app:
 smartdrone:
   charging:
     simulate-heartbeat: true # thiết bị sạc giả lập gửi heartbeat mỗi 30 giây (chưa có phần cứng thật)
+  dispatch:
+    auto-sweep: true # định kỳ 30 giây gán drone cho đơn đang chờ và tính lại kế hoạch

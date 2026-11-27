@@ -8,6 +8,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.smartdrone.application.common.*;
+import com.smartdrone.application.dispatch.DroneDispatchService;
 import com.smartdrone.application.orders.dto.*;
 import com.smartdrone.application.orders.scope.*;
 import com.smartdrone.application.packages.PackageService;
@@ -29,10 +30,12 @@ public class OrderReceiptService {
     private final OrderStatusHistoryRepository history;
     private final StaffStationScope stations;
     private final OrderTransitionService transitions;
+    private final DroneDispatchService droneDispatch;
 
     public OrderReceiptService(OrderRepository orders, UserRepository users, DeliveryAttemptRepository attempts,
             OrderPackageRepository packageRows, PackageService packages, OrderStatusHistoryRepository history,
-            StaffStationScope stations, OrderTransitionService transitions) {
+            StaffStationScope stations, OrderTransitionService transitions, DroneDispatchService droneDispatch) {
+        this.droneDispatch = droneDispatch;
         this.orders = orders; this.users = users; this.attempts = attempts; this.packageRows = packageRows;
         this.packages = packages; this.history = history; this.stations = stations; this.transitions = transitions;
     }
@@ -95,6 +98,8 @@ public class OrderReceiptService {
         // Repeated/concurrent requests cannot add a second RECEIVE for this order version.
         transitions.transition(order, new TransitionCommand(OrderAction.RECEIVE, actor,
                 RoleName.STATION_OPERATOR, version, note, attempt.getId(), null));
+        // Đơn đã ở trạm gửi và chờ vận chuyển: điều phối drone (không làm hỏng luồng nếu không phân công được).
+        droneDispatch.onReceived(order);
         return detail(order);
     }
 

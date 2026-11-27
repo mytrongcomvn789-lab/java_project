@@ -52,6 +52,19 @@ public class Drone {
         this.status = DroneStatus.IDLE;
     }
 
+    /** Cất cánh: không còn thuộc trạm nào cho tới khi hạ cánh. */
+    public void takeOff(int batteryPercent) {
+        this.batteryPercent = batteryPercent;
+        this.status = DroneStatus.IN_FLIGHT;
+        this.stationId = null;
+    }
+
+    public void land(UUID stationId, int batteryPercent) {
+        this.stationId = stationId;
+        this.batteryPercent = batteryPercent;
+        this.status = DroneStatus.IDLE;
+    }
+
     public void startCharging() {
         this.status = DroneStatus.CHARGING;
     }
