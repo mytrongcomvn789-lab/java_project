@@ -4,3 +4,6 @@
 app:
   seed:
     demo: true
+smartdrone:
+  charging:
+    simulate-heartbeat: true # thiết bị sạc giả lập gửi heartbeat mỗi 30 giây (chưa có phần cứng thật)
