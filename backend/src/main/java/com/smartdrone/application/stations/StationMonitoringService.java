@@ -12,6 +12,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.smartdrone.application.charging.StationChargingService;
+import com.smartdrone.application.charging.StationChargingService.StationChargingOverview;
 import com.smartdrone.application.scheduling.ScheduleProperties;
 import com.smartdrone.application.scheduling.ScheduleSlotPolicy;
 import com.smartdrone.application.stations.dto.StationConnection;
@@ -36,10 +38,11 @@ public class StationMonitoringService {
     private final ScheduleProperties schedule;
     private final ScheduleSlotPolicy slotPolicy;
     private final Clock clock;
+    private final StationChargingService charging;
 
     public StationMonitoringService(StationRepository stations, StationLoadRepository load,
             StaffStationScope scope, DeliveryAttemptRepository attempts, ScheduleProperties schedule,
-            ScheduleSlotPolicy slotPolicy, Clock clock) {
+            ScheduleSlotPolicy slotPolicy, Clock clock, StationChargingService charging) {
         this.stations = stations;
         this.load = load;
         this.scope = scope;
@@ -47,6 +50,7 @@ public class StationMonitoringService {
         this.schedule = schedule;
         this.slotPolicy = slotPolicy;
         this.clock = clock;
+        this.charging = charging;
     }
 
     @Transactional(readOnly = true)
@@ -62,15 +66,20 @@ public class StationMonitoringService {
         Instant slotStart = currentSlotStart();
         Instant slotEnd = slotPolicy.slotEnd(slotStart);
 
-        return stations.findAll(Sort.by("name", "id")).stream()
+        var visible = stations.findAll(Sort.by("name", "id")).stream()
                 .filter(s -> allowed == null || allowed.contains(s.getId()))
                 .filter(s -> statusFilter == null || s.getStatus() == statusFilter)
-                .map(s -> view(s, scheduled, preparing, inbound, waitingPickup, slotStart, slotEnd))
+                .toList();
+        var chargers = charging.overview(visible.stream().map(Station::getId).toList());
+        return visible.stream()
+                .map(s -> view(s, scheduled, preparing, inbound, waitingPickup, slotStart, slotEnd,
+                        chargers.get(s.getId())))
                 .toList();
     }
 
     private StationMonitoringView view(Station s, Map<UUID, Long> scheduled, Map<UUID, Long> preparing,
-            Map<UUID, Long> inbound, Map<UUID, Long> waitingPickup, Instant slotStart, Instant slotEnd) {
+            Map<UUID, Long> inbound, Map<UUID, Long> waitingPickup, Instant slotStart, Instant slotEnd,
+            StationChargingOverview chargerData) {
         long sc = scheduled.getOrDefault(s.getId(), 0L);
         long pr = preparing.getOrDefault(s.getId(), 0L);
         long in = inbound.getOrDefault(s.getId(), 0L);
@@ -79,8 +88,10 @@ public class StationMonitoringService {
         long used = attempts.countActiveOverlapping(s.getId(), slotStart, slotEnd);
         long free = Math.max(0, s.getCapacity() - used);
         return new StationMonitoringView(s.getId(), s.getName(), s.getAddress(), s.getStatus(), s.getCapacity(),
-                StationConnection.noData(), new StationSlotUsage(slotStart, slotEnd, used, free),
-                new StationPackageLoad(sc, pr, in, wp, pr + wp, sc + pr + in + wp));
+                chargerData == null ? StationConnection.noData() : chargerData.connection(),
+                new StationSlotUsage(slotStart, slotEnd, used, free),
+                new StationPackageLoad(sc, pr, in, wp, pr + wp, sc + pr + in + wp),
+                chargerData == null ? List.of() : chargerData.chargers());
     }
 
     /** Đầu khung giờ hiện tại, cùng lưới với 4.2 (bội số của độ dài slot tính từ epoch). */
