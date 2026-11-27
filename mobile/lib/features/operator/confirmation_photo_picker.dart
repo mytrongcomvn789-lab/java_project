@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/theme/app_theme.dart';
 import '../orders/photo_picker.dart' show PhotoSource;
 import 'confirmation_photo_controller.dart';
 
@@ -19,7 +20,7 @@ class ConfirmationPhotoPicker extends ConsumerWidget {
       if (state.permissionDenied != null)
         _Notice(
             key: const Key('photo-permission'),
-            color: theme.colorScheme.errorContainer,
+            color: StatusPalette.failed.background,
             text: state.permissionDenied == PhotoSource.camera
                 ? 'Ứng dụng chưa được cấp quyền camera. Vào Cài đặt > Ứng dụng > SmartDroneDelivery > Quyền để cho phép, hoặc chọn ảnh từ thư viện.'
                 : 'Ứng dụng chưa được cấp quyền truy cập ảnh. Vào Cài đặt > Ứng dụng > SmartDroneDelivery > Quyền để cho phép, hoặc chụp ảnh bằng camera.',
@@ -27,7 +28,7 @@ class ConfirmationPhotoPicker extends ConsumerWidget {
       if (state.pickError != null)
         _Notice(
             key: const Key('photo-error'),
-            color: theme.colorScheme.errorContainer,
+            color: StatusPalette.failed.background,
             text: state.pickError!,
             onClose: controller.dismissMessages),
       if (photo == null)
@@ -36,18 +37,21 @@ class ConfirmationPhotoPicker extends ConsumerWidget {
             height: 160,
             width: double.infinity,
             decoration: BoxDecoration(
-                border: Border.all(color: theme.dividerColor),
-                borderRadius: BorderRadius.circular(8)),
+                color: StatusPalette.active.background.withValues(alpha: 0.5),
+                border: Border.all(color: AppColors.primary.withValues(alpha: 0.5)),
+                borderRadius: BorderRadius.circular(AppRadii.card)),
             child: const Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.photo_camera_outlined, size: 40),
+                  Icon(Icons.photo_camera_outlined, size: 40, color: AppColors.primary),
                   SizedBox(height: 8),
-                  Text('Chưa có ảnh xác nhận'),
+                  Text('Chưa có ảnh xác nhận',
+                      style: TextStyle(
+                          color: AppColors.primary, fontWeight: FontWeight.w600)),
                 ]))
       else
         ClipRRect(
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(AppRadii.card),
             child: Stack(alignment: Alignment.center, children: [
               Image.memory(photo.bytes,
                   key: const Key('photo-preview'),
@@ -69,7 +73,7 @@ class ConfirmationPhotoPicker extends ConsumerWidget {
                     right: 8,
                     child: Chip(
                         key: Key('photo-done'),
-                        avatar: Icon(Icons.check_circle, color: Colors.green),
+                        avatar: Icon(Icons.check_circle, color: Color(0xff14602d)),
                         label: Text('Đã tải lên'))),
             ])),
       if (photo != null && photo.status == ConfirmPhotoStatus.failed) ...[
@@ -121,7 +125,7 @@ class _Notice extends StatelessWidget {
       width: double.infinity,
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.only(left: 12, top: 4, bottom: 4),
-      decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(8)),
+      decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(AppRadii.button)),
       child: Row(children: [
         Expanded(child: Text(text)),
         IconButton(
