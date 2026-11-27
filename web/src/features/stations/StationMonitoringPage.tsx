@@ -63,7 +63,7 @@ function formatTime(iso: string): string {
 function connectionLabel(connection: StationConnection): string {
   switch (connection.state) {
     case "UNKNOWN":
-      return "Chưa có dữ liệu";
+      return "Chưa có tín hiệu từ thiết bị";
     case "ONLINE":
       return "Trực tuyến";
     case "OFFLINE":
@@ -74,7 +74,7 @@ function connectionLabel(connection: StationConnection): string {
 }
 
 function connectionDetail(connection: StationConnection): string {
-  const parts = [`Nguồn: ${connection.source}`];
+  const parts = [connection.source === "NONE" ? "Chưa tích hợp heartbeat thiết bị" : `Nguồn thiết bị: ${connection.source}`];
   if (connection.lastSeenAt) {
     const seen = new Date(connection.lastSeenAt);
     parts.push(
@@ -124,6 +124,11 @@ export default function StationMonitoringPage() {
     };
   }, [filter, revision]);
 
+  useEffect(() => {
+    const timer = window.setInterval(() => setRevision((value) => value + 1), 30_000);
+    return () => window.clearInterval(timer);
+  }, []);
+
   function reload() {
     setMessage("");
     setActionError("");
@@ -163,7 +168,7 @@ export default function StationMonitoringPage() {
     <div className="stations-page">
       <PageHeader
         title="Giám sát trạm"
-        subtitle="Trạng thái vận hành, kết nối, chỗ đang giữ và số kiện của từng trạm."
+        subtitle="Dữ liệu trạm, đơn hàng và lịch giao đồng bộ từ hệ thống; tự cập nhật mỗi 30 giây."
         crumbs={["Trang chủ", "Giám sát trạm"]}
       />
 
