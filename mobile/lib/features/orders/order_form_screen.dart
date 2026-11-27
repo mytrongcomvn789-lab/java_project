@@ -3,6 +3,9 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/network/api_failure.dart';
+import '../../core/theme/app_theme.dart';
+import '../../core/ui/app_widgets.dart';
+import '../../core/ui/demo_badge.dart';
 import '../addresses/address_controller.dart';
 import 'customer_order_models.dart';
 import 'order_detail_controller.dart';
@@ -100,95 +103,94 @@ class _OrderFormScreenState extends ConsumerState<OrderFormScreen> {
                 key: _form,
                 child: ListView(padding: const EdgeInsets.all(16), children: [
                   if (state.error != null) _ErrorBox(state.error!),
-                  Text('Lộ trình', style: theme.textTheme.titleMedium),
-                  const SizedBox(height: 8),
-                  stations.when(
-                      loading: () => const Padding(
-                          padding: EdgeInsets.all(12),
-                          child: Center(child: CircularProgressIndicator())),
-                      error: (e, _) => Column(children: [
-                            Text(toApiFailure(e).message,
-                                key: const Key('stations-error')),
-                            TextButton(
-                                onPressed: () => ref.invalidate(stationsProvider),
-                                child: const Text('Tải lại danh sách trạm')),
-                          ]),
-                      data: (all) {
-                        final active = all.where((s) => s.isActive).toList();
-                        return Column(children: [
-                          _stationField('Trạm gửi', 'pickup-station', active,
-                              state.pickupId, controller.setPickup),
-                          const SizedBox(height: 12),
-                          _stationField('Trạm nhận', 'dropoff-station', active,
-                              state.dropoffId, controller.setDropoff,
-                              exclude: state.pickupId),
-                        ]);
-                      }),
-                  const SizedBox(height: 16),
-                  Text('Người nhận', style: theme.textTheme.titleMedium),
-                  const SizedBox(height: 8),
-                  Card(
-                      child: ListTile(
-                          key: const Key('pick-address'),
-                          leading: const Icon(Icons.location_on_outlined),
-                          title: Text(state.address == null
-                              ? 'Chọn địa chỉ người nhận'
-                              : '${state.address!.label} · ${state.address!.recipientName}'),
-                          subtitle: state.address == null
-                              ? null
-                              : Text(
-                                  '${state.address!.phone}\n${state.address!.addressLine}'),
-                          isThreeLine: state.address != null,
-                          trailing: const Icon(Icons.chevron_right),
-                          onTap: _pickAddress)),
-                  const SizedBox(height: 16),
-                  Text('Gói hàng', style: theme.textTheme.titleMedium),
-                  const SizedBox(height: 8),
-                  TextFormField(
-                      key: const Key('package-description'),
-                      controller: _desc,
-                      maxLength: 500,
-                      decoration: const InputDecoration(
-                          labelText: 'Mô tả gói hàng',
-                          border: OutlineInputBorder()),
-                      validator: (v) =>
-                          AddressValidation.required(v, name: 'Mô tả gói hàng')),
-                  const SizedBox(height: 4),
-                  _numberField(_weight, 'Trọng lượng (gam)', 'package-weight',
-                      integer: true),
-                  Row(children: [
-                    Expanded(child: _numberField(_length, 'Dài (cm)', 'package-length')),
-                    const SizedBox(width: 8),
-                    Expanded(child: _numberField(_width, 'Rộng (cm)', 'package-width')),
-                    const SizedBox(width: 8),
-                    Expanded(child: _numberField(_height, 'Cao (cm)', 'package-height')),
+                  InfoCard('Lộ trình', [
+                    stations.when(
+                        loading: () => const Padding(
+                            padding: EdgeInsets.all(12),
+                            child: Center(child: CircularProgressIndicator())),
+                        error: (e, _) => Column(children: [
+                              Text(toApiFailure(e).message,
+                                  key: const Key('stations-error')),
+                              TextButton(
+                                  onPressed: () => ref.invalidate(stationsProvider),
+                                  child: const Text('Tải lại danh sách trạm')),
+                            ]),
+                        data: (all) {
+                          final active = all.where((s) => s.isActive).toList();
+                          return Column(children: [
+                            _stationField('Trạm gửi', 'pickup-station', active,
+                                state.pickupId, controller.setPickup),
+                            const SizedBox(height: 12),
+                            _stationField('Trạm nhận', 'dropoff-station', active,
+                                state.dropoffId, controller.setDropoff,
+                                exclude: state.pickupId),
+                          ]);
+                        }),
                   ]),
-                  const SizedBox(height: 8),
-                  Text('Ảnh gói hàng (tùy chọn, tối đa $maxPackagePhotos ảnh)',
-                      style: theme.textTheme.titleSmall),
-                  const SizedBox(height: 8),
-                  _photos(state, controller),
-                  if (state.photoError != null)
-                    Padding(
-                        padding: const EdgeInsets.only(top: 8),
-                        child: Text(state.photoError!,
-                            key: const Key('photo-error'),
-                            style: TextStyle(color: theme.colorScheme.error))),
-                  const SizedBox(height: 24),
-                  FilledButton(
-                      key: const Key('submit-order'),
-                      // Vô hiệu hóa khi đang gửi hoặc ảnh đang tải: chặn bấm đúp.
-                      onPressed: busy || state.uploading ? null : _submit,
-                      child: busy
-                          ? const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2))
-                          : Text(state.error?.outcomeUnknown == true ||
-                                  state.error?.kind == FailureKind.offline
-                              ? 'Gửi lại'
-                              : 'Tạo đơn')),
-                ]))));
+                  InfoCard('Người nhận', [
+                    ListTile(
+                        key: const Key('pick-address'),
+                        contentPadding: EdgeInsets.zero,
+                        leading: const Icon(Icons.location_on_outlined,
+                            color: AppColors.primary),
+                        title: Text(state.address == null
+                            ? 'Chọn địa chỉ người nhận'
+                            : '${state.address!.label} · ${state.address!.recipientName}'),
+                        subtitle: state.address == null
+                            ? null
+                            : Text(
+                                '${state.address!.phone}\n${state.address!.addressLine}'),
+                        isThreeLine: state.address != null,
+                        trailing: const Icon(Icons.chevron_right),
+                        onTap: _pickAddress),
+                  ]),
+                  InfoCard('Gói hàng', [
+                    TextFormField(
+                        key: const Key('package-description'),
+                        controller: _desc,
+                        maxLength: 500,
+                        decoration: const InputDecoration(labelText: 'Mô tả gói hàng'),
+                        validator: (v) =>
+                            AddressValidation.required(v, name: 'Mô tả gói hàng')),
+                    const SizedBox(height: 4),
+                    _numberField(_weight, 'Trọng lượng (gam)', 'package-weight',
+                        integer: true),
+                    Row(children: [
+                      Expanded(child: _numberField(_length, 'Dài (cm)', 'package-length')),
+                      const SizedBox(width: 8),
+                      Expanded(child: _numberField(_width, 'Rộng (cm)', 'package-width')),
+                      const SizedBox(width: 8),
+                      Expanded(child: _numberField(_height, 'Cao (cm)', 'package-height')),
+                    ]),
+                  ]),
+                  InfoCard('Ảnh gói hàng', [
+                    Text('Tùy chọn, tối đa $maxPackagePhotos ảnh.',
+                        style: const TextStyle(color: AppColors.textMuted, fontSize: 13)),
+                    const SizedBox(height: 10),
+                    _photos(state, controller),
+                    if (state.photoError != null)
+                      Padding(
+                          padding: const EdgeInsets.only(top: 8),
+                          child: Text(state.photoError!,
+                              key: const Key('photo-error'),
+                              style: TextStyle(color: theme.colorScheme.error))),
+                  ]),
+                  _FeeEstimate(weight: _weight),
+                ]))),
+        bottomNavigationBar: BottomActionBar(
+            child: FilledButton(
+                key: const Key('submit-order'),
+                // Vô hiệu hóa khi đang gửi hoặc ảnh đang tải: chặn bấm đúp.
+                onPressed: busy || state.uploading ? null : _submit,
+                child: busy
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2))
+                    : Text(state.error?.outcomeUnknown == true ||
+                            state.error?.kind == FailureKind.offline
+                        ? 'Gửi lại'
+                        : 'Tạo đơn'))));
   }
 
   Widget _stationField(String label, String key, List<Station> stations,
@@ -197,8 +199,7 @@ class _OrderFormScreenState extends ConsumerState<OrderFormScreen> {
           key: Key(key),
           initialValue: stations.any((s) => s.id == value) ? value : null,
           isExpanded: true,
-          decoration:
-              InputDecoration(labelText: label, border: const OutlineInputBorder()),
+          decoration: InputDecoration(labelText: label),
           items: [
             for (final s in stations)
               DropdownMenuItem(
@@ -221,8 +222,7 @@ class _OrderFormScreenState extends ConsumerState<OrderFormScreen> {
                 FilteringTextInputFormatter.allow(
                     integer ? RegExp(r'[0-9]') : RegExp(r'[0-9.,]'))
               ],
-              decoration: InputDecoration(
-                  labelText: label, border: const OutlineInputBorder()),
+              decoration: InputDecoration(labelText: label),
               validator: (v) {
                 final t = v?.trim().replaceAll(',', '.') ?? '';
                 if (t.isEmpty) return 'Cần nhập.';
@@ -243,14 +243,16 @@ class _OrderFormScreenState extends ConsumerState<OrderFormScreen> {
         if (state.photos.length < maxPackagePhotos)
           InkWell(
               key: const Key('add-photo'),
+              borderRadius: BorderRadius.circular(16),
               onTap: _photoSheet,
               child: Container(
                   width: 88,
                   height: 88,
                   decoration: BoxDecoration(
-                      border: Border.all(color: Theme.of(context).dividerColor),
-                      borderRadius: BorderRadius.circular(8)),
-                  child: const Icon(Icons.add_a_photo_outlined))),
+                      color: StatusPalette.active.background.withValues(alpha: 0.5),
+                      border: Border.all(color: AppColors.primary.withValues(alpha: 0.5)),
+                      borderRadius: BorderRadius.circular(16)),
+                  child: const Icon(Icons.add_a_photo_outlined, color: AppColors.primary))),
       ]);
 }
 
@@ -307,7 +309,6 @@ class _ErrorBox extends StatelessWidget {
   final ApiFailure failure;
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     final hint = switch (failure.kind) {
       FailureKind.offline => 'Đơn CHƯA được tạo. Kiểm tra mạng rồi bấm "Gửi lại".',
       FailureKind.timeout =>
@@ -319,10 +320,50 @@ class _ErrorBox extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-            color: scheme.errorContainer, borderRadius: BorderRadius.circular(8)),
+            color: StatusPalette.failed.background,
+            borderRadius: BorderRadius.circular(AppRadii.button)),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text(failure.message),
           if (hint != null) ...[const SizedBox(height: 4), Text(hint)],
         ]));
   }
+}
+
+/// Phí giao hàng MẪU theo trọng lượng. Backend chưa có API ước tính phí (`POST /v1/orders/estimate`),
+/// nên số này chỉ để minh hoạ giao diện, được ghi nhãn "Demo" và KHÔNG được gửi lên server.
+int demoShippingFee(int weightGrams) {
+  final kg = (weightGrams / 1000).ceil().clamp(1, 1000000);
+  return 15000 + (kg - 1) * 8000;
+}
+
+String formatVnd(int amount) {
+  final digits = amount.toString();
+  final out = StringBuffer();
+  for (var i = 0; i < digits.length; i++) {
+    if (i > 0 && (digits.length - i) % 3 == 0) out.write('.');
+    out.write(digits[i]);
+  }
+  return '$out đ';
+}
+
+class _FeeEstimate extends StatelessWidget {
+  const _FeeEstimate({required this.weight});
+  final TextEditingController weight;
+
+  @override
+  Widget build(BuildContext context) => ValueListenableBuilder<TextEditingValue>(
+      valueListenable: weight,
+      builder: (context, value, _) {
+        final grams = int.tryParse(value.text.trim());
+        return InfoCard('Phí ước tính', trailing: const DemoBadge(), [
+          Text(grams == null || grams <= 0 ? '—' : formatVnd(demoShippingFee(grams)),
+              key: const Key('fee-estimate'),
+              style: const TextStyle(
+                  fontSize: 26, fontWeight: FontWeight.w800, color: AppColors.dark)),
+          const SizedBox(height: 4),
+          const Text(
+              'Số minh hoạ theo trọng lượng. Phí thật do hệ thống tính khi đơn được duyệt.',
+              style: TextStyle(color: AppColors.textMuted, fontSize: 13, height: 1.3)),
+        ]);
+      });
 }

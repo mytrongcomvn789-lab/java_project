@@ -10,6 +10,7 @@ import 'package:smartdrone_mobile/core/realtime/realtime_provider.dart';
 import 'package:smartdrone_mobile/features/addresses/address_screens.dart';
 import 'package:smartdrone_mobile/features/orders/customer_order_models.dart';
 import 'package:smartdrone_mobile/features/orders/customer_orders_api.dart';
+import 'package:smartdrone_mobile/core/ui/demo_badge.dart';
 import 'package:smartdrone_mobile/features/orders/order_form_controller.dart';
 import 'package:smartdrone_mobile/features/orders/order_form_screen.dart';
 import 'package:smartdrone_mobile/features/orders/photo_picker.dart';
@@ -119,6 +120,7 @@ PickedPhoto photo([String name = 'a.jpg']) =>
     PickedPhoto(name: name, bytes: Uint8List.fromList([1, 2, 3]), contentType: null);
 
 void main() {
+  feeTests();
   late FakeFormApi api;
   late StateProvider<String?> user;
   late ProviderContainer container;
@@ -359,6 +361,19 @@ void main() {
       expect(api.submitted, isEmpty);
     });
 
+    testWidgets('phí ước tính là Demo, đổi theo trọng lượng và không gửi lên server', (tester) async {
+      tester.view.physicalSize = const Size(800, 2400);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(app());
+      await tester.pumpAndSettle();
+      expect(find.text('—'), findsOneWidget);
+      await tester.enterText(find.byKey(const Key('package-weight')), '2500');
+      await tester.pump();
+      expect(find.text('31.000 đ'), findsOneWidget);
+      expect(find.byType(DemoBadge), findsOneWidget);
+    });
+
     testWidgets('luồng đầy đủ: nhập, chọn địa chỉ, gửi một lần, chuyển sang chi tiết', (tester) async {
       tester.view.physicalSize = const Size(800, 2400);
       tester.view.devicePixelRatio = 1;
@@ -433,3 +448,19 @@ const _png = <int>[
   0x00, 0x05, 0xFE, 0x02, 0xFE, 0xA7, 0x35, 0x81, 0x84, 0x00, 0x00, 0x00, 0x00, 0x49, 0x45, 0x4E,
   0x44, 0xAE, 0x42, 0x60, 0x82
 ];
+
+void feeTests() {
+  group('Phí ước tính (Demo)', () {
+    test('theo kg làm tròn lên, tối thiểu 1 kg', () {
+      expect(demoShippingFee(1), 15000);
+      expect(demoShippingFee(1000), 15000);
+      expect(demoShippingFee(1001), 23000);
+      expect(demoShippingFee(2500), 31000);
+    });
+    test('định dạng tiền Việt', () {
+      expect(formatVnd(15000), '15.000 đ');
+      expect(formatVnd(1234567), '1.234.567 đ');
+      expect(formatVnd(500), '500 đ');
+    });
+  });
+}
