@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../core/theme/app_theme.dart';
 import '../ai/ai_panels.dart';
 import '../orders/customer_nav.dart';
 import '../orders/customer_order_models.dart';
@@ -47,14 +48,22 @@ class _AssistantScreenState extends ConsumerState<AssistantScreen> {
     final needsNew = chat.exhausted ||
         (error != null && error.needsNewConversation && chat.conversationId != null);
     return Scaffold(
-        appBar: AppBar(title: const Text('Trợ lý Drone AI')),
+        appBar: AppBar(
+            title: const Row(children: [
+          CircleAvatar(
+              radius: 16,
+              backgroundColor: AppColors.tealBright,
+              child: Icon(Icons.smart_toy_outlined, size: 18, color: AppColors.dark)),
+          SizedBox(width: 10),
+          Text('Trợ lý Drone AI'),
+        ])),
         body: Column(children: [
           Padding(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Text(
                     'Hỏi đáp chỉ đọc về đơn của bạn. Trợ lý không thể hủy, sửa hay xác nhận đơn.',
-                    style: theme.textTheme.bodySmall),
+                    style: const TextStyle(color: AppColors.textMuted, fontSize: 13)),
                 const SizedBox(height: 8),
                 _OrderPicker(
                     orders: orders,
@@ -77,22 +86,53 @@ class _AssistantScreenState extends ConsumerState<AssistantScreen> {
                   padding: const EdgeInsets.all(16),
                   children: [
                 if (chat.turns.isEmpty && !chat.pending)
-                  Text(
-                      'Chưa có tin nhắn. Hãy hỏi, ví dụ: “Đơn của tôi đang ở trạng thái nào?”. '
-                      'Không nhập mật khẩu, mã OTP hay thông tin nhạy cảm.',
+                  Column(
                       key: const Key('chat-empty'),
-                      style: theme.textTheme.bodyMedium),
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                            'Chưa có tin nhắn. Hãy hỏi, ví dụ: “Đơn của tôi đang ở trạng thái nào?”. '
+                            'Không nhập mật khẩu, mã OTP hay thông tin nhạy cảm.',
+                            style: TextStyle(color: AppColors.textMuted, height: 1.4)),
+                        const SizedBox(height: 12),
+                        Wrap(spacing: 8, runSpacing: 8, children: [
+                          for (final q in _suggestions)
+                            ActionChip(
+                                key: Key('suggest-$q'),
+                                label: Text(q),
+                                backgroundColor: StatusPalette.active.background,
+                                labelStyle: TextStyle(
+                                    color: StatusPalette.active.foreground,
+                                    fontWeight: FontWeight.w600),
+                                side: BorderSide.none,
+                                onPressed: chat.pending
+                                    ? null
+                                    : () {
+                                        _input.text = q;
+                                        setState(() {});
+                                      }),
+                        ]),
+                      ]),
                 for (final t in chat.turns) _Bubble(t),
                 if (chat.pending)
                   const Padding(
                       padding: EdgeInsets.symmetric(vertical: 8),
-                      child: Text('Trợ lý đang trả lời…', key: Key('chat-pending'))),
+                      child: Row(children: [
+                        SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2)),
+                        SizedBox(width: 10),
+                        Text('Trợ lý đang trả lời…',
+                            key: Key('chat-pending'),
+                            style: TextStyle(color: AppColors.textMuted)),
+                      ])),
               ])),
           if (error != null)
             Container(
                 key: const Key('chat-error'),
                 width: double.infinity,
-                color: theme.colorScheme.errorContainer,
+                color: StatusPalette.failed.background,
                 padding: const EdgeInsets.all(12),
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                   Text(error.message),
@@ -120,9 +160,7 @@ class _AssistantScreenState extends ConsumerState<AssistantScreen> {
                               maxLines: 4,
                               maxLength: maxChatChars,
                               textInputAction: TextInputAction.newline,
-                              decoration: const InputDecoration(
-                                  hintText: 'Nhập câu hỏi…',
-                                  border: OutlineInputBorder()),
+                              decoration: const InputDecoration(hintText: 'Nhập câu hỏi…'),
                               onChanged: (_) => setState(() {}))),
                       const SizedBox(width: 8),
                       IconButton.filled(
@@ -151,6 +189,12 @@ class _AssistantScreenState extends ConsumerState<AssistantScreen> {
   }
 }
 
+const _suggestions = [
+  'Đơn của tôi đang ở đâu?',
+  'Khi nào đơn đến?',
+  'Vì sao đơn chưa được duyệt?',
+];
+
 class _OrderPicker extends StatelessWidget {
   const _OrderPicker(
       {required this.orders,
@@ -172,9 +216,7 @@ class _OrderPicker extends StatelessWidget {
           isExpanded: true,
           initialValue: known ? selected : null,
           decoration: const InputDecoration(
-              labelText: 'Đơn muốn hỏi (tùy chọn)',
-              border: OutlineInputBorder(),
-              isDense: true),
+              labelText: 'Đơn muốn hỏi (tùy chọn)', isDense: true),
           items: [
             const DropdownMenuItem<String?>(
                 value: null, child: Text('Hỏi chung, không gắn đơn')),
@@ -214,15 +256,21 @@ class _Bubble extends StatelessWidget {
             constraints: BoxConstraints(maxWidth: MediaQuery.sizeOf(context).width * 0.85),
             // Material (không phải DecoratedBox) để ExpansionTile bên trong vẽ đúng.
             child: Material(
-              color: turn.fromUser
-                  ? theme.colorScheme.primaryContainer
-                  : theme.colorScheme.surfaceContainerHighest,
-              borderRadius: BorderRadius.circular(12),
+              color: turn.fromUser ? AppColors.primary : AppColors.surface,
+              elevation: turn.fromUser ? 0 : 1,
+              shadowColor: const Color(0x33073b45),
+              borderRadius: BorderRadius.only(
+                  topLeft: const Radius.circular(18),
+                  topRight: const Radius.circular(18),
+                  bottomLeft: Radius.circular(turn.fromUser ? 18 : 4),
+                  bottomRight: Radius.circular(turn.fromUser ? 4 : 18)),
               child: Padding(
             padding: const EdgeInsets.all(12),
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               // Văn bản không tin cậy: Text thuần, không diễn giải HTML hay liên kết.
-              Text(turn.text),
+              Text(turn.text,
+                  style: TextStyle(
+                      color: turn.fromUser ? Colors.white : AppColors.text, height: 1.35)),
               if (env != null) ...[
                 const SizedBox(height: 8),
                 AiSourceBadge(env),

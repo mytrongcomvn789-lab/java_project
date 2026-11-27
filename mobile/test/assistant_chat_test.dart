@@ -123,6 +123,16 @@ void main() {
     expect(sendEnabled(tester), isFalse);
   });
 
+  testWidgets('gợi ý câu hỏi: bấm chỉ điền vào ô nhập, không tự gửi', (tester) async {
+    await mount(tester);
+    await tester.tap(find.byKey(const Key('suggest-Khi nào đơn đến?')));
+    await tester.pump();
+    expect(tester.widget<TextField>(find.byKey(const Key('chat-input'))).controller!.text,
+        'Khi nào đơn đến?');
+    expect(ai.calls, isEmpty, reason: 'Người dùng phải bấm Gửi; gợi ý không tự gửi');
+    expect(sendEnabled(tester), isTrue);
+  });
+
   testWidgets('gửi: lượt đầu không có conversationId, lượt sau gửi lại; xóa ô nhập; nhãn MOCK',
       (tester) async {
     await mount(tester);
