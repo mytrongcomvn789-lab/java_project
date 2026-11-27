@@ -216,9 +216,13 @@ class AppNotification {
       required this.title,
       required this.body,
       required this.createdAt,
-      this.readAt});
+      this.readAt,
+      this.status});
   final String id, eventId, orderId, title, body;
   final DateTime? createdAt, readAt;
+
+  /// Trạng thái đơn tại thời điểm gửi thông báo (backend chưa có `category`, app phân loại theo đây).
+  final String? status;
   bool get unread => readAt == null;
 
   AppNotification markRead() => AppNotification(
@@ -228,7 +232,8 @@ class AppNotification {
       title: title,
       body: body,
       createdAt: createdAt,
-      readAt: readAt ?? DateTime.now());
+      readAt: readAt ?? DateTime.now(),
+      status: status);
 
   factory AppNotification.fromJson(Map<String, dynamic> json) =>
       AppNotification(
@@ -238,7 +243,8 @@ class AppNotification {
           title: json['title'] as String? ?? '',
           body: json['body'] as String? ?? '',
           createdAt: _time(json['createdAt']),
-          readAt: _time(json['readAt']));
+          readAt: _time(json['readAt']),
+          status: json['status'] as String?);
 
   /// Envelope `{schemaVersion,type:"NOTIFICATION_CREATED",notification}`.
   static AppNotification? tryParseEnvelope(String body) {
