@@ -91,6 +91,6 @@ Chọn provider (`AiConfig`, `smartdrone.ai.provider=AUTO`): có `SMARTDRONE_AI_
 
 - Rate limit, ngân sách và ngắt mạch nằm trong bộ nhớ: đúng cho **một** instance, mất khi khởi động lại. Nhiều instance cần bộ đếm tập trung (Redis...).
 - Mọi giá trị mặc định về hạn mức (5 yêu cầu/phút/người, 10/phút toàn hệ thống, 20 000 token/ngày/người, 200 000/ngày toàn hệ thống) là **ước lượng** thấp hơn gói miễn phí; phải đối chiếu trang rate limit trong AI Studio.
-- Tên model mặc định `gemini-2.5-flash-lite` cần kiểm tra lại vì Google đổi tên/ngừng model thường xuyên.
+- Tên model mặc định `gemini-3.5-flash-lite` (thay cho `gemini-2.5-flash-lite` đã bị Google ngừng cho khóa mới) cần kiểm tra lại vì Google đổi tên/ngừng model thường xuyên.
 - Hội thoại chat chưa được lưu (`conversationId` chỉ là mã tương quan); nơi lưu do 7.4 quyết định.
 - Luồng thực tế `GeminiAiProvider` chưa được chạy với khóa thật trong test tự động; xem hướng dẫn thử thủ công trong `docs/07-testing/APDDMP-51-verification.md`.

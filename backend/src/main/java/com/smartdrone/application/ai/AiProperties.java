@@ -35,7 +35,7 @@ public record AiProperties(
     public record Gemini(
             String apiKey,
             // Cần kiểm tra lại: Google đổi tên/ngừng model thường xuyên và hạn mức gói miễn phí khác nhau theo model.
-            @DefaultValue("gemini-2.5-flash-lite") String model,
+            @DefaultValue("gemini-3.5-flash-lite") String model,
             @DefaultValue("https://generativelanguage.googleapis.com") String baseUrl,
             @DefaultValue("v1beta") String apiVersion,
             @DefaultValue("PT3S") Duration connectTimeout,

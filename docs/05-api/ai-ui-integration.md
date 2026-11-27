@@ -61,7 +61,7 @@ Tên model không hardcode ở client; luôn lấy từ `model` do backend trả
 - Mobile chưa có màn phân tích cho quản lý.
 - Timeout 30 giây cho request AI (web `AI_TIMEOUT_MS`, mobile `aiReceiveTimeout`) lớn hơn timeout mặc định của API thường.
 - Các nhãn cảnh báo/lý do tiếng Việt do 7.6 soạn; cần chủ dự án đọc lại.
-- Model Gemini mặc định trong `application.yml` (`gemini-2.5-flash-lite`) đã bị Google ngừng cấp cho khóa mới (404); cần đặt `SMARTDRONE_AI_GEMINI_MODEL` (đã thử được `gemini-3.5-flash-lite`). Xem [APDDMP-56-verification.md](../07-testing/APDDMP-56-verification.md) mục 5.
+- Model Gemini mặc định cũ (`gemini-2.5-flash-lite`) đã bị Google ngừng cấp cho khóa mới (404); mặc định hiện là `gemini-3.5-flash-lite`, vẫn có thể ghi đè bằng `SMARTDRONE_AI_GEMINI_MODEL`. Xem [APDDMP-56-verification.md](../07-testing/APDDMP-56-verification.md) mục 5.
 
 ## 5. Chạy và kiểm thử
 
