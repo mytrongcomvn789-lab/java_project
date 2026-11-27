@@ -31,6 +31,8 @@ import PackageFormPreviewPage from "../features/packages/PackageFormPreviewPage"
 import StationsPage from "../features/stations/StationsPage";
 import ReportsPage from "../features/reports/ReportsPage";
 import DashboardPage from "../features/dashboard/DashboardPage";
+import PerformancePage from "../features/reports/PerformancePage";
+import CustomersPage from "../features/customers/CustomersPage";
 import AssistantPage from "../features/assistant/AssistantPage";
 import OperationsAnalyticsPage from "../features/reports/OperationsAnalyticsPage";
 // Task 2.6 sẽ bọc thêm RoleRoute (chặn theo vai trò) bên trong nhóm RequireAuth.
@@ -66,9 +68,13 @@ export default function AppRouter() {
           <Route element={<RequireRole roles={["CUSTOMER"]} />}>
             <Route path="/assistant" element={<AssistantPage />} />
           </Route>
+          <Route element={<RequireRole roles={["DISPATCHER"]} />}>
+            <Route path="/customers" element={<CustomersPage />} />
+          </Route>
           <Route element={<RequireRole roles={["LOGISTICS_MANAGER"]} />}>
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/reports" element={<ReportsPage />} />
+            <Route path="/performance" element={<PerformancePage />} />
             <Route path="/ai-analytics" element={<OperationsAnalyticsPage />} />
           </Route>
           {/* FR-02: chỉ SYSTEM_ADMIN. Backend vẫn kiểm tra quyền ở mọi API. */}
@@ -87,7 +93,7 @@ export default function AppRouter() {
               element={<PackageFormPreviewPage />}
             />
           )}
-          {PLACEHOLDER_PATHS.filter((p) => p !== "/deliveries/new").map((p) => (
+          {PLACEHOLDER_PATHS.filter((p) => p !== "/deliveries/new" && p !== "/performance" && p !== "/customers").map((p) => (
             <Route key={p} path={p} element={<PlaceholderPage />} />
           ))}
         </Route>
