@@ -7,6 +7,9 @@ import com.smartdrone.application.ai.AiDataBlock;
 /** Technical rules traceable to existing code, not invented commercial policies. */
 @Component
 public class ChatKnowledge {
+    /** Số hotline thật được chèn sau khi lọc dữ liệu cá nhân; AI chỉ được viết ký hiệu giữ chỗ. */
+    public static final String HOTLINE_PLACEHOLDER = "{{HOTLINE}}";
+    public static final String HOTLINE = "0899.989.650";
     public static final String VERSION = "functional-rules-2026-11-25-v1";
     public record Source(String id, String title, String reference) { }
     public List<Source> sources() {
@@ -23,7 +26,8 @@ public class ChatKnowledge {
             Mã OTP/QR phải được xác minh qua luồng nhận hàng trên máy chủ; không gửi mã vào chat.
             Chưa có nguồn chính sách thương mại được nhóm phê duyệt trong task này.
             Không có căn cứ về giá, phí, bồi thường, bảo hiểm hay cam kết thời gian giao.
-            Với các chính sách chưa có: nói chưa có thông tin xác nhận và đề nghị liên hệ nhóm vận hành.
+            Với các chính sách chưa có: nói chưa có thông tin xác nhận và đề nghị liên hệ Hotline: {{HOTLINE}}.
+            Khi hướng dẫn liên hệ, luôn viết đúng ký hiệu {{HOTLINE}} thay cho số điện thoại (hệ thống sẽ tự điền số); không nói "nhóm vận hành" và không tự bịa số khác.
             Nếu không có khối order: đề nghị chọn đơn trước khi hỏi trạng thái cụ thể.
             """);
     }
