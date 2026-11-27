@@ -32,6 +32,28 @@ Nhân viên trạm chỉ truy cập trạm được phân công; trạm khác tr
 
 `connection.state` = `ONLINE` nếu ít nhất một thiết bị có heartbeat trong 2 phút, `OFFLINE` nếu không, `UNKNOWN` (nguồn `NONE`) nếu trạm chưa có thiết bị sạc.
 
-## Chưa làm
+## Chưa làm (phần sạc)
 
 Tự động điều phối drone giữa các trạm, đặt trước thiết bị sạc ở trạm đích và tính thời gian chờ cho khách hàng. Mobile chưa có màn hình này.
+
+## Điều phối drone tự động
+
+Hệ thống tự chọn drone, đặt trước thiết bị sạc ở trạm nhận và tính thời gian chờ. Mọi mốc thời gian là **ước tính theo công thức** (`source = FORMULA`): khoảng cách đường chim bay, tốc độ `app.eta.speed-kmh`, tiêu hao pin 2%/km, dự phòng 20% pin, tốc độ sạc giả lập 1%/phút.
+
+Luồng gắn vào đơn:
+
+1. Trạm gửi nhận kiện (đơn sang `PREPARING`): tự phân công drone.
+2. Chọn drone: ưu tiên drone đang ở trạm gửi; nếu không có thì drone ở trạm gần nhất (xa dần), drone đó phải bay tới trạm gửi trước. Drone phải đủ pin cho cả chặng; drone đang sạc chưa đủ pin thì chờ sạc.
+3. Trạm nhận: đặt trước thiết bị sạc nhận được sớm nhất (không bảo trì, chưa bị đơn khác đặt). Nếu hết chỗ, drone không cần đợi trống rồi mới đi mà khởi hành để đến đúng lúc thiết bị được giải phóng (lý do `DESTINATION_FULL`).
+4. Đơn khởi hành: drone cất cánh, nhả thiết bị sạc đang cắm. Đơn đến trạm nhận: drone hạ cánh, cắm vào thiết bị đã đặt (hoặc thiết bị trống khác, hoặc đỗ chờ).
+5. Nếu hệ thống chưa có drone nào, mọi bước trên không làm gì và luồng đơn giữ nguyên.
+
+| Method | Đường dẫn | Vai trò | Mô tả |
+|---|---|---|---|
+| GET | `/v1/orders/{id}/dispatch` | Khách hàng, điều phối, nhân viên trạm, quản lý | Kế hoạch của đơn. Khách hàng chỉ thấy thời gian chờ, lý do, giờ dự kiến; drone, trạm xuất phát và thiết bị sạc là `null` |
+| GET | `/v1/dispatch/board` | Điều phối, nhân viên trạm, quản lý | Đội drone và các đơn trong phạm vi trạm được phân công |
+| POST | `/v1/orders/{id}/dispatch-plan` | Nhân viên trạm gửi | Phân công hoặc tính lại cho đơn `PREPARING` |
+
+Lý do chờ (`waitReason`): `NONE`, `DRONE_CHARGING`, `DRONE_REPOSITION`, `DESTINATION_FULL`; giai đoạn `NO_DRONE` và `NO_CHARGER` khi chưa phân công được. Bộ quét định kỳ (`smartdrone.dispatch.auto-sweep=true`, profile demo) gán drone cho đơn đang chờ, tính lại kế hoạch và hủy kế hoạch của đơn không còn chờ.
+
+Chưa làm: thông báo chủ động cho khách khi thời gian chờ đổi; điều phối dựa trên vị trí drone thật; mobile.

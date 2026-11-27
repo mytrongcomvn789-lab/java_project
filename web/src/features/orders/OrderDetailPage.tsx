@@ -16,6 +16,7 @@ import OrderReviewActions from "./OrderReviewActions";
 import OrderCustomerActions from "./OrderCustomerActions";
 import OrderScheduleActions from "./OrderScheduleActions";
 import OrderTrackingPanel from "./OrderTrackingPanel";
+import OrderDispatchPanel from "./OrderDispatchPanel";
 import OrderEtaPanel from "./OrderEtaPanel";
 import OrderSummaryPanel from "./OrderSummaryPanel";
 import OrderFailurePanel from "./OrderFailurePanel";
@@ -182,6 +183,7 @@ export default function OrderDetailPage() {
               orderId={order.id}
               onVersionChange={() => setRetry((n) => n + 1)}
             />
+            <OrderDispatchPanel orderId={order.id} status={order.status} version={order.version} />
             {/* 7.6: backend chỉ cho CUSTOMER/DISPATCHER/STATION_OPERATOR dùng ETA và tóm tắt (vai trò khác nhận 403). */}
             {user && AI_ORDER_ROLES.includes(user.role) && (
               <>
