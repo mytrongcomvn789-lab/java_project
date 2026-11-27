@@ -6,6 +6,7 @@ import '../../features/auth/session.dart';
 import '../../features/assistant/assistant_screen.dart';
 import '../../features/auth/screens.dart';
 import '../../features/dispatcher/dispatcher_screens.dart';
+import '../../features/manager/manager_screens.dart';
 import '../../features/notifications/notification_screens.dart';
 import '../../features/operator/operator_screens.dart';
 import '../../features/operator/pickup_screens.dart';
@@ -92,6 +93,7 @@ final routerProvider = Provider<GoRouter>((ref) {
                 builder: (_, state) =>
                     DispatcherOrderScreen(orderId: state.pathParameters['id']!)),
           ]),
+      GoRoute(path: '/manager', builder: (_, __) => const ManagerHomeScreen()),
       GoRoute(path: '/profile', builder: (_, __) => const ProfileScreen()),
       GoRoute(
           path: '/unsupported', builder: (_, __) => const UnsupportedScreen()),

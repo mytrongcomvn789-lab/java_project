@@ -353,8 +353,8 @@ class UnsupportedScreen extends ConsumerWidget {
                   const SizedBox(height: 8),
                   Text(
                       '${user == null ? '' : 'Tài khoản của bạn là ${roleLabel(user.role)}. '}'
-                      'Ứng dụng này dành cho khách hàng, nhân viên trạm và điều phối viên. '
-                      'Vui lòng dùng ứng dụng web cho vai trò quản trị hoặc quản lý.',
+                      'Ứng dụng này dành cho khách hàng, nhân viên trạm, điều phối viên và quản lý hậu cần. '
+                      'Vui lòng dùng ứng dụng web cho vai trò quản trị hệ thống.',
                       textAlign: TextAlign.center,
                       style: const TextStyle(color: AppColors.textMuted, height: 1.4)),
                   const SizedBox(height: 24),

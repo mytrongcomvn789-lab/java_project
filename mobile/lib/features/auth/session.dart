@@ -20,10 +20,11 @@ class UserProfile {
       name: json['fullName'] as String? ?? '',
       phone: json['phone'] as String? ?? '',
       role: json['role'] as String);
-  bool get supported => const {'CUSTOMER', 'STATION_OPERATOR', 'DISPATCHER'}.contains(role);
+  bool get supported => const {'CUSTOMER', 'STATION_OPERATOR', 'DISPATCHER', 'LOGISTICS_MANAGER'}.contains(role);
   String get home => switch (role) {
         'CUSTOMER' => '/customer',
         'DISPATCHER' => '/dispatcher',
+        'LOGISTICS_MANAGER' => '/manager',
         _ => '/operator',
       };
 }
