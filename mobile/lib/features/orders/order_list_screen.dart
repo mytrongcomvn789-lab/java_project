@@ -133,10 +133,19 @@ class StatusFilterBar extends StatelessWidget {
 
   Widget _chip(String label, String? status) => Padding(
       padding: const EdgeInsets.only(right: 8),
+      // Màu ghi rõ ngay tại chip (không dựa vào theme) để nhãn luôn đọc được.
       child: ChoiceChip(
           key: Key('filter-${status ?? 'ALL'}'),
           label: Text(label),
           selected: selected == status,
+          showCheckmark: false,
+          backgroundColor: AppColors.surface,
+          selectedColor: AppColors.primary,
+          side: BorderSide(
+              color: selected == status ? AppColors.primary : AppColors.border),
+          labelStyle: TextStyle(
+              fontWeight: FontWeight.w600,
+              color: selected == status ? Colors.white : AppColors.text),
           onSelected: (_) => onSelected(status)));
 }
 
