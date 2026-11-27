@@ -232,15 +232,18 @@ class InfoCard extends StatelessWidget {
 
 /// Một dòng "nhãn: giá trị" trong [InfoCard].
 class InfoRow extends StatelessWidget {
-  const InfoRow(this.label, this.value, {super.key});
+  const InfoRow(this.label, this.value, {super.key, this.labelWidth = 104});
   final String label, value;
+
+  /// Bề rộng cột nhãn; tăng lên khi nhãn dài (ví dụ "Thời gian giao TB").
+  final double labelWidth;
 
   @override
   Widget build(BuildContext context) => Padding(
       padding: const EdgeInsets.symmetric(vertical: 3),
       child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
         SizedBox(
-            width: 104,
+            width: labelWidth,
             child: Text(label,
                 style: const TextStyle(color: AppColors.textMuted, fontSize: 13))),
         Expanded(

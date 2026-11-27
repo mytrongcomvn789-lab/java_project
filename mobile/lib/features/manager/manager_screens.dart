@@ -217,29 +217,31 @@ class _SummaryBody extends StatelessWidget {
   Widget build(BuildContext context) {
     final o = s.orders;
     return Column(children: [
-      Row(children: [
+      IntrinsicHeight(
+          child: Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         Expanded(child: _Kpi(const Key('kpi-total'), 'Tổng đơn', '${o.total}', Icons.inventory_2_outlined)),
         const SizedBox(width: 10),
         Expanded(child: _Kpi(const Key('kpi-progress'), 'Đang xử lý', '${o.inProgress}', Icons.flight_takeoff)),
-      ]),
+      ])),
       const SizedBox(height: 10),
-      Row(children: [
+      IntrinsicHeight(
+          child: Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         Expanded(child: _Kpi(const Key('kpi-delivered'), 'Đã giao', '${o.delivered}', Icons.check_circle_outline)),
         const SizedBox(width: 10),
         Expanded(
             child: _Kpi(const Key('kpi-success'), 'Giao thành công', formatPercent(s.successRate),
                 Icons.percent,
                 hint: s.deliverySample == 0 ? 'Chưa có đơn kết thúc' : 'Mẫu ${s.deliverySample} đơn')),
-      ]),
+      ])),
       const SizedBox(height: 12),
       InfoCard('Phân bố theo trạng thái', [_StatusBars(s.byStatus)]),
       InfoCard('Chỉ số giao hàng', [
-        InfoRow('Thời gian giao TB',
+        InfoRow(labelWidth: 150, 'Thời gian giao TB',
             s.deliveryTimeCount == 0 ? '—' : '${formatDuration(s.avgDeliverySeconds)} (${s.deliveryTimeCount} đơn)'),
-        InfoRow('Tỷ lệ hoàn hàng', formatPercent(s.returnRate)),
-        InfoRow('Tỷ lệ hủy', formatPercent(s.cancelRate)),
-        InfoRow('Số lần giao', '${s.totalAttempts}'),
-        InfoRow('Số lần giao lại', '${s.retryAttempts}'),
+        InfoRow(labelWidth: 150, 'Tỷ lệ hoàn hàng', formatPercent(s.returnRate)),
+        InfoRow(labelWidth: 150, 'Tỷ lệ hủy', formatPercent(s.cancelRate)),
+        InfoRow(labelWidth: 150, 'Số lần giao', '${s.totalAttempts}'),
+        InfoRow(labelWidth: 150, 'Số lần giao lại', '${s.retryAttempts}'),
       ]),
     ]);
   }
@@ -307,7 +309,7 @@ class _StatusBars extends StatelessWidget {
             padding: const EdgeInsets.symmetric(vertical: 4),
             child: Row(children: [
               SizedBox(
-                  width: 110,
+                  width: 126,
                   child: Text(labelOfStatus(status),
                       maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13))),
               Expanded(
