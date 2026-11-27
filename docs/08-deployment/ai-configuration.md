@@ -17,7 +17,7 @@ Khóa này hoàn toàn tách biệt với API key 5.4 (khóa cấp cho hệ th�
 | `provider` | `AUTO` | `AUTO` / `DISABLED` / `MOCK` / `GEMINI`. AUTO: có khóa → Gemini; không khóa → Mock (chỉ profile dev/test/h2/demo) hoặc Disabled |
 | `fallback-enabled` | `false` | `true`: provider lỗi thì trả `degraded=true` thay vì lỗi 5xx |
 | `send-personal-data` | `false` | Giữ `false` với gói miễn phí |
-| `gemini.model` | `gemini-2.5-flash-lite` | **Cần kiểm tra lại**: Google đổi tên/ngừng model thường xuyên |
+| `gemini.model` | `gemini-3.5-flash-lite` | **Cần kiểm tra lại**: Google đổi tên/ngừng model thường xuyên (`gemini-2.5-flash-lite` đã bị ngừng cấp cho khóa mới, trả 404). Có thể ghi đè bằng biến `SMARTDRONE_AI_GEMINI_MODEL` |
 | `gemini.base-url` / `api-version` | `https://generativelanguage.googleapis.com` / `v1beta` | |
 | `gemini.connect-timeout` / `read-timeout` | `PT3S` / `PT15S` | |
 | `gemini.max-retries` | `2` | Tối đa 2 |
