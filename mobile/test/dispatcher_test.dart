@@ -73,6 +73,13 @@ class FakeDispatcherApi extends DispatcherApi {
     'FAILED': [],
   };
   StationAvailability availabilityData = StationAvailability(stationName: 'Trạm A', capacity: 4, slotMinutes: 30, slots: [
+    // Khung đã qua giờ: còn chỗ nhưng không đặt được; phải bị ẩn.
+    SlotInfo(
+        start: DateTime.utc(2026, 11, 27, 7),
+        end: DateTime.utc(2026, 11, 27, 7, 30),
+        used: 0,
+        free: 4,
+        bookable: false),
     SlotInfo(
         start: DateTime.utc(2026, 11, 27, 8),
         end: DateTime.utc(2026, 11, 27, 8, 30),
@@ -394,6 +401,8 @@ void main() {
       await tester.pumpAndSettle();
       expect(api.dates.single, matches(RegExp(r'^\d{4}-\d{2}-\d{2}$')));
       expect(find.text('15:00'), findsOneWidget);
+      expect(find.text('14:00'), findsNothing, reason: 'khung đã qua giờ bị ẩn');
+      expect(find.text('1 khung còn chỗ'), findsOneWidget);
       expect(find.text('còn 3 chỗ'), findsOneWidget);
       expect(find.text('đã đầy'), findsOneWidget);
       expect(tester.widget<FilledButton>(find.byKey(const Key('slot-confirm'))).onPressed, isNull);

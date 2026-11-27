@@ -104,26 +104,44 @@ class _SlotPickerSheetState extends ConsumerState<SlotPickerSheet> {
                 ]))));
   }
 
+  /// Khung ngoài thời gian cho phép đặt (đã qua, quá xa) còn chỗ nhưng `bookable=false`: ẩn đi cho gọn.
+  /// Khung đã đầy vẫn hiện để điều phối viên biết vì sao không chọn được.
+  static List<SlotInfo> visibleSlots(List<SlotInfo> all) =>
+      [for (final s in all) if (s.bookable || s.free == 0) s];
+
   Widget _grid(StationAvailability a) {
-    if (a.slots.isEmpty) {
+    final slots = visibleSlots(a.slots);
+    if (slots.isEmpty) {
       return const Padding(
           padding: EdgeInsets.symmetric(vertical: 24),
-          child: Text('Không có khung giờ nào trong ngày này.',
+          child: Text('Không còn khung giờ nào đặt được trong ngày này. Thử chọn ngày khác.',
               key: Key('slot-empty'), style: TextStyle(color: AppColors.textMuted)));
     }
-    return Wrap(spacing: 8, runSpacing: 8, children: [
-      for (final s in a.slots)
-        _SlotChip(
-            slot: s,
-            selected: _picked == s.start,
-            onTap: s.bookable ? () => setState(() => _picked = s.start) : null),
+    final open = slots.where((s) => s.bookable).length;
+    // Ba cột đều nhau trong bề rộng của bảng (trừ lề 20 hai bên và hai khoảng cách 8).
+    final width = (MediaQuery.sizeOf(context).width - 40 - 16) / 3;
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Text('$open khung còn chỗ',
+          key: const Key('slot-summary'),
+          style: const TextStyle(color: AppColors.textMuted, fontSize: 13)),
+      const SizedBox(height: 8),
+      Wrap(spacing: 8, runSpacing: 8, children: [
+        for (final s in slots)
+          _SlotChip(
+              slot: s,
+              width: width,
+              selected: _picked == s.start,
+              onTap: s.bookable ? () => setState(() => _picked = s.start) : null),
+      ]),
     ]);
   }
 }
 
 class _SlotChip extends StatelessWidget {
-  const _SlotChip({required this.slot, required this.selected, required this.onTap});
+  const _SlotChip(
+      {required this.slot, required this.selected, required this.onTap, required this.width});
   final SlotInfo slot;
+  final double width;
   final bool selected;
   final VoidCallback? onTap;
 
@@ -146,7 +164,7 @@ class _SlotChip extends StatelessWidget {
             borderRadius: BorderRadius.circular(AppRadii.button),
             onTap: onTap,
             child: Container(
-                width: 92,
+                width: width,
                 padding: const EdgeInsets.symmetric(vertical: 10),
                 decoration: BoxDecoration(
                     color: selected

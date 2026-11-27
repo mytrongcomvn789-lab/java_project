@@ -59,6 +59,8 @@ class _DispatcherScaffold extends ConsumerWidget {
                   dividerColor: Colors.transparent,
                   labelColor: Colors.white,
                   unselectedLabelColor: AppColors.textMuted,
+                  // Bỏ đệm hai bên: nhãn có số đếm dài hơn tab nên bị cắt mất ")".
+                  labelPadding: EdgeInsets.zero,
                   labelStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
                   tabs: [
                     Tab(key: const Key('tab-PENDING'), height: 40, text: 'Chờ duyệt${count(lists['PENDING']!)}'),
