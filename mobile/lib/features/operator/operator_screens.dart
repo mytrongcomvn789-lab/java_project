@@ -12,6 +12,7 @@ import 'operator_controllers.dart';
 import 'operator_models.dart' show AssignedStation, PickupCredential;
 import 'return_controller.dart';
 import 'sync_widgets.dart';
+import 'transit_controller.dart';
 
 String _stationName(List<Station>? stations, String id) {
   for (final s in stations ?? const <Station>[]) {
@@ -30,7 +31,7 @@ class OperatorHomeScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     // Giữ provider mã vừa quét sống khi màn chính còn mở (nó tự hủy khi không ai nghe).
     ref.watch(scannedCredentialProvider);
-    return const DefaultTabController(length: 3, child: _OperatorScaffold());
+    return const DefaultTabController(length: 4, child: _OperatorScaffold());
   }
 }
 
@@ -42,6 +43,7 @@ class _OperatorScaffold extends ConsumerWidget {
     final receipts = ref.watch(receiptListProvider);
     final pickups = ref.watch(pickupListProvider);
     final returns = ref.watch(returnListProvider);
+    final transit = ref.watch(transitListProvider);
     String count(OperatorListState s) =>
         s.loading || s.error != null ? '' : ' (${s.total})';
     return Scaffold(
@@ -71,6 +73,10 @@ class _OperatorScaffold extends ConsumerWidget {
                         height: 40,
                         text: 'Chờ nhận${count(receipts)}'),
                     Tab(
+                        key: const Key('tab-transit'),
+                        height: 40,
+                        text: 'Đang giao${count(transit)}'),
+                    Tab(
                         key: const Key('tab-pickups'),
                         height: 40,
                         text: 'Chờ giao${count(pickups)}'),
@@ -89,6 +95,14 @@ class _OperatorScaffold extends ConsumerWidget {
                 onRefresh: ref.read(receiptListProvider.notifier).reload,
                 onLoadMore: ref.read(receiptListProvider.notifier).loadMore,
                 onTap: (o) => context.push('/operator/receipts/${o.id}')),
+            _PagedOrders(
+                key: const Key('list-transit'),
+                state: transit,
+                emptyText: 'Không có đơn nào cần xuất phát hoặc đang bay tới trạm của bạn.',
+                actionLabelOf: (o) => transitActionLabel(o.status),
+                onRefresh: ref.read(transitListProvider.notifier).reload,
+                onLoadMore: () async {},
+                onTap: (o) => _transitAction(context, ref, o)),
             _PagedOrders(
                 key: const Key('list-pickups'),
                 state: pickups,
@@ -119,6 +133,37 @@ class _OperatorScaffold extends ConsumerWidget {
             onTap: (i) => _onNav(context, ref, i)));
   }
 
+  /// Xuất phát / Drone đến: hỏi xác nhận rồi gọi API; báo kết quả bằng thanh thông báo.
+  Future<void> _transitAction(BuildContext context, WidgetRef ref, OrderSummary o) async {
+    final label = transitActionLabel(o.status);
+    if (label == null) return;
+    final dispatch = o.status == 'PREPARING';
+    final ok = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+                title: Text(dispatch ? 'Xuất phát đơn này?' : 'Xác nhận drone đã đến?'),
+                content: Text(dispatch
+                    ? 'Đơn ${o.shortCode} sẽ chuyển sang "Đang giao". Chỉ xuất phát khi kiện đã sẵn sàng.'
+                    : 'Đơn ${o.shortCode} sẽ chuyển sang "Chờ nhận hàng" và khách được báo đến nhận.'),
+                actions: [
+                  TextButton(
+                      key: const Key('transit-no'),
+                      onPressed: () => Navigator.of(ctx).pop(false),
+                      child: const Text('Quay lại')),
+                  FilledButton(
+                      key: const Key('transit-yes'),
+                      onPressed: () => Navigator.of(ctx).pop(true),
+                      child: Text(label)),
+                ])) ??
+        false;
+    if (!ok || !context.mounted) return;
+    final result = await ref.read(transitActionProvider.notifier).run(o.id, o.status);
+    if (!context.mounted || result.message.isEmpty) return;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(result.message)));
+  }
+
   Future<void> _onNav(BuildContext context, WidgetRef ref, int i) async {
     switch (i) {
       case 1:
@@ -126,7 +171,7 @@ class _OperatorScaffold extends ConsumerWidget {
         final credential = await context.push<PickupCredential>('/operator/scan');
         if (credential == null || !context.mounted) return;
         ref.read(scannedCredentialProvider.notifier).state = credential;
-        DefaultTabController.of(context).animateTo(1);
+        DefaultTabController.of(context).animateTo(2); // tab Chờ giao
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
             content: Text('Đã quét mã nhận hàng. Chọn đơn trong "Chờ giao" để xác nhận.')));
       case 2:
@@ -359,10 +404,14 @@ class _PagedOrders extends ConsumerStatefulWidget {
       required this.onRefresh,
       required this.onLoadMore,
       this.onTap,
-      this.actionLabel});
+      this.actionLabel,
+      this.actionLabelOf});
   final OperatorListState state;
   final String emptyText;
   final String? actionLabel;
+
+  /// Nhãn nút riêng của từng đơn (tab có nhiều trạng thái); ưu tiên hơn [actionLabel].
+  final String? Function(OrderSummary)? actionLabelOf;
   final Future<void> Function() onRefresh;
   final Future<void> Function() onLoadMore;
   final void Function(OrderSummary)? onTap;
@@ -424,7 +473,8 @@ class _PagedOrdersState extends ConsumerState<_PagedOrders> {
           separatorBuilder: (_, __) => const SizedBox(height: 8),
           itemBuilder: (context, i) {
             if (i < s.items.length) {
-              return _OrderCard(s.items[i], stations, widget.onTap, widget.actionLabel);
+              return _OrderCard(s.items[i], stations, widget.onTap,
+                  widget.actionLabelOf?.call(s.items[i]) ?? widget.actionLabel);
             }
             if (s.moreError != null) {
               return Center(

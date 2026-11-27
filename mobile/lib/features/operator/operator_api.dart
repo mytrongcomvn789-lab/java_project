@@ -118,6 +118,35 @@ class OperatorApi {
         return OrderPage.fromJson(res.data!);
       });
 
+  /// Đơn theo một trạng thái trong phạm vi trạm của operator (dùng cho PREPARING và IN_TRANSIT).
+  /// Server trả đơn có trạm gửi HOẶC trạm nhận thuộc phạm vi; màn hình lọc thêm theo đúng trạm.
+  Future<OrderPage> listByStatus(String status, {int page = 1, int pageSize = 20}) =>
+      guardApi(() async {
+        final res = await _dio.get<Map<String, dynamic>>('/v1/orders',
+            queryParameters: {
+              'status': status,
+              'page': page,
+              'pageSize': pageSize,
+              'sort': 'createdAt,asc',
+            });
+        return OrderPage.fromJson(res.data!);
+      });
+
+  /// Xuất phát: PREPARING → IN_TRANSIT (nhân viên trạm GỬI). `If-Match` = phiên bản đang xem.
+  Future<OrderDetail> dispatch(String orderId, int version) =>
+      _progress('dispatch', orderId, version);
+
+  /// Drone đến: IN_TRANSIT → AWAITING_PICKUP (nhân viên trạm NHẬN).
+  Future<OrderDetail> arrive(String orderId, int version) =>
+      _progress('arrive', orderId, version);
+
+  Future<OrderDetail> _progress(String action, String orderId, int version) =>
+      guardApi(() async {
+        final res = await _dio.post<Map<String, dynamic>>('/v1/orders/$orderId/$action',
+            options: Options(headers: {'If-Match': '"$version"'}));
+        return OrderDetail.fromJson(res.data!);
+      });
+
   /// Xác nhận đã nhận hàng hoàn: RETURNING → RETURNED. Trả đơn đã cập nhật.
   Future<OrderDetail> completeReturn(CompleteReturnRequest r) =>
       guardApi(() async {
