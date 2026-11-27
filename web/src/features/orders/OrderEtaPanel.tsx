@@ -1,3 +1,4 @@
+import { formatMinutes } from "../../lib/formatDuration";
 import AiSourceBadge from "../../components/ui/AiSourceBadge";
 import { aiService, type EtaResult } from "../../lib/aiService";
 import { useAiTask } from "../../lib/useAiTask";
@@ -29,11 +30,11 @@ function EtaBody({ eta }: { eta: EtaResult }) {
       <p>
         <strong>
           {eta.etaAt ? when(eta.etaAt) : "—"}
-          {eta.etaMinutes != null && ` (khoảng ${eta.etaMinutes} phút nữa)`}
+          {eta.etaMinutes != null && ` (khoảng ${formatMinutes(eta.etaMinutes)} nữa)`}
         </strong>
       </p>
       <p className="muted">
-        Bay khoảng {eta.travelMinutes ?? "—"} phút · chờ trạm {eta.waitMinutes ?? "—"} phút ·
+        Bay khoảng {eta.travelMinutes != null ? formatMinutes(eta.travelMinutes) : "—"} · chờ trạm {eta.waitMinutes != null ? formatMinutes(eta.waitMinutes) : "—"} ·
         quãng đường {eta.distanceKm ?? "—"} km
       </p>
       <p className="muted">Độ tin cậy: thấp (chỉ là ước tính, không đảm bảo giờ giao).</p>

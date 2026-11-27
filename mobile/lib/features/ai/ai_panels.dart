@@ -109,10 +109,10 @@ Widget _etaBody(ThemeData theme, EtaResult? eta) {
   }
   final minutes = eta.etaMinutes;
   return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-    Text('${formatTime(eta.etaAt)}${minutes == null ? '' : ' (khoảng $minutes phút nữa)'}',
+    Text('${formatTime(eta.etaAt)}${minutes == null ? '' : ' (khoảng ${formatMinutes(minutes)} nữa)'}',
         key: const Key('ai-eta-value'), style: theme.textTheme.titleSmall),
     Text(
-        'Bay khoảng ${eta.travelMinutes ?? '—'} phút · chờ trạm ${eta.waitMinutes ?? '—'} phút · ${eta.distanceKm ?? '—'} km',
+        'Bay khoảng ${eta.travelMinutes == null ? '—' : formatMinutes(eta.travelMinutes!)} · chờ trạm ${eta.waitMinutes == null ? '—' : formatMinutes(eta.waitMinutes!)} · ${eta.distanceKm ?? '—'} km',
         style: theme.textTheme.bodySmall),
     Text('Độ tin cậy: thấp (chỉ là ước tính, không đảm bảo giờ giao).',
         style: theme.textTheme.bodySmall),
@@ -185,7 +185,7 @@ class AiSummaryPanel extends ConsumerWidget {
           for (final s in result.timeline)
             Text(
                 '${s.label} · ${formatTime(s.at)}'
-                '${s.minutesSincePrevious == null ? '' : ' (sau ${s.minutesSincePrevious} phút)'}',
+                '${s.minutesSincePrevious == null ? '' : ' (sau ${formatMinutes(s.minutesSincePrevious!)})'}',
                 style: theme.textTheme.bodySmall),
         const SizedBox(height: 4),
         Text(
@@ -202,4 +202,14 @@ class AiSummaryPanel extends ConsumerWidget {
       ],
     ]);
   }
+}
+
+/// Quy đổi số phút sang dạng dễ đọc: dưới 60 phút giữ phút; từ 60 phút là giờ; từ 24 giờ là ngày.
+String formatMinutes(int totalMinutes) {
+  final min = totalMinutes < 0 ? 0 : totalMinutes;
+  if (min < 60) return '$min phút';
+  final hours = min ~/ 60, m = min % 60;
+  if (hours < 24) return m == 0 ? '$hours giờ' : '$hours giờ $m phút';
+  final days = hours ~/ 24, h = hours % 24;
+  return h == 0 ? '$days ngày' : '$days ngày $h giờ';
 }
