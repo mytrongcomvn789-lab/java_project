@@ -84,7 +84,7 @@ class OrderSummaryServiceTest {
         String tl = text.substring(text.indexOf("timeline:"));
         assertTrue(tl.indexOf("APPROVED") < tl.indexOf("IN_TRANSIT") && tl.indexOf("IN_TRANSIT") < tl.indexOf("DELIVERED"),
                 "timeline phải theo thời gian");
-        assertTrue(text.contains("minutesSincePrevious=10") && text.contains("totalMinutes: 20"));
+        assertTrue(text.contains("sincePreviousStep=10 phút") && text.contains("totalDuration: 20 phút"));
     }
 
     @Test

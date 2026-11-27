@@ -1,3 +1,4 @@
+import { formatMinutes } from "../../lib/formatDuration";
 import AiSourceBadge from "../../components/ui/AiSourceBadge";
 import { aiService, type OrderSummaryResult } from "../../lib/aiService";
 import { useAiTask } from "../../lib/useAiTask";
@@ -81,7 +82,7 @@ export default function OrderSummaryPanel({
                 <li key={`${s.status}-${i}`}>
                   <strong>{s.label}</strong> · {when(s.at)}
                   {s.minutesSincePrevious != null && (
-                    <small className="muted"> (sau {s.minutesSincePrevious} phút)</small>
+                    <small className="muted"> (sau {formatMinutes(s.minutesSincePrevious)})</small>
                   )}
                 </li>
               ))}

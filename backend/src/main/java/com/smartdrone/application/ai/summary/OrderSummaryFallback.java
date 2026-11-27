@@ -28,7 +28,7 @@ public class OrderSummaryFallback {
             var last = f.steps().get(f.steps().size() - 1);
             highlights.add("Bước gần nhất: " + last.status().label() + " lúc " + fmt(last.at()) + ".");
             if (f.totalMinutes() != null) {
-                highlights.add("Từ bước đầu đến bước gần nhất: " + f.totalMinutes() + " phút.");
+                highlights.add("Từ bước đầu đến bước gần nhất: " + OrderSummaryFacts.duration(f.totalMinutes()) + ".");
             }
             f.steps().stream().filter(s -> s.reasonCode() != null).reduce((a, b) -> b).ifPresent(s ->
                     highlights.add("Lý do ghi nhận: " + s.reasonCode().label() + "."));
