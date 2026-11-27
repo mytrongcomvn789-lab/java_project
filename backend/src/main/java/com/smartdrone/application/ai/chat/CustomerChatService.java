@@ -48,7 +48,8 @@ public class CustomerChatService {
             String reply = generated.degraded()
                 ? "Dịch vụ AI đang tạm thời không sẵn sàng. Vui lòng xem trạng thái trong chi tiết đơn hoặc thử lại sau. "
                   + "Chatbot chưa thực hiện bất kỳ thao tác nào trên đơn."
-                : clean(generated.result().path("reply").asString());
+                : clean(generated.result().path("reply").asString())
+                    .replace(ChatKnowledge.HOTLINE_PLACEHOLDER, ChatKnowledge.HOTLINE);
             if (reply.isBlank()) throw new ApiException(ErrorCode.AI_RESPONSE_INVALID);
             // Whitelist output fields; ignore tool calls, arbitrary links and conversation IDs from the model.
             var result = json.createObjectNode()
