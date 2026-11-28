@@ -69,7 +69,7 @@ class _OperatorScaffold extends ConsumerWidget {
                   dividerColor: Colors.transparent,
                   labelColor: Colors.white,
                   unselectedLabelColor: AppColors.textMuted,
-                  labelStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+                  labelStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
                   tabs: [
                     _tab(const Key('tab-receipts'), 'Chờ nhận${count(receipts)}'),
                     _tab(const Key('tab-transit'), 'Đang giao${count(transit)}'),
