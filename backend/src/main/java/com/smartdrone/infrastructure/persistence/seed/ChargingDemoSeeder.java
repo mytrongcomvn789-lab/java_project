@@ -49,6 +49,13 @@ public class ChargingDemoSeeder implements CommandLineRunner {
             new Layout("D", List.of(Seed.charging(60, 5), Seed.charging(70, 10), Seed.charging(0, 90),
                     Seed.charging(35, 45)), List.of()));
 
+    /** Tên trạm theo chữ cái bố cục: tên hiện tại của DemoDataSeeder và tên cũ (DB tạo bằng bản trước khi bỏ chữ "Demo"). */
+    private static final java.util.Map<String, List<String>> STATION_NAMES = java.util.Map.of(
+            "A", List.of("Trạm Bến Thành", "Trạm Demo A"),
+            "B", List.of("Trạm Thủ Đức", "Trạm Demo B"),
+            "C", List.of("Trạm Chợ Lớn", "Trạm Demo C"),
+            "D", List.of("Trạm Bình Thạnh", "Trạm Demo D"));
+
     private final StationRepository stations;
     private final ChargingDeviceRepository devices;
     private final DroneRepository drones;
@@ -72,7 +79,7 @@ public class ChargingDemoSeeder implements CommandLineRunner {
         Instant now = Instant.now(clock);
         for (Layout layout : LAYOUTS) {
             var station = stations.findAll().stream()
-                    .filter(s -> ("Trạm Demo " + layout.letter()).equals(s.getName())).findFirst().orElse(null);
+                    .filter(s -> STATION_NAMES.get(layout.letter()).contains(s.getName())).findFirst().orElse(null);
             if (station == null) continue;
 
             var created = new java.util.ArrayList<ChargingDevice>();

@@ -58,7 +58,13 @@ public class DemoDataSeeder implements CommandLineRunner {
     public static final String MANAGER_EMAIL = "manager@demo.local";
     public static final String ADMIN_EMAIL = "admin@demo.local";
 
-    private static final String RECIPIENT_PREFIX = "[DEMO] ";
+    /** Tên người nhận của đơn mẫu (lặp vòng theo số thứ tự đơn). Không còn tiền tố "[DEMO]" để dữ liệu trông như thật. */
+    private static final List<String> RECIPIENT_NAMES = List.of("Nguyễn Thị Lan", "Trần Văn Hùng", "Lê Thị Mai",
+            "Phạm Văn Nam", "Hoàng Thị Oanh", "Vũ Văn Phong", "Đặng Thị Quỳnh", "Bùi Văn Sơn", "Đỗ Thị Thảo",
+            "Ngô Văn Uy", "Dương Thị Vân", "Lý Văn Xuân", "Phan Thị Yến", "Võ Văn Zũng");
+
+    /** Hậu tố của tên mẫu cũ ("... Demo"). DB tạo bằng bản seeder cũ được đổi sang tên mới khi khởi động. */
+    private static final String LEGACY_SUFFIX = " Demo";
 
     private final RoleRepository roles;
     private final UserRepository users;
@@ -109,17 +115,17 @@ public class DemoDataSeeder implements CommandLineRunner {
     @Override
     @Transactional
     public void run(String... args) {
-        User customer = ensureUser(CUSTOMER_EMAIL, "Khách hàng Demo", RoleName.CUSTOMER);
-        User dispatcher = ensureUser(DISPATCHER_EMAIL, "Điều phối viên Demo", RoleName.DISPATCHER);
-        User operator = ensureUser(OPERATOR_EMAIL, "Nhân viên trạm Demo", RoleName.STATION_OPERATOR);
-        User manager = ensureUser(MANAGER_EMAIL, "Quản lý hậu cần Demo", RoleName.LOGISTICS_MANAGER);
-        ensureUser(ADMIN_EMAIL, "Quản trị viên Demo", RoleName.SYSTEM_ADMIN);
+        User customer = ensureUser(CUSTOMER_EMAIL, "Nguyễn Văn An", RoleName.CUSTOMER);
+        User dispatcher = ensureUser(DISPATCHER_EMAIL, "Trần Thị Bình", RoleName.DISPATCHER);
+        User operator = ensureUser(OPERATOR_EMAIL, "Lê Minh Châu", RoleName.STATION_OPERATOR);
+        User manager = ensureUser(MANAGER_EMAIL, "Phạm Quốc Dũng", RoleName.LOGISTICS_MANAGER);
+        ensureUser(ADMIN_EMAIL, "Hoàng Thu Hà", RoleName.SYSTEM_ADMIN);
 
         List<Station> demoStations = List.of(
-                ensureStation("Trạm Demo A", 10.7769, 106.7009, "1 Lê Lợi, Quận 1, TP.HCM"),
-                ensureStation("Trạm Demo B", 10.8505, 106.7717, "2 Võ Văn Ngân, Thủ Đức, TP.HCM"),
-                ensureStation("Trạm Demo C", 10.7626, 106.6602, "3 Nguyễn Trãi, Quận 5, TP.HCM"),
-                ensureStation("Trạm Demo D", 10.8012, 106.7141, "4 Điện Biên Phủ, Bình Thạnh, TP.HCM"));
+                ensureStation("Trạm Bến Thành", "Trạm Demo A", 10.7769, 106.7009, "1 Lê Lợi, Quận 1, TP.HCM"),
+                ensureStation("Trạm Thủ Đức", "Trạm Demo B", 10.8505, 106.7717, "2 Võ Văn Ngân, Thủ Đức, TP.HCM"),
+                ensureStation("Trạm Chợ Lớn", "Trạm Demo C", 10.7626, 106.6602, "3 Nguyễn Trãi, Quận 5, TP.HCM"),
+                ensureStation("Trạm Bình Thạnh", "Trạm Demo D", 10.8012, 106.7141, "4 Điện Biên Phủ, Bình Thạnh, TP.HCM"));
 
         for (User staff : List.of(dispatcher, operator, manager)) {
             for (Station station : demoStations) {
@@ -138,6 +144,17 @@ public class DemoDataSeeder implements CommandLineRunner {
     }
 
     private User ensureUser(String email, String fullName, RoleName role) {
+        var existing = users.findByEmail(email);
+        if (existing.isPresent()) {
+            User u = existing.get();
+            // Tên cũ của seeder ("... Demo") hoặc tên đã bị hỏng ký tự ('?') thì đổi sang tên mới; tên do người dùng tự sửa thì giữ.
+            if (u.getFullName().endsWith(LEGACY_SUFFIX) || u.getFullName().contains("?")) {
+                log.info("Dữ liệu demo: đổi tên hiển thị của {}", email);
+                u.setFullName(fullName);
+                users.save(u);
+            }
+            return u;
+        }
         return users.findByEmail(email).orElseGet(() -> {
             log.info("Dữ liệu demo: tạo tài khoản {} ({})", email, role);
             return users.save(new User(email, passwordEncoder.encode(DEMO_PASSWORD), fullName,
@@ -145,11 +162,20 @@ public class DemoDataSeeder implements CommandLineRunner {
         });
     }
 
-    private Station ensureStation(String name, double lat, double lng, String address) {
-        return stations.findAll().stream().filter(s -> name.equals(s.getName())).findFirst().orElseGet(() -> {
-            log.info("Dữ liệu demo: tạo trạm {}", name);
-            return stations.save(new Station(name, lat, lng, 4, address));
-        });
+    /** Tìm trạm theo tên mới; chưa có mà còn tên cũ ([legacyName]) thì đổi tên (không tạo trạm trùng). */
+    private Station ensureStation(String name, String legacyName, double lat, double lng, String address) {
+        List<Station> all = stations.findAll();
+        var current = all.stream().filter(s -> name.equals(s.getName())).findFirst();
+        if (current.isPresent()) return current.get();
+        var legacy = all.stream().filter(s -> legacyName.equals(s.getName())).findFirst();
+        if (legacy.isPresent()) {
+            Station s = legacy.get();
+            log.info("Dữ liệu demo: đổi tên trạm {} thành {}", legacyName, name);
+            s.update(name, s.getCapacity(), s.getAddress());
+            return stations.save(s);
+        }
+        log.info("Dữ liệu demo: tạo trạm {}", name);
+        return stations.save(new Station(name, lat, lng, 4, address));
     }
 
     private void createSampleOrders(User customer, User dispatcher, List<Station> st) {
@@ -161,7 +187,7 @@ public class DemoDataSeeder implements CommandLineRunner {
             UUID pickup = st.get(s.pickup()).getId();
             UUID dropoff = st.get(s.dropoff()).getId();
             var order = orders.save(new com.smartdrone.domain.entity.Order(customer.getId(), pickup, dropoff,
-                    new RecipientSnapshot(RECIPIENT_PREFIX + "Người nhận " + n, String.format("09012345%02d", n),
+                    new RecipientSnapshot(RECIPIENT_NAMES.get((n - 1) % RECIPIENT_NAMES.size()), String.format("09012345%02d", n),
                             "Số " + n + " Nguyễn Huệ, Quận 1, TP.HCM", 10.7769, 106.7009), created));
 
             OrderPackage pkg = new OrderPackage(order.getId(), created);
