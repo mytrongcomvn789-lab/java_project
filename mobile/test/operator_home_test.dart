@@ -148,6 +148,9 @@ void main() {
             path: '/operator/receipts/:id',
             builder: (_, s) => Scaffold(body: Text('RECEIPT ${s.pathParameters['id']}'))),
         GoRoute(path: '/profile', builder: (_, __) => const Scaffold(body: Text('PROFILE'))),
+        GoRoute(
+            path: '/operator/stations',
+            builder: (_, __) => const Scaffold(body: Text('STATIONS SCREEN'))),
       ]);
       await tester.pumpWidget(ProviderScope(
           overrides: [
@@ -228,9 +231,16 @@ void main() {
       expect(find.text('Hồ sơ'), findsOneWidget);
     });
 
-    testWidgets('nút Trạm mở danh sách trạm có địa chỉ và sức chứa', (tester) async {
+    testWidgets('nút Trạm trên thanh dưới mở màn trạm và thiết bị sạc', (tester) async {
       await mount(tester);
       await tester.tap(find.byKey(const Key('nav-stations')));
+      await tester.pumpAndSettle();
+      expect(find.text('STATIONS SCREEN'), findsOneWidget);
+    });
+
+    testWidgets('ô chọn trạm trên đầu trang mở bảng trạm có địa chỉ và sức chứa', (tester) async {
+      await mount(tester);
+      await tester.tap(find.byKey(const Key('station-selector')));
       await tester.pumpAndSettle();
       expect(find.text('Trạm của bạn'), findsOneWidget);
       expect(find.text('1 Lê Lợi, Quận 1'), findsOneWidget);

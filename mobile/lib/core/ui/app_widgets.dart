@@ -197,9 +197,12 @@ class AppBottomNav extends StatelessWidget {
 
 /// Thẻ thông tin có tiêu đề (Lộ trình, Kiện hàng…): nền trắng, bo góc, bóng nhẹ.
 class InfoCard extends StatelessWidget {
-  const InfoCard(this.title, this.rows, {super.key});
+  const InfoCard(this.title, this.rows, {super.key, this.trailing});
   final String title;
   final List<Widget> rows;
+
+  /// Phần phụ bên phải tiêu đề (ví dụ nhãn Demo).
+  final Widget? trailing;
 
   @override
   Widget build(BuildContext context) => Padding(
@@ -215,9 +218,13 @@ class InfoCard extends StatelessWidget {
               child: Padding(
                   padding: const EdgeInsets.all(16),
                   child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Text(title,
-                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                            fontWeight: FontWeight.w700, color: AppColors.primary)),
+                    Row(children: [
+                      Expanded(
+                          child: Text(title,
+                              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                                  fontWeight: FontWeight.w700, color: AppColors.primary))),
+                      if (trailing != null) trailing!,
+                    ]),
                     const SizedBox(height: 10),
                     ...rows,
                   ])))));
@@ -225,15 +232,18 @@ class InfoCard extends StatelessWidget {
 
 /// Một dòng "nhãn: giá trị" trong [InfoCard].
 class InfoRow extends StatelessWidget {
-  const InfoRow(this.label, this.value, {super.key});
+  const InfoRow(this.label, this.value, {super.key, this.labelWidth = 104});
   final String label, value;
+
+  /// Bề rộng cột nhãn; tăng lên khi nhãn dài (ví dụ "Thời gian giao TB").
+  final double labelWidth;
 
   @override
   Widget build(BuildContext context) => Padding(
       padding: const EdgeInsets.symmetric(vertical: 3),
       child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
         SizedBox(
-            width: 104,
+            width: labelWidth,
             child: Text(label,
                 style: const TextStyle(color: AppColors.textMuted, fontSize: 13))),
         Expanded(

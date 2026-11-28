@@ -327,6 +327,17 @@ class ReceiptDetailController
                 ? 'Chưa rõ yêu cầu nhận kiện đã được thực hiện chưa. Đã tải lại trạng thái đơn.'
                 : 'Đơn vừa thay đổi (có thể đã được nhận). Đã tải lại trạng thái mới nhất.');
         await reload(silent: true);
+        // Tải lại xong mà đơn VẪN chờ nhận ở đúng phiên bản cũ: không có ai nhận thay, đơn chưa được
+        // nhận. Nói rõ như vậy thay vì "có thể đã được nhận" (dễ hiểu nhầm là đã thành công).
+        final after = state.context;
+        if (!failure.outcomeUnknown &&
+            after != null &&
+            state.canReceive &&
+            after.order.version == request.version) {
+          state = state.copyWith(
+              notice: 'Đơn CHƯA được nhận. Máy chủ từ chối dù đơn vẫn chờ nhận (dữ liệu đơn có thể bị lỗi). '
+                  'Hãy thử lại sau hoặc báo quản trị viên.');
+        }
       } else {
         state = state.copyWith(receiving: false, actionError: failure);
       }

@@ -5,6 +5,10 @@ import '../../features/addresses/address_screens.dart';
 import '../../features/auth/session.dart';
 import '../../features/assistant/assistant_screen.dart';
 import '../../features/auth/screens.dart';
+import '../../features/auth/password_screen.dart';
+import '../../features/dispatcher/dispatcher_screens.dart';
+import '../../features/operator/charging_screens.dart';
+import '../../features/manager/manager_screens.dart';
 import '../../features/notifications/notification_screens.dart';
 import '../../features/operator/operator_screens.dart';
 import '../../features/operator/pickup_screens.dart';
@@ -12,7 +16,7 @@ import '../../features/orders/customer_dashboard.dart';
 import '../../features/orders/order_detail_screen.dart';
 import '../../features/orders/order_form_screen.dart';
 import '../../features/orders/order_list_screen.dart';
-import '../../features/orders/order_screens.dart';
+import '../../features/orders/tracking_screen.dart';
 
 String? sessionRedirect(Session session, String path) {
   if (session.phase == SessionPhase.restoring ||
@@ -24,7 +28,7 @@ String? sessionRedirect(Session session, String path) {
   }
   final user = session.user!;
   if (!user.supported) return path == '/unsupported' ? null : '/unsupported';
-  if (path == '/profile') return null;
+  if (path == '/profile' || path.startsWith('/profile/')) return null;
   if (path == user.home || path.startsWith('${user.home}/')) return null;
   return user.home;
 }
@@ -52,6 +56,10 @@ final routerProvider = Provider<GoRouter>((ref) {
                 path: 'orders/:id/detail',
                 builder: (_, state) =>
                     OrderDetailScreen(orderId: state.pathParameters['id']!)),
+            GoRoute(
+                path: 'orders/:id/edit',
+                builder: (_, state) =>
+                    OrderFormScreen(orderId: state.pathParameters['id']!)),
             GoRoute(
                 path: 'new-order',
                 builder: (_, __) => const OrderFormScreen()),
@@ -81,8 +89,31 @@ final routerProvider = Provider<GoRouter>((ref) {
                 builder: (_, state) =>
                     ReturnDetailScreen(orderId: state.pathParameters['id']!)),
             GoRoute(path: 'scan', builder: (_, __) => const QrScanScreen()),
+            GoRoute(
+                path: 'stations',
+                builder: (_, __) => const StationsScreen(),
+                routes: [
+                  GoRoute(
+                      path: ':id',
+                      builder: (_, state) =>
+                          StationChargersScreen(stationId: state.pathParameters['id']!)),
+                ]),
+            GoRoute(path: 'fleet', builder: (_, __) => const FleetScreen()),
           ]),
-      GoRoute(path: '/profile', builder: (_, __) => const ProfileScreen()),
+      GoRoute(
+          path: '/dispatcher',
+          builder: (_, __) => const DispatcherHomeScreen(),
+          routes: [
+            GoRoute(
+                path: 'orders/:id',
+                builder: (_, state) =>
+                    DispatcherOrderScreen(orderId: state.pathParameters['id']!)),
+          ]),
+      GoRoute(path: '/manager', builder: (_, __) => const ManagerHomeScreen()),
+      GoRoute(
+          path: '/profile',
+          builder: (_, __) => const ProfileScreen(),
+          routes: [GoRoute(path: 'password', builder: (_, __) => const ChangePasswordScreen())]),
       GoRoute(
           path: '/unsupported', builder: (_, __) => const UnsupportedScreen()),
     ],

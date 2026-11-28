@@ -28,6 +28,8 @@ class TrackingState {
       this.timeline = const [],
       this.pickup,
       this.dropoff,
+      this.position,
+      this.allowedActions = const [],
       this.error,
       this.refreshing = false,
       this.live = false,
@@ -45,6 +47,10 @@ class TrackingState {
   final String status, statusLabel;
   final List<TimelineEntry> timeline;
   final StationPoint? pickup, dropoff;
+
+  /// Vị trí suy ra từ trạng thái (không phải GPS), và các thao tác server cho phép.
+  final OrderPosition? position;
+  final List<String> allowedActions;
   final String? error;
   // Counters shown only in diagnostics.
   final int duplicates, stale, gaps, catchUps;
@@ -58,6 +64,8 @@ class TrackingState {
           List<TimelineEntry>? timeline,
           StationPoint? pickup,
           StationPoint? dropoff,
+          OrderPosition? position,
+          List<String>? allowedActions,
           Object? error = _keep,
           bool? refreshing,
           bool? live,
@@ -76,6 +84,8 @@ class TrackingState {
           timeline: timeline ?? this.timeline,
           pickup: pickup ?? this.pickup,
           dropoff: dropoff ?? this.dropoff,
+          position: position ?? this.position,
+          allowedActions: allowedActions ?? this.allowedActions,
           error: identical(error, _keep) ? this.error : error as String?,
           refreshing: refreshing ?? this.refreshing,
           live: live ?? this.live,
@@ -146,6 +156,9 @@ TrackingState mergeSnapshot(TrackingState state, TrackingSnapshot rest) {
       terminal: restIsNewer ? rest.terminal : state.terminal,
       pickup: rest.pickup ?? state.pickup,
       dropoff: rest.dropoff ?? state.dropoff,
+      // Vị trí và thao tác chỉ đổi theo bản REST mới hơn hoặc bằng; bản cũ không kéo màn hình lùi.
+      position: restIsNewer ? (rest.position ?? state.position) : state.position,
+      allowedActions: restIsNewer ? rest.allowedActions : state.allowedActions,
       error: null,
       refreshing: false);
 }

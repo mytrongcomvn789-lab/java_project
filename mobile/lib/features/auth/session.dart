@@ -20,8 +20,13 @@ class UserProfile {
       name: json['fullName'] as String? ?? '',
       phone: json['phone'] as String? ?? '',
       role: json['role'] as String);
-  bool get supported => role == 'CUSTOMER' || role == 'STATION_OPERATOR';
-  String get home => role == 'CUSTOMER' ? '/customer' : '/operator';
+  bool get supported => const {'CUSTOMER', 'STATION_OPERATOR', 'DISPATCHER', 'LOGISTICS_MANAGER'}.contains(role);
+  String get home => switch (role) {
+        'CUSTOMER' => '/customer',
+        'DISPATCHER' => '/dispatcher',
+        'LOGISTICS_MANAGER' => '/manager',
+        _ => '/operator',
+      };
 }
 
 enum SessionPhase { restoring, signedOut, signedIn, unavailable }
@@ -237,6 +242,16 @@ class Session extends ChangeNotifier {
     if (epoch != _epoch) return;
     user = UserProfile.fromJson(response.data!);
     _emit();
+  }
+
+  /// Đổi mật khẩu. Máy chủ thu hồi MỌI phiên của tài khoản khi đổi thành công, nên app đăng xuất
+  /// luôn (xóa token cục bộ) và người dùng đăng nhập lại bằng mật khẩu mới.
+  Future<void> changePassword(String current, String next) async {
+    final epoch = _epoch;
+    await api.post<void>('/v1/me/password',
+        data: {'currentPassword': current, 'newPassword': next});
+    if (epoch != _epoch) return;
+    await _invalidate();
   }
 
   @override

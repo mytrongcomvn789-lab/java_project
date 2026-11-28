@@ -140,3 +140,16 @@ Dữ liệu demo dùng giá trị giả; không đưa mật khẩu hay khóa th�
 - Thêm `mobile_scanner ^7.5.0` (quét QR; tự khai báo quyền `CAMERA` và đặt camera là không bắt buộc; Android minSdk 23).
 - `pubspec.lock`: thêm `mobile_scanner 7.5.0`.
 - Sửa nhẹ code của 6.2: tách luồng upload 3 bước thành `PhotoUploader` dùng chung (hành vi giữ nguyên), thêm các loại lỗi của mã nhận hàng vào `ApiFailure`, `Station` thêm `address`, `photo_picker` thêm `PhotoPermissionDenied`.
+
+## Kiểm chứng bổ sung (27/11/2026)
+
+Emulator Android 37 và backend thật (`sqlserver,demo`), tài khoản `operator@demo.local`:
+
+| Ca | Kết quả |
+|---|---|
+| Trang vận hành sau khi nhận kiện ở nơi khác | Danh sách tự cập nhật: đơn đã nhận rời tab "Chờ nhận", đơn `AWAITING_PICKUP` hiện ở "Chờ giao" |
+| Mở đơn chờ giao, chụp ảnh bằng camera ảo | Ảnh tải lên MinIO, hiện "Đã tải lên", nút xác nhận chỉ sáng khi có ảnh và mã |
+| Nhập OTP đúng, xác nhận | Hộp thoại xác nhận; server `200`, đơn `DELIVERED`, phương thức `OTP` |
+| Nhập OTP sai | Server `422`; app báo "Còn 4 lần thử" và xoá ô nhập |
+
+**Vẫn chưa kiểm chứng:** quét **QR** bằng camera ảo và việc server ghi phương thức `QR`. App khách hiện chưa vẽ được mã QR (chưa có thư viện tạo QR) nên không có ảnh QR để đưa vào camera ảo. Chưa test từ chối quyền camera trên thiết bị thật.

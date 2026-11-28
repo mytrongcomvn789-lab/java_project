@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../core/theme/app_theme.dart';
+import '../../core/ui/app_widgets.dart' show BottomActionBar, InfoCard, InfoRow;
 import '../ai/ai_panels.dart';
 import '../ai/ai_task_controller.dart';
 import 'customer_order_models.dart';
@@ -36,6 +38,12 @@ class OrderDetailScreen extends ConsumerWidget {
                 icon: const Icon(Icons.arrow_back),
                 onPressed: () => context.go('/customer')),
             actions: [
+              if (order != null && order.canCancel)
+                IconButton(
+                    key: const Key('edit-order'),
+                    tooltip: 'Sửa đơn',
+                    onPressed: () => context.go('/customer/orders/${order.id}/edit'),
+                    icon: const Icon(Icons.edit_outlined)),
               IconButton(
                   tooltip: 'Tải lại',
                   onPressed: () => controller.reload(),
@@ -47,22 +55,20 @@ class OrderDetailScreen extends ConsumerWidget {
             _Banner(
                 key: const Key('detail-notice'),
                 text: state.notice!,
-                color: Theme.of(context).colorScheme.tertiaryContainer,
+                color: StatusPalette.pending.background,
                 onClose: controller.dismissNotice),
           if (state.actionError != null)
             _Banner(
                 key: const Key('detail-action-error'),
                 text: state.actionError!.message,
-                color: Theme.of(context).colorScheme.errorContainer,
+                color: StatusPalette.failed.background,
                 onClose: controller.dismissNotice),
           Expanded(child: _body(context, ref, state, order, controller, stationName)),
         ]),
         bottomNavigationBar: order == null
             ? null
-            : SafeArea(
-                child: Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: Row(children: [
+            : BottomActionBar(
+                child: Row(children: [
                       Expanded(
                           child: OutlinedButton.icon(
                               key: const Key('open-tracking'),
@@ -76,8 +82,7 @@ class OrderDetailScreen extends ConsumerWidget {
                             child: FilledButton.icon(
                                 key: const Key('cancel-order'),
                                 style: FilledButton.styleFrom(
-                                    backgroundColor:
-                                        Theme.of(context).colorScheme.error),
+                                    backgroundColor: AppColors.danger),
                                 // Vô hiệu hóa khi đang gửi: chặn bấm đúp.
                                 onPressed: state.cancelling
                                     ? null
@@ -91,7 +96,7 @@ class OrderDetailScreen extends ConsumerWidget {
                                     : const Icon(Icons.cancel_outlined),
                                 label: const Text('Hủy đơn'))),
                       ],
-                    ]))));
+                    ])));
   }
 
   Future<void> _confirmCancel(
@@ -142,55 +147,52 @@ class OrderDetailScreen extends ConsumerWidget {
       }
       return const Center(child: CircularProgressIndicator());
     }
-    final theme = Theme.of(context);
     final p = order.package;
     return RefreshIndicator(
         onRefresh: () => controller.reload(),
         child: ListView(padding: const EdgeInsets.all(16), children: [
           Row(children: [
+            KeyedSubtree(
+                key: const Key('detail-status'),
+                child: StatusChip(order.status, order.statusLabel)),
+            const SizedBox(width: 10),
             Expanded(
-                child: Text(order.statusLabel,
-                    key: const Key('detail-status'),
-                    style: theme.textTheme.headlineSmall)),
-            StatusChip(order.status, order.statusLabel),
+                child: Text('Tạo lúc ${formatTime(order.createdAt)}',
+                    style: const TextStyle(color: AppColors.textMuted, fontSize: 12))),
           ]),
-          const SizedBox(height: 4),
-          Text('Tạo lúc ${formatTime(order.createdAt)}',
-              style: theme.textTheme.bodySmall),
-          const SizedBox(height: 16),
+          const SizedBox(height: 14),
           // 7.6: ETA (công thức) và tóm tắt đơn. Khóa đổi khi đơn đổi trạng thái/phiên bản.
           AiEtaPanel(AiOrderKey(order.id, order.status, order.version)),
           AiSummaryPanel(AiOrderKey(order.id, order.status, order.version)),
-          _Section('Lộ trình', [
-            _Row('Trạm gửi', stationName(order.pickupStationId)),
-            _Row('Trạm nhận', stationName(order.dropoffStationId)),
+          InfoCard('Lộ trình', [
+            InfoRow('Trạm gửi', stationName(order.pickupStationId)),
+            InfoRow('Trạm nhận', stationName(order.dropoffStationId)),
           ]),
-          _Section('Người nhận', [
-            _Row('Họ tên', order.recipient.name),
-            _Row('Điện thoại', order.recipient.phone),
-            _Row('Địa chỉ', order.recipient.addressLine),
+          InfoCard('Người nhận', [
+            InfoRow('Họ tên', order.recipient.name),
+            InfoRow('Điện thoại', order.recipient.phone),
+            InfoRow('Địa chỉ', order.recipient.addressLine),
           ]),
-          _Section('Gói hàng', [
-            _Row('Mô tả', p.description),
-            _Row('Trọng lượng', '${p.weightGrams} g'),
-            _Row('Kích thước',
+          InfoCard('Gói hàng', [
+            InfoRow('Mô tả', p.description),
+            InfoRow('Trọng lượng', '${p.weightGrams} g'),
+            InfoRow('Kích thước',
                 '${_num(p.lengthCm)} × ${_num(p.widthCm)} × ${_num(p.heightCm)} cm'),
-            _Row('Ảnh', p.photoFileIds.isEmpty ? 'Không có' : '${p.photoFileIds.length} ảnh'),
+            InfoRow('Ảnh', p.photoFileIds.isEmpty ? 'Không có' : '${p.photoFileIds.length} ảnh'),
           ]),
-          if (order.history.isNotEmpty) ...[
-            Text('Lịch sử', style: theme.textTheme.titleMedium),
-            const SizedBox(height: 8),
-            for (final h in order.history.reversed)
-              ListTile(
-                  dense: true,
-                  contentPadding: EdgeInsets.zero,
-                  leading: const Icon(Icons.circle, size: 10),
-                  title: Text(h.toLabel),
-                  subtitle: Text([
-                    formatTime(h.occurredAt),
-                    if (h.reason != null && h.reason!.isNotEmpty) h.reason!
-                  ].join('\n'))),
-          ],
+          if (order.history.isNotEmpty)
+            InfoCard('Lịch sử', [
+              for (final h in order.history.reversed)
+                ListTile(
+                    dense: true,
+                    contentPadding: EdgeInsets.zero,
+                    leading: const Icon(Icons.circle, size: 10, color: AppColors.primary),
+                    title: Text(h.toLabel),
+                    subtitle: Text([
+                      formatTime(h.occurredAt),
+                      if (h.reason != null && h.reason!.isNotEmpty) h.reason!
+                    ].join('\n'))),
+            ]),
         ]));
   }
 }
@@ -212,33 +214,5 @@ class _Banner extends StatelessWidget {
         Expanded(child: Text(text)),
         IconButton(
             tooltip: 'Đóng', onPressed: onClose, icon: const Icon(Icons.close)),
-      ]));
-}
-
-class _Section extends StatelessWidget {
-  const _Section(this.title, this.rows);
-  final String title;
-  final List<Widget> rows;
-  @override
-  Widget build(BuildContext context) => Padding(
-      padding: const EdgeInsets.only(bottom: 16),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text(title, style: Theme.of(context).textTheme.titleMedium),
-        const SizedBox(height: 8),
-        ...rows,
-      ]));
-}
-
-class _Row extends StatelessWidget {
-  const _Row(this.label, this.value);
-  final String label, value;
-  @override
-  Widget build(BuildContext context) => Padding(
-      padding: const EdgeInsets.symmetric(vertical: 2),
-      child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        SizedBox(
-            width: 100,
-            child: Text(label, style: Theme.of(context).textTheme.bodySmall)),
-        Expanded(child: Text(value)),
       ]));
 }

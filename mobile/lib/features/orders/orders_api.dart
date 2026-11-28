@@ -34,6 +34,9 @@ class OrdersApi {
 
   Future<void> markRead(String notificationId) =>
       _dio.post<void>('/v1/notifications/$notificationId/read');
+
+  /// `POST /v1/notifications/read-all`.
+  Future<void> markAllRead() => _dio.post<void>('/v1/notifications/read-all');
 }
 
 final ordersApiProvider =

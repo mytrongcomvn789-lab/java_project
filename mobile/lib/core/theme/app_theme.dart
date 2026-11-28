@@ -153,11 +153,23 @@ ThemeData buildAppTheme() {
         shape: RoundedRectangleBorder(
             borderRadius:
                 BorderRadius.vertical(top: Radius.circular(AppRadii.sheet)))),
+    // Màu chữ và nền ghi rõ: nếu để theme tự suy ra, nhãn của chip chưa chọn gần như trắng trên nền trắng.
     chipTheme: ChipThemeData(
         shape: const StadiumBorder(),
         side: const BorderSide(color: AppColors.border),
+        backgroundColor: AppColors.surface,
+        selectedColor: StatusPalette.active.background,
+        checkmarkColor: StatusPalette.active.foreground,
         labelStyle: const TextStyle(
-            fontFamily: fontFamily, fontWeight: FontWeight.w600, fontSize: 13)),
+            fontFamily: fontFamily,
+            fontWeight: FontWeight.w600,
+            fontSize: 13,
+            color: AppColors.text),
+        secondaryLabelStyle: TextStyle(
+            fontFamily: fontFamily,
+            fontWeight: FontWeight.w700,
+            fontSize: 13,
+            color: StatusPalette.active.foreground)),
     tabBarTheme: const TabBarThemeData(
         dividerColor: Colors.transparent,
         labelStyle:

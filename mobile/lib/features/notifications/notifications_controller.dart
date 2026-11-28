@@ -109,4 +109,13 @@ class NotificationsController extends Notifier<NotificationsState> {
       // Shown as read locally; the next REST reload restores the truth.
     }
   }
+
+  /// Đánh dấu tất cả đã đọc. Lỗi mạng: giữ trạng thái cục bộ, lần tải lại kế tiếp trả về sự thật.
+  Future<void> markAllRead() async {
+    if (state.unread == 0) return;
+    state = state.copyWith(items: [for (final e in state.items) e.markRead()]);
+    try {
+      await ref.read(ordersApiProvider).markAllRead();
+    } catch (_) {}
+  }
 }
