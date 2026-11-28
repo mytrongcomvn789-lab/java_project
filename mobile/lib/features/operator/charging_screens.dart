@@ -505,7 +505,10 @@ class _DispatchTile extends ConsumerWidget {
     final p = row.plan;
     final busy = ref.watch(chargingActionsProvider).contains('assign-${row.orderId}');
     // Chỉ đề nghị phân công khi đơn chưa có drone và chưa bay; server vẫn là nơi quyết định.
-    final canAssign = !p.assigned && const {'PLANNED', 'NO_DRONE', 'NO_CHARGER'}.contains(p.stage);
+    // Server chỉ cho phân công khi đơn đã nhận kiện (PREPARING); đơn mới "Đã lên lịch" chỉ có bản xem trước.
+    final canAssign = !p.assigned &&
+        row.orderStatus == 'PREPARING' &&
+        const {'PLANNED', 'NO_DRONE', 'NO_CHARGER'}.contains(p.stage);
     return Padding(
         padding: const EdgeInsets.symmetric(vertical: 6),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [

@@ -80,6 +80,18 @@ class FakeChargingApi extends ChargingApi {
         }
       },
       {
+        'orderId': 'cccccccc-0000-0000-0000-000000000003',
+        'orderStatus': 'SCHEDULED',
+        'pickupStationName': 'Trạm Bến Thành',
+        'dropoffStationName': 'Trạm Bình Thạnh',
+        'dispatch': {
+          'orderId': 'cccccccc-0000-0000-0000-000000000003',
+          'stage': 'PLANNED',
+          'assigned': false,
+          'droneCode': 'DR-A2'
+        }
+      },
+      {
         'orderId': 'bbbbbbbb-0000-0000-0000-000000000002',
         'orderStatus': 'IN_TRANSIT',
         'pickupStationName': 'Trạm Thủ Đức',
@@ -350,6 +362,9 @@ void main() {
       expect(find.text('Chưa có drone phù hợp'), findsWidgets);
       expect(find.byKey(const Key('assign-AAAAAAAA')), findsOneWidget);
       expect(find.byKey(const Key('assign-BBBBBBBB')), findsNothing, reason: 'đơn đang bay không phân công lại');
+      expect(find.byKey(const Key('assign-CCCCCCCC')), findsNothing,
+          reason: 'đơn chưa nhận kiện (SCHEDULED) chỉ có bản xem trước, server từ chối phân công');
+      expect(find.text('Xem trước, chưa phân công'), findsOneWidget);
       expect(find.textContaining('Drone DR-B2 từ Trạm Thủ Đức'), findsOneWidget);
       expect(find.textContaining('sạc A-03'), findsOneWidget);
       expect(find.text('DR-B2'), findsWidgets);
