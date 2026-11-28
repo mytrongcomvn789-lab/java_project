@@ -7,6 +7,7 @@ import '../../features/assistant/assistant_screen.dart';
 import '../../features/auth/screens.dart';
 import '../../features/auth/password_screen.dart';
 import '../../features/dispatcher/dispatcher_screens.dart';
+import '../../features/operator/charging_screens.dart';
 import '../../features/manager/manager_screens.dart';
 import '../../features/notifications/notification_screens.dart';
 import '../../features/operator/operator_screens.dart';
@@ -88,6 +89,16 @@ final routerProvider = Provider<GoRouter>((ref) {
                 builder: (_, state) =>
                     ReturnDetailScreen(orderId: state.pathParameters['id']!)),
             GoRoute(path: 'scan', builder: (_, __) => const QrScanScreen()),
+            GoRoute(
+                path: 'stations',
+                builder: (_, __) => const StationsScreen(),
+                routes: [
+                  GoRoute(
+                      path: ':id',
+                      builder: (_, state) =>
+                          StationChargersScreen(stationId: state.pathParameters['id']!)),
+                ]),
+            GoRoute(path: 'fleet', builder: (_, __) => const FleetScreen()),
           ]),
       GoRoute(
           path: '/dispatcher',

@@ -163,10 +163,7 @@ class _OperatorScaffold extends ConsumerWidget {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
             content: Text('Đã quét mã nhận hàng. Chọn đơn trong "Chờ giao" để xác nhận.')));
       case 2:
-        await showModalBottomSheet<void>(
-            context: context,
-            isScrollControlled: true,
-            builder: (_) => const _StationsSheet());
+        context.push('/operator/stations');
       case 3:
         context.go('/profile');
     }
