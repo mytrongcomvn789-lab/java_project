@@ -53,6 +53,15 @@ class CustomerOrdersApi {
             replayed: res.headers.value('idempotent-replayed') == 'true');
       });
 
+  /// `PUT /v1/orders/{id}`: sửa đơn đang chờ duyệt, gửi lại TOÀN BỘ nội dung. `If-Match` = phiên bản đang xem;
+  /// server trả 412 nếu đơn đã đổi và 409 nếu đơn không còn chờ duyệt.
+  Future<OrderDetail> updateOrder(String id, int version, CreateOrderInput input) =>
+      guardApi(() async {
+        final res = await _dio.put<Map<String, dynamic>>('/v1/orders/$id',
+            data: input.toJson(), options: Options(headers: {'If-Match': '"$version"'}));
+        return OrderDetail.fromJson(res.data!);
+      });
+
   /// `POST /v1/orders/{id}/cancel` với `If-Match` = phiên bản đang xem.
   /// Server trả 412 nếu đơn đã đổi, 409 nếu đơn không còn PENDING.
   Future<OrderDetail> cancelOrder(String id, int version) => guardApi(() async {

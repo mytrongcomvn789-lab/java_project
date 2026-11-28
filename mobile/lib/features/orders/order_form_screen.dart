@@ -8,6 +8,7 @@ import '../../core/ui/app_widgets.dart';
 import '../../core/ui/demo_badge.dart';
 import '../addresses/address_controller.dart';
 import 'customer_order_models.dart';
+import 'customer_orders_api.dart';
 import 'order_detail_controller.dart';
 import 'order_form_controller.dart';
 import 'photo_picker.dart';
@@ -15,7 +16,9 @@ import 'photo_picker.dart';
 /// Tạo đơn mới. Route `/customer/new-order`. Chọn trạm và địa chỉ từ dữ liệu
 /// thật của server; mọi kiểm tra nghiệp vụ do server quyết định.
 class OrderFormScreen extends ConsumerStatefulWidget {
-  const OrderFormScreen({super.key});
+  /// [orderId] khác null: SỬA đơn đang chờ duyệt (điền sẵn dữ liệu, gửi `PUT`), không phải tạo mới.
+  const OrderFormScreen({super.key, this.orderId});
+  final String? orderId;
   @override
   ConsumerState<OrderFormScreen> createState() => _OrderFormScreenState();
 }
@@ -27,6 +30,50 @@ class _OrderFormScreenState extends ConsumerState<OrderFormScreen> {
   final _length = TextEditingController();
   final _width = TextEditingController();
   final _height = TextEditingController();
+
+  ApiFailure? _loadError;
+  bool _loading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.orderId != null) {
+      _loading = true;
+      Future.microtask(_loadForEdit);
+    }
+  }
+
+  /// Tải đơn cần sửa rồi điền sẵn. Chỉ đơn còn "Chờ duyệt" mới sửa được (server vẫn kiểm tra lại khi gửi).
+  Future<void> _loadForEdit() async {
+    try {
+      final order = await ref.read(customerOrdersApiProvider).getOrder(widget.orderId!);
+      if (!mounted) return;
+      if (!order.canCancel) {
+        setState(() {
+          _loading = false;
+          _loadError = const ApiFailure(
+              FailureKind.stateConflict, 'Đơn này không còn ở trạng thái chờ duyệt nên không sửa được.');
+        });
+        return;
+      }
+      ref.read(orderFormProvider.notifier).startEdit(order);
+      _desc.text = order.package.description;
+      _weight.text = '${order.package.weightGrams}';
+      _length.text = _fmtNum(order.package.lengthCm);
+      _width.text = _fmtNum(order.package.widthCm);
+      _height.text = _fmtNum(order.package.heightCm);
+      setState(() => _loading = false);
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _loading = false;
+          _loadError = toApiFailure(e);
+        });
+      }
+    }
+  }
+
+  static String _fmtNum(double v) => v == v.roundToDouble() ? '${v.toInt()}' : '$v';
 
   @override
   void dispose() {
@@ -53,9 +100,11 @@ class _OrderFormScreenState extends ConsumerState<OrderFormScreen> {
     final created = ref.read(orderFormProvider).created;
     if (created == null) return;
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(created.replayed
-            ? 'Đơn này đã được tạo trước đó.'
-            : 'Đã tạo đơn thành công.')));
+        content: Text(widget.orderId != null
+            ? 'Đã cập nhật đơn.'
+            : created.replayed
+                ? 'Đơn này đã được tạo trước đó.'
+                : 'Đã tạo đơn thành công.')));
     context.go('/customer/orders/${created.order.id}/detail');
   }
 
@@ -96,8 +145,29 @@ class _OrderFormScreenState extends ConsumerState<OrderFormScreen> {
     final theme = Theme.of(context);
     final busy = state.submitting;
     return Scaffold(
-        appBar: AppBar(title: const Text('Tạo đơn mới')),
-        body: AbsorbPointer(
+        appBar: AppBar(
+            title: Text(widget.orderId != null ? 'Sửa đơn' : 'Tạo đơn mới'),
+            leading: widget.orderId == null
+                ? null
+                : IconButton(
+                    tooltip: 'Quay lại',
+                    icon: const Icon(Icons.arrow_back),
+                    onPressed: () => context.go('/customer/orders/${widget.orderId}/detail'))),
+        body: _loading
+            ? const Center(key: Key('edit-loading'), child: CircularProgressIndicator())
+            : _loadError != null
+                ? Center(
+                    child: Padding(
+                        padding: const EdgeInsets.all(24),
+                        child: Column(mainAxisSize: MainAxisSize.min, children: [
+                          Text(_loadError!.message, key: const Key('edit-load-error'), textAlign: TextAlign.center),
+                          const SizedBox(height: 12),
+                          FilledButton(
+                              key: const Key('edit-back'),
+                              onPressed: () => context.go('/customer/orders/${widget.orderId}/detail'),
+                              child: const Text('Về chi tiết đơn')),
+                        ])))
+                : AbsorbPointer(
             absorbing: busy,
             child: Form(
                 key: _form,
@@ -167,6 +237,17 @@ class _OrderFormScreenState extends ConsumerState<OrderFormScreen> {
                     Text('Tùy chọn, tối đa $maxPackagePhotos ảnh.',
                         style: const TextStyle(color: AppColors.textMuted, fontSize: 13)),
                     const SizedBox(height: 10),
+                    if (state.keptPhotoIds.isNotEmpty)
+                      Padding(
+                          padding: const EdgeInsets.only(bottom: 10),
+                          child: Wrap(spacing: 8, runSpacing: 4, children: [
+                            for (var i = 0; i < state.keptPhotoIds.length; i++)
+                              InputChip(
+                                  key: Key('kept-photo-${state.keptPhotoIds[i]}'),
+                                  avatar: const Icon(Icons.image_outlined, size: 18),
+                                  label: Text('Ảnh hiện có ${i + 1}'),
+                                  onDeleted: () => controller.removeKeptPhoto(state.keptPhotoIds[i])),
+                          ])),
                     _photos(state, controller),
                     if (state.photoError != null)
                       Padding(
@@ -177,7 +258,7 @@ class _OrderFormScreenState extends ConsumerState<OrderFormScreen> {
                   ]),
                   _FeeEstimate(weight: _weight),
                 ]))),
-        bottomNavigationBar: BottomActionBar(
+        bottomNavigationBar: (_loading || _loadError != null) ? null : BottomActionBar(
             child: FilledButton(
                 key: const Key('submit-order'),
                 // Vô hiệu hóa khi đang gửi hoặc ảnh đang tải: chặn bấm đúp.
@@ -190,7 +271,9 @@ class _OrderFormScreenState extends ConsumerState<OrderFormScreen> {
                     : Text(state.error?.outcomeUnknown == true ||
                             state.error?.kind == FailureKind.offline
                         ? 'Gửi lại'
-                        : 'Tạo đơn'))));
+                        : widget.orderId != null
+                            ? 'Lưu thay đổi'
+                            : 'Tạo đơn'))));
   }
 
   Widget _stationField(String label, String key, List<Station> stations,
@@ -240,7 +323,7 @@ class _OrderFormScreenState extends ConsumerState<OrderFormScreen> {
               photo: p,
               onRemove: () => controller.removePhoto(p.id),
               onRetry: () => controller.retryPhoto(p.id)),
-        if (state.photos.length < maxPackagePhotos)
+        if (state.photos.length + state.keptPhotoIds.length < maxPackagePhotos)
           InkWell(
               key: const Key('add-photo'),
               borderRadius: BorderRadius.circular(16),

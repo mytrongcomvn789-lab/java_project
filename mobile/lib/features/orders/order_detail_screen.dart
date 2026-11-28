@@ -38,6 +38,12 @@ class OrderDetailScreen extends ConsumerWidget {
                 icon: const Icon(Icons.arrow_back),
                 onPressed: () => context.go('/customer')),
             actions: [
+              if (order != null && order.canCancel)
+                IconButton(
+                    key: const Key('edit-order'),
+                    tooltip: 'Sửa đơn',
+                    onPressed: () => context.go('/customer/orders/${order.id}/edit'),
+                    icon: const Icon(Icons.edit_outlined)),
               IconButton(
                   tooltip: 'Tải lại',
                   onPressed: () => controller.reload(),

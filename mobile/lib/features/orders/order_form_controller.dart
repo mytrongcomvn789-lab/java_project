@@ -63,8 +63,16 @@ class OrderFormState {
       this.submitting = false,
       this.error,
       this.photoError,
-      this.created});
+      this.created,
+      this.editing,
+      this.keptPhotoIds = const []});
   final String? pickupId, dropoffId;
+
+  /// Khác null khi đang SỬA một đơn chờ duyệt (không phải tạo mới).
+  final OrderDetail? editing;
+
+  /// Ảnh đã có trên đơn đang sửa và được giữ lại (không tải lại).
+  final List<String> keptPhotoIds;
   final Address? address;
   final List<PhotoAttachment> photos;
   final bool submitting;
@@ -88,6 +96,8 @@ class OrderFormState {
           ApiFailure? error,
           String? photoError,
           CreatedOrder? created,
+          OrderDetail? editing,
+          List<String>? keptPhotoIds,
           bool clearError = false,
           bool clearPhotoError = false}) =>
       OrderFormState(
@@ -98,7 +108,9 @@ class OrderFormState {
           submitting: submitting ?? this.submitting,
           error: clearError ? null : error ?? this.error,
           photoError: clearPhotoError ? null : photoError ?? this.photoError,
-          created: created ?? this.created);
+          created: created ?? this.created,
+          editing: editing ?? this.editing,
+          keptPhotoIds: keptPhotoIds ?? this.keptPhotoIds);
 }
 
 /// Biểu mẫu tạo đơn. Mọi ràng buộc nghiệp vụ do server quyết định; ở đây chỉ
@@ -123,6 +135,17 @@ class OrderFormController extends AutoDisposeNotifier<OrderFormState> {
 
   CustomerOrdersApi get _api => ref.read(customerOrdersApiProvider);
 
+  /// Bắt đầu sửa [order]: điền sẵn trạm và giữ ảnh hiện có. Địa chỉ người nhận phải chọn lại vì đơn chỉ lưu
+  /// bản chụp địa chỉ, không lưu mã địa chỉ.
+  void startEdit(OrderDetail order) => state = OrderFormState(
+      pickupId: order.pickupStationId,
+      dropoffId: order.dropoffStationId,
+      editing: order,
+      keptPhotoIds: List.of(order.package.photoFileIds));
+
+  void removeKeptPhoto(String fileId) => state = state.copyWith(
+      keptPhotoIds: [for (final id in state.keptPhotoIds) if (id != fileId) id]);
+
   void setPickup(String? id) =>
       state = state.copyWith(pickupId: id, clearError: true);
   void setDropoff(String? id) =>
@@ -132,7 +155,7 @@ class OrderFormController extends AutoDisposeNotifier<OrderFormState> {
 
   /// Chọn ảnh rồi tải lên ngay để lỗi ảnh hiện sớm và gửi đơn nhanh hơn.
   Future<void> addPhoto(PhotoSource source) async {
-    if (state.photos.length >= maxPackagePhotos) {
+    if (state.photos.length + state.keptPhotoIds.length >= maxPackagePhotos) {
       state = state.copyWith(
           photoError: 'Tối đa $maxPackagePhotos ảnh cho mỗi đơn.');
       return;
@@ -221,7 +244,9 @@ class OrderFormController extends AutoDisposeNotifier<OrderFormState> {
         lengthCm: v.lengthCm,
         widthCm: v.widthCm,
         heightCm: v.heightCm,
-        photoFileIds: [for (final p in state.photos) p.fileId!]);
+        photoFileIds: [...state.keptPhotoIds, for (final p in state.photos) p.fileId!]);
+    final editing = state.editing;
+    if (editing != null) return _update(editing, input);
     final fingerprint = jsonEncode(input.toJson());
     if (fingerprint != _keyFingerprint) {
       _key = newIdempotencyKey();
@@ -243,6 +268,25 @@ class OrderFormController extends AutoDisposeNotifier<OrderFormState> {
       if (epoch == _epoch) {
         state = state.copyWith(submitting: false, error: failure);
       }
+      return false;
+    }
+  }
+
+  /// Gửi bản sửa. Không dùng Idempotency-Key: `If-Match` (phiên bản đang xem) đã chặn ghi đè và gửi trùng.
+  Future<bool> _update(OrderDetail editing, CreateOrderInput input) async {
+    final epoch = _epoch;
+    state = state.copyWith(submitting: true, clearError: true);
+    try {
+      final order = await ref
+          .read(customerOrdersApiProvider)
+          .updateOrder(editing.id, editing.version, input);
+      if (epoch != _epoch) return true;
+      ref.invalidate(orderListProvider);
+      state = state.copyWith(
+          submitting: false, created: CreatedOrder(order, replayed: false));
+      return true;
+    } catch (e) {
+      if (epoch == _epoch) state = state.copyWith(submitting: false, error: toApiFailure(e));
       return false;
     }
   }
