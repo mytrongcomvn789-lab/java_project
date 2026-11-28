@@ -8,6 +8,7 @@ import {
   PackageCheck,
   PackagePlus,
   PackageSearch,
+  Plane,
   Radar,
   ScrollText,
   Settings,
@@ -173,6 +174,15 @@ export const NAV_ITEMS: NavItem[] = [
   },
 
   {
+    to: "/dispatch/drones",
+    label: "Điều phối drone",
+    icon: Plane,
+    roles: ["DISPATCHER", "STATION_OPERATOR", "LOGISTICS_MANAGER"],
+    code: "FR-07",
+    summary: "Drone dùng chung giữa các trạm: chọn drone, đặt trước chỗ sạc, tính thời gian chờ.",
+    features: ["Xem đội drone", "Xem kế hoạch điều phối của từng đơn", "Phân công hoặc tính lại drone (nhân viên trạm)"],
+  },
+  {
     to: "/station/availability",
     label: "Tình trạng sẵn sàng",
     icon: Activity,
@@ -336,6 +346,7 @@ export const PLACEHOLDER_PATHS: string[] = Array.from(
           "/dispatch/schedule",
           "/dispatch/failures",
           "/station/availability",
+          "/dispatch/drones",
           "/station/parcels",
           "/admin/users",
           "/admin/roles",

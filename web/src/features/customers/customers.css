@@ -1,0 +1,29 @@
+.customers-page .card { margin-bottom: 16px; }
+.customers-toolbar { display: grid; gap: 8px; }
+.customers-toolbar label { font-weight: 600; }
+.customers-toolbar > div { display: flex; gap: 10px; flex-wrap: wrap; }
+.customers-toolbar input { flex: 1 1 280px; min-width: 0; padding: 10px 12px; border: 1px solid var(--border); border-radius: 6px; font: inherit; }
+.customers-page button { padding: 9px 14px; border: 1px solid var(--border); border-radius: 6px; background: var(--surface); color: var(--text); font: inherit; cursor: pointer; }
+.customers-page button:hover:not(:disabled) { border-color: var(--green); }
+.customers-page button:disabled { opacity: .55; cursor: default; }
+.customers-list { padding: 0; overflow: hidden; }
+.customers-list-head, .customers-pager { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 16px; }
+.customers-list-head h2 { margin: 0; font-size: 19px; }
+.customers-list-head span, .customers-pager, .customers-hint { color: var(--muted); font-size: 13px; }
+.customers-state { padding: 35px 16px; text-align: center; }
+.customers-scroll { overflow-x: auto; }
+.customers-scroll table { width: 100%; min-width: 650px; border-collapse: collapse; }
+.customers-scroll th, .customers-scroll td { padding: 12px 16px; border-top: 1px solid var(--border); text-align: left; }
+.customers-scroll thead th { background: var(--sidebar); font-size: 13px; }
+.customers-scroll tbody th { font-weight: 600; }
+.customers-pager { border-top: 1px solid var(--border); }
+.customers-pager > div { display: flex; gap: 8px; }
+.customers-overlay { position: fixed; inset: 0; z-index: 50; background: rgba(20,30,20,.48); display: grid; place-items: center; padding: 16px; }
+.customers-dialog { width: min(100%, 460px); background: var(--surface); border-radius: 12px; padding: 24px; box-shadow: 0 12px 35px rgba(0,0,0,.2); }
+.customers-dialog h2 { margin: 0 0 6px; }
+.customers-dialog form, .customers-dialog label { display: grid; gap: 7px; }
+.customers-dialog form { gap: 15px; }
+.customers-dialog input { padding: 10px 12px; border: 1px solid var(--border); border-radius: 6px; font: inherit; }
+.customers-dialog input[readonly] { background: var(--sidebar); }
+.customers-dialog-actions { display: flex; justify-content: end; gap: 10px; }
+.customers-dialog-actions button[type="submit"] { background: var(--green); border-color: var(--green); color: white; }

@@ -30,6 +30,16 @@ public record OrderSummaryFacts(UUID orderId, OrderStatus status, Instant create
         return t == null ? "không rõ" : TIME.format(t);
     }
 
+    /** Quy đổi số phút sang dạng dễ đọc: dưới 60 phút giữ phút; từ 60 phút là giờ; từ 24 giờ là ngày. */
+    public static String duration(long totalMinutes) {
+        long min = Math.max(0, totalMinutes);
+        if (min < 60) return min + " phút";
+        long hours = min / 60, m = min % 60;
+        if (hours < 24) return m == 0 ? hours + " giờ" : hours + " giờ " + m + " phút";
+        long days = hours / 24, h = hours % 24;
+        return h == 0 ? days + " ngày" : days + " ngày " + h + " giờ";
+    }
+
     /** Một bước của timeline; minutesSincePrevious = null ở bước đầu. */
     public record Step(OrderStatus status, Instant at, Long minutesSincePrevious, RoleName actorRole,
                        FailureReason reasonCode) { }
@@ -64,13 +74,13 @@ public record OrderSummaryFacts(UUID orderId, OrderStatus status, Instant create
         sb.append("updatedAt: ").append(fmt(updatedAt)).append('\n');
         sb.append("now: ").append(fmt(now)).append('\n');
         sb.append("stepCount: ").append(steps.size()).append('\n');
-        if (totalMinutes() != null) sb.append("totalMinutes: ").append(totalMinutes()).append('\n');
+        if (totalMinutes() != null) sb.append("totalDuration: ").append(duration(totalMinutes())).append('\n');
         sb.append("timeline:\n");
         int i = 1;
         for (Step s : steps) {
             sb.append(i++).append(". ").append(fmt(s.at())).append(" | ").append(s.status()).append(" (")
                     .append(s.status().label()).append(')');
-            if (s.minutesSincePrevious() != null) sb.append(" | minutesSincePrevious=").append(s.minutesSincePrevious());
+            if (s.minutesSincePrevious() != null) sb.append(" | sincePreviousStep=").append(duration(s.minutesSincePrevious()));
             if (s.actorRole() != null) sb.append(" | actor=").append(s.actorRole());
             if (s.reasonCode() != null) sb.append(" | reason=").append(s.reasonCode().label());
             sb.append('\n');
