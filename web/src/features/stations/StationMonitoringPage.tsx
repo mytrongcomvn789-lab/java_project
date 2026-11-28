@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import PageHeader from "../../components/ui/PageHeader";
 import {
   stationService,
@@ -8,7 +9,9 @@ import {
   type StationStatus,
 } from "../../lib/stationService";
 import { useAuth } from "../auth/AuthContext";
+import ChargerIcon, { ChargerLegend } from "./ChargerIcon";
 import "./stations.css";
+import "./chargers.css";
 
 const STATUS_LABELS: Record<StationStatus, string> = {
   ACTIVE: "Đang hoạt động",
@@ -73,8 +76,13 @@ function connectionLabel(connection: StationConnection): string {
   }
 }
 
+const CONNECTION_SOURCE: Record<string, string> = {
+  NONE: "chưa có thiết bị sạc báo về",
+  CHARGER_HEARTBEAT: "heartbeat thiết bị sạc (giả lập)",
+};
+
 function connectionDetail(connection: StationConnection): string {
-  const parts = [`Nguồn: ${connection.source}`];
+  const parts = [`Nguồn: ${CONNECTION_SOURCE[connection.source] ?? connection.source}`];
   if (connection.lastSeenAt) {
     const seen = new Date(connection.lastSeenAt);
     parts.push(
@@ -196,6 +204,7 @@ export default function StationMonitoringPage() {
         </button>
       </div>
 
+      <ChargerLegend />
       {isOperator && (
         <p className="station-hint">
           Bạn chỉ xem và đổi trạng thái được các trạm đã được phân công.
@@ -236,28 +245,50 @@ export default function StationMonitoringPage() {
         <div className="station-grid">
           {rows.map((row) => (
             <article className="station-panel" key={row.id}>
-              <div className="station-heading">
-                <h3>{row.name}</h3>
+              <div className="monitor-card-head">
+                <div>
+                  <h3>{row.name}</h3>
+                  <p className="station-address">
+                    {row.address ?? "Chưa có địa chỉ"}
+                  </p>
+                </div>
                 <span className={`station-status ${row.status.toLowerCase()}`}>
                   {STATUS_LABELS[row.status]}
                 </span>
               </div>
 
-              <p className="station-address">
-                {row.address ?? "Chưa có địa chỉ"}
-              </p>
-
-              <div>
-                <p className="station-metric-title">Kết nối</p>
-                <p className="station-connection">
-                  {connectionLabel(row.connection)}
+              <div className="monitor-section">
+                <p className="station-metric-title">
+                  Thiết bị sạc ({row.chargers.length})
                 </p>
+                {row.chargers.length === 0 ? (
+                  <p className="station-hint">Trạm chưa có thiết bị sạc.</p>
+                ) : (
+                  <div className="charger-strip">
+                    {row.chargers.map((c) => (
+                      <ChargerIcon
+                        key={c.code}
+                        code={c.code}
+                        state={c.state}
+                        percent={c.batteryPercent}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="monitor-section">
+                <span
+                  className={`conn-badge ${row.connection.state.toLowerCase()}`}
+                >
+                  Kết nối: {connectionLabel(row.connection)}
+                </span>
                 <p className="station-hint">
                   {connectionDetail(row.connection)}
                 </p>
               </div>
 
-              <div>
+              <div className="monitor-section">
                 <p className="station-metric-title">
                   Khung giờ hiện tại ({formatTime(row.slot.start)} –{" "}
                   {formatTime(row.slot.end)})
@@ -268,26 +299,33 @@ export default function StationMonitoringPage() {
                 </p>
               </div>
 
-              <div>
+              <div className="monitor-section">
                 <p className="station-metric-title">Số kiện</p>
-                <dl className="station-metrics">
+                <div className="monitor-stats">
                   {PACKAGE_GROUPS.map((group) => (
-                    <div key={group.key} className="station-metric">
-                      <dt>{group.label}</dt>
-                      <dd>{row.packages[group.key]}</dd>
-                      <small>{group.hint}</small>
+                    <div key={group.key} title={group.hint}>
+                      <strong>{row.packages[group.key]}</strong>
+                      <span>{group.label}</span>
                     </div>
                   ))}
-                </dl>
-                <p>
-                  Đang ở trạm: <strong>{row.packages.atStation}</strong> · Tổng
-                  đang xử lý: <strong>{row.packages.processingTotal}</strong>
+                </div>
+                <p className="station-hint">
+                  Đang ở trạm: {row.packages.atStation} · Tổng đang xử lý:{" "}
+                  {row.packages.processingTotal}
                 </p>
               </div>
 
-              {canChangeStatus && (
-                <div className="station-actions">
-                  {ALL_STATUSES.filter((status) => status !== row.status).map(
+              <div className="station-actions">
+                {isOperator && (
+                  <Link
+                    className="station-link"
+                    to={`/stations/${row.id}/chargers`}
+                  >
+                    Chi tiết sạc và drone
+                  </Link>
+                )}
+                {canChangeStatus &&
+                  ALL_STATUSES.filter((status) => status !== row.status).map(
                     (status) => (
                       <button
                         type="button"
@@ -301,8 +339,7 @@ export default function StationMonitoringPage() {
                       </button>
                     ),
                   )}
-                </div>
-              )}
+              </div>
             </article>
           ))}
         </div>

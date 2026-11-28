@@ -1,0 +1,309 @@
+/* Thiết bị sạc và drone của trạm */
+.charger-icon {
+  display: inline-grid;
+  justify-items: center;
+  gap: 2px;
+  min-width: 56px;
+}
+.charger-icon .charger-body {
+  fill: transparent;
+  stroke: #9aa593;
+  stroke-width: 2.5;
+}
+.charger-icon .charger-bolt {
+  fill: #9aa593;
+}
+.charger-icon.charging .charger-body {
+  fill: #f5c518;
+  stroke: #c99a00;
+}
+.charger-icon.charging .charger-bolt {
+  fill: #5c4300;
+}
+.charger-icon.full .charger-body {
+  fill: #3f9142;
+  stroke: #2e6e31;
+}
+.charger-icon.full .charger-bolt {
+  fill: #fff;
+}
+.charger-icon.maintenance .charger-body {
+  fill: #c62828;
+  stroke: #8f1c1c;
+}
+.charger-icon .charger-mark {
+  fill: #fff;
+}
+.charger-code {
+  color: var(--muted);
+  font-size: 12px;
+}
+.charger-percent {
+  font-weight: 700;
+  font-size: 12px;
+}
+.charger-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 10px;
+}
+.charger-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+.charger-legend li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.charger-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+  border: 2px solid #9aa593;
+}
+.charger-dot.charging {
+  background: #f5c518;
+  border-color: #c99a00;
+}
+.charger-dot.full {
+  background: #3f9142;
+  border-color: #2e6e31;
+}
+.charger-dot.maintenance {
+  background: #c62828;
+  border-color: #8f1c1c;
+}
+
+/* Thẻ trạm ở trang giám sát */
+.monitor-card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+.conn-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 13px;
+  background: #eceee8;
+  color: #4b5545;
+}
+.conn-badge::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #9aa593;
+}
+.conn-badge.online {
+  background: #e6efdf;
+  color: #2e5b28;
+}
+.conn-badge.online::before {
+  background: #3f9142;
+}
+.conn-badge.offline {
+  background: #fbe3e1;
+  color: #8f1c1c;
+}
+.conn-badge.offline::before {
+  background: #c62828;
+}
+.monitor-section {
+  display: grid;
+  gap: 8px;
+}
+.monitor-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 24px;
+}
+.monitor-stats div {
+  display: grid;
+}
+.monitor-stats strong {
+  font-size: 20px;
+}
+.monitor-stats span {
+  font-size: 13px;
+  color: var(--muted);
+}
+.station-link {
+  display: inline-block;
+  border: 1px solid var(--dark);
+  background: var(--dark);
+  color: #fff;
+  border-radius: 8px;
+  padding: 10px 16px;
+  text-decoration: none;
+}
+
+/* Trang chi tiết thiết bị sạc và drone */
+.charger-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.charger-summary .chip {
+  display: grid;
+  min-width: 110px;
+  padding: 12px 16px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+}
+.charger-summary .chip strong {
+  font-size: 24px;
+}
+.charger-summary .chip span {
+  font-size: 13px;
+  color: var(--muted);
+}
+.charger-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+}
+.charger-card {
+  display: grid;
+  gap: 10px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  overflow-wrap: anywhere;
+}
+.charger-card.charging {
+  border-color: #e3c44f;
+}
+.charger-card.full {
+  border-color: #6fb172;
+}
+.charger-card.maintenance {
+  border-color: #d98a8a;
+}
+.charger-card header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.charger-card h4 {
+  margin: 0;
+}
+.charger-card dl {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 12px;
+  margin: 0;
+  font-size: 14px;
+}
+.charger-card dt {
+  color: var(--muted);
+}
+.charger-card dd {
+  margin: 0;
+}
+.battery-bar {
+  height: 10px;
+  border-radius: 999px;
+  background: #e5e8e0;
+  overflow: hidden;
+}
+.battery-bar > span {
+  display: block;
+  height: 100%;
+  background: #f5c518;
+}
+.charger-card.full .battery-bar > span {
+  background: #3f9142;
+}
+.charger-card .station-actions button {
+  padding: 8px 12px;
+}
+.sim-note {
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: #f6efd9;
+  color: #725217;
+  font-size: 14px;
+}
+.idle-drones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.idle-drones li {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 12px;
+  background: var(--surface);
+}
+
+/* Tình trạng sẵn sàng: nhóm khung giờ */
+.slot-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+.slot-section {
+  display: grid;
+  gap: 10px;
+}
+.slot-section h4 {
+  margin: 0;
+}
+.slot-collapsed summary {
+  cursor: pointer;
+  padding: 8px 0;
+  color: var(--muted);
+}
+.slot.now {
+  outline: 3px solid #698543;
+}
+.slot.past {
+  opacity: 0.55;
+}
+.slot-bar {
+  display: flex;
+  height: 12px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: #e5e8e0;
+}
+.slot-bar .open {
+  background: #3f9142;
+}
+.slot-bar .full {
+  background: #c62828;
+}
+.charger-mini {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+
+@media (max-width: 700px) {
+  .charger-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

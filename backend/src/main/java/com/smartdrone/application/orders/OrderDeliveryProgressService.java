@@ -7,6 +7,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.smartdrone.application.common.ApiException;
+import com.smartdrone.application.dispatch.DroneDispatchService;
 import com.smartdrone.application.common.ErrorCode;
 import com.smartdrone.application.orders.dto.DeliveryProgressRequest;
 import com.smartdrone.application.orders.dto.OrderDetail;
@@ -43,10 +44,13 @@ public class OrderDeliveryProgressService {
     private final StaffStationScope stations;
     private final OrderTransitionService transitions;
     private final OrderReviewEventPublisher events;
+    private final DroneDispatchService droneDispatch;
 
     public OrderDeliveryProgressService(OrderRepository orders, DeliveryAttemptRepository attempts,
             OrderStatusHistoryRepository history, PackageService packages, StaffStationScope stations,
-            OrderTransitionService transitions, OrderReviewEventPublisher events) {
+            OrderTransitionService transitions, OrderReviewEventPublisher events,
+            DroneDispatchService droneDispatch) {
+        this.droneDispatch = droneDispatch;
         this.orders = orders; this.attempts = attempts; this.history = history; this.packages = packages;
         this.stations = stations; this.transitions = transitions; this.events = events;
     }
@@ -75,6 +79,9 @@ public class OrderDeliveryProgressService {
         DeliveryAttempt attempt = currentAttempt(order);
         var result = transitions.transition(order, new TransitionCommand(action, actor,
                 RoleName.STATION_OPERATOR, version, note, attempt.getId(), null));
+        // Drone cất cánh khi đơn khởi hành, hạ cánh và cắm sạc khi đơn đến trạm nhận.
+        if (action == OrderAction.DISPATCH) droneDispatch.onDispatched(order);
+        else droneDispatch.onArrived(order);
         var entries = history.findByOrderIdOrderByOrderVersionAsc(orderId);
         var entry = entries.stream().filter(h -> h.getOrderVersion() == result.newVersion())
                 .findFirst().orElseThrow();

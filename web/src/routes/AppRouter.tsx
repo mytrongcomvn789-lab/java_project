@@ -1,5 +1,7 @@
 import { Routes, Route } from "react-router-dom";
 import AuthLayout from "../layouts/AuthLayout";
+import DroneDispatchBoardPage from "../features/stations/DroneDispatchBoardPage";
+import StationChargersPage from "../features/stations/StationChargersPage";
 import StationMonitoringPage from "../features/stations/StationMonitoringPage";
 import MainLayout from "../layouts/MainLayout";
 import StationParcelsPage from "../features/orders/StationParcelsPage";
@@ -64,6 +66,13 @@ export default function AppRouter() {
             path="/stations/monitoring"
             element={<StationMonitoringPage />}
           />
+          <Route element={<RequireRole roles={["STATION_OPERATOR", "DISPATCHER", "LOGISTICS_MANAGER"]} />}>
+            <Route path="/dispatch/drones" element={<DroneDispatchBoardPage />} />
+          </Route>
+          {/* Chi tiết thiết bị sạc và drone: chỉ nhân viên trạm (backend cũng chặn bằng 403). */}
+          <Route element={<RequireRole roles={["STATION_OPERATOR"]} />}>
+            <Route path="/stations/:id/chargers" element={<StationChargersPage />} />
+          </Route>
           {/* 7.6: chat AI chỉ cho khách hàng (backend cũng chặn vai trò khác bằng 403). */}
           <Route element={<RequireRole roles={["CUSTOMER"]} />}>
             <Route path="/assistant" element={<AssistantPage />} />
