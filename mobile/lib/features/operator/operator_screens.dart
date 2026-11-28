@@ -59,6 +59,9 @@ class _OperatorScaffold extends ConsumerWidget {
                   borderRadius: BorderRadius.circular(AppRadii.pill),
                   border: Border.all(color: AppColors.border)),
               child: TabBar(
+                  isScrollable: true,
+                  tabAlignment: TabAlignment.start,
+                  labelPadding: const EdgeInsets.symmetric(horizontal: 6),
                   indicatorSize: TabBarIndicatorSize.tab,
                   indicator: BoxDecoration(
                       color: AppColors.primary,
@@ -175,8 +178,8 @@ Tab _tab(Key key, String text) => Tab(
     key: key,
     height: 40,
     child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 4),
-        child: FittedBox(fit: BoxFit.scaleDown, child: Text(text, maxLines: 1))));
+        padding: const EdgeInsets.symmetric(horizontal: 10),
+        child: Text(text, maxLines: 1)));
 
 class _OperatorHeader extends ConsumerWidget {
   const _OperatorHeader(
