@@ -728,3 +728,36 @@ h3 {
 .auth-switch a:hover {
   text-decoration: underline;
 }
+
+/* ---- Chuẩn hóa form để các màn cân xứng ---- */
+.customer-field select,
+.field select {
+  width: 100%;
+  min-height: 46px;
+  border: 1px solid #a9b39f;
+  border-radius: 8px;
+  padding: 10px 12px;
+  color: var(--text);
+  background: white;
+  font: inherit;
+}
+.customer-field select:disabled { background: var(--bg); color: var(--text-muted, #6b7466); }
+.customer-field input[type="date"] { min-height: 46px; }
+.customer-actions { margin-top: 20px; }
+main button:not([class]),
+main form button[type="button"]:not([class]) {
+  min-height: 40px;
+  padding: 8px 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: white;
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+}
+main button:not([class]):hover { background: var(--bg); }
+main button:not([class]):disabled { opacity: .55; cursor: not-allowed; }
+/* Nhãn trạng thái không ngắt dòng */
+.badge, .status-badge, [class*="badge"] { white-space: nowrap; }
+/* Dòng chú thích dưới bộ lọc cách đều với thẻ KPI */
+main > p.muted, main section > p.muted { margin: 12px 0; }
