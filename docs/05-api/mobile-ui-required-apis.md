@@ -66,3 +66,18 @@ Backend đã trả `qrPayload`, nhưng app **chưa vẽ** được QR vì chưa 
 - Không có API: giao diện không lỗi, hiện Demo hoặc Sắp có, không giả dữ liệu thật.
 - Có API đúng hợp đồng: không còn nhãn Demo (nhãn chỉ hiện khi dữ liệu là mẫu).
 - Mất mạng, 401, 429 và lỗi máy chủ đều có thông báo tiếng Việt và nút Thử lại (`AsyncStateView`).
+
+## 4. Bổ sung 28/11/2026
+
+### Đã làm phía mobile
+- Nhân viên trạm: **Xuất phát** (`POST /v1/orders/{id}/dispatch`) và **Drone đến** (`.../arrive`) ở tab "Đang giao", mở trọn vòng đời đơn trên điện thoại.
+- Điều phối viên (`/dispatcher`) và quản lý hậu cần (`/manager`): xem [mobile-dispatcher.md](mobile-dispatcher.md), [mobile-manager.md](mobile-manager.md).
+- Đổi mật khẩu (`POST /v1/me/password`, máy chủ thu hồi mọi phiên nên app đăng xuất), bằng chứng giao hàng cho khách (`GET /v1/orders/{id}/confirmation` và `/v1/files/{id}/download-link`), sửa đơn chờ duyệt (`PUT /v1/orders/{id}`, địa chỉ phải chọn lại vì đơn chỉ lưu bản chụp địa chỉ).
+
+### Còn thiếu ở backend
+| Thiếu | Ảnh hưởng |
+|---|---|
+| **API nhân viên trạm báo sự cố** (ví dụ `POST /v1/orders/{id}/incidents` kèm mã lý do, ghi chú) | Yêu cầu 6.5: nếu operator không có quyền FAIL thì báo sự cố để điều phối viên xử lý. Hiện `/fail` chỉ dành cho điều phối viên và chưa có route nào khác, nên mobile chưa làm được |
+| Đăng ký tài khoản khách đã có (`/v1/auth/register`) nhưng mobile chưa có màn | Khách mới phải đăng ký trên web |
+| Kênh realtime cho điều phối viên | Danh sách của điều phối viên phải kéo xuống để làm mới |
+| Quên mật khẩu | Chưa có API |
